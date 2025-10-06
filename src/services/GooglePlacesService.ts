@@ -20,14 +20,16 @@ export class GooglePlacesService {
 
   static async nearbySearch(
     location: { lat: number; lng: number },
-    radius: number
+    radius: number,
+    includedType?: string
   ): Promise<{ results: GooglePlace[] }> {
     try {
       const { data, error } = await supabase.functions.invoke('google-nearby-search', {
         body: {
           latitude: location.lat,
           longitude: location.lng,
-          radius
+          radius,
+          includedType
         }
       });
 
@@ -70,35 +72,47 @@ export class GooglePlacesService {
 
     const businesses: Business[] = [];
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
-    let radius = 300; // Démarrer avec un rayon très petit pour avoir beaucoup d'appels variés
-    let attempts = 0;
-    const maxAttempts = 50; // BEAUCOUP plus de tentatives
-    let consecutiveEmptyResults = 0;
-
-    // List of large chains and multinationals to exclude (réduit drastiquement)
-    const excludedNames = [
-      'mcdonalds', 'mcdonald', 'burger king', 'kfc', 'quick', 'subway',
-      'starbucks', 'carrefour', 'auchan', 'leclerc', 'intermarché',
-      'monoprix', 'franprix', 'aldi', 'lidl',
-      'décathlon', 'leroy merlin', 'castorama',
-      'fnac', 'darty',
-      'ikea', 'but', 'conforama',
-      'orange', 'bouygues', 'free', 'sfr',
-      'la poste',
-      'total', 'esso', 'shell', 'bp',
+    
+    // NOUVELLE STRATÉGIE : chercher par TYPE spécifique pour obtenir des résultats variés
+    const priorityTypes = [
+      'restaurant', 'cafe', 'bar', 'bakery',
+      'hair_care', 'beauty_salon', 'spa',
+      'clothing_store', 'shoe_store', 'florist', 'jewelry_store', 'book_store',
+      'plumber', 'electrician', 'painter', 'roofing_contractor',
+      'gym', 'physiotherapist', 'doctor', 'dentist',
+      'real_estate_agency', 'insurance_agency', 'accounting', 'lawyer',
+      'store', 'meal_takeaway', 'lodging', 'car_repair',
     ];
 
-    while (businesses.length < maxResults && attempts < maxAttempts && consecutiveEmptyResults < 8) {
-      attempts++;
-      console.log(`🔍 Attempt ${attempts}: radius=${radius}m, found=${businesses.length}/${maxResults}`);
+    // List of large chains and multinationals to exclude (TRÈS réduite)
+    const excludedNames = [
+      'mcdonalds', 'burger king', 'kfc', 'starbucks',
+      'carrefour', 'auchan', 'leclerc',
+      'décathlon', 'fnac', 'ikea',
+    ];
+
+    // NOUVELLE APPROCHE : chercher par type spécifique pour diversifier les résultats
+    let typeIndex = 0;
+    let radius = 1000;
+    
+    while (businesses.length < maxResults && typeIndex < priorityTypes.length * 3) {
+      const currentType = priorityTypes[typeIndex % priorityTypes.length];
+      const attempt = Math.floor(typeIndex / priorityTypes.length) + 1;
       
-      // Faire plusieurs appels avec le même rayon si nécessaire
-      const searchResult = await this.nearbySearch(location, radius);
+      // Augmenter le rayon à chaque cycle complet des types
+      if (typeIndex > 0 && typeIndex % priorityTypes.length === 0) {
+        radius = Math.min(radius * 2, 50000);
+      }
+      
+      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}", radius=${radius}m, found=${businesses.length}/${maxResults}`);
+      
+      // Chercher spécifiquement ce type d'entreprise
+      const searchResult = await this.nearbySearch(location, radius, currentType);
       const places = searchResult.results;
       
-      console.log(`📍 API returned ${places.length} places (before filtering)`);
+      console.log(`📍 Found ${places.length} places of type "${currentType}"`);
       
-      let newBusinessesInThisAttempt = 0;
+      let newBusinessesInThisSearch = 0;
 
       for (const place of places) {
         if (businesses.length >= maxResults) break;
@@ -109,36 +123,30 @@ export class GooglePlacesService {
         }
         seenPlaceIds.add(place.place_id);
 
-        // Filter out ONLY the biggest chains (liste minimale)
+        // Filter out ONLY the very biggest chains
         const nameLower = place.name.toLowerCase();
         const isMajorChain = excludedNames.some(excluded => nameLower.includes(excluded));
         
         if (isMajorChain) {
-          console.log(`⛔ Filtered major chain: ${place.name}`);
           continue;
         }
 
-        // Use data from nearby search if available (optimized to reduce API calls)
+        // Use data from nearby search if available
         let phoneNumber = place.formatted_phone_number;
         let website = place.website;
 
-        // Only fetch details if phone or website is missing
+        // Fetch details if needed
         if (!phoneNumber || !website) {
           const details = await this.getPlaceDetails(place.place_id);
           if (details) {
             phoneNumber = phoneNumber || details.formatted_phone_number;
             website = website || details.website;
           }
-          // Small delay only when we make an additional API call
-          await new Promise(resolve => setTimeout(resolve, 50)); // Réduit à 50ms
+          await new Promise(resolve => setTimeout(resolve, 30));
         }
 
-        // PLUS SOUPLE : Accepter si on a AU MOINS un moyen de contact
-        // Priorité : téléphone > site web, mais accepter les deux
+        // Accepter si on a AU MOINS un moyen de contact
         if (phoneNumber || website) {
-          console.log(`✅ Accepting: ${place.name} (phone: ${phoneNumber ? 'yes' : 'no'}, website: ${website ? 'yes' : 'no'})`);
-          
-          // Create a simple Google Maps link that works in new tabs
           const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
           
           businesses.push({
@@ -149,46 +157,26 @@ export class GooglePlacesService {
             lien_maps: mapsLink,
           });
 
-          newBusinessesInThisAttempt++;
+          newBusinessesInThisSearch++;
+          console.log(`✅ ${businesses.length}/${maxResults}: ${place.name}`);
 
           if (onProgress) {
             onProgress(businesses.length, maxResults);
           }
-        } else {
-          console.log(`❌ Rejected (no contact): ${place.name}`);
         }
       }
-
-      // Si on n'a trouvé aucune nouvelle entreprise, incrémenter le compteur
-      if (newBusinessesInThisAttempt === 0) {
-        consecutiveEmptyResults++;
-        console.log(`⚠️ No new businesses in attempt ${attempts}, empty streak: ${consecutiveEmptyResults}`);
-      } else {
-        consecutiveEmptyResults = 0; // Réinitialiser si on a trouvé quelque chose
-        console.log(`✅ Added ${newBusinessesInThisAttempt} new businesses (total: ${businesses.length}/${maxResults})`);
+      
+      if (newBusinessesInThisSearch > 0) {
+        console.log(`✅ Added ${newBusinessesInThisSearch} businesses from type "${currentType}"`);
       }
-
-      // Si on a encore besoin de plus d'entreprises
-      if (businesses.length < maxResults && attempts < maxAttempts) {
-        // Stratégie adaptative : augmenter progressivement le rayon
-        if (places.length >= 15 && newBusinessesInThisAttempt > 0) {
-          // Beaucoup de résultats et on a trouvé des nouveaux -> augmenter doucement
-          radius = Math.min(radius * 1.4, 50000);
-        } else if (newBusinessesInThisAttempt === 0) {
-          // Aucun nouveau -> sauter plus loin
-          radius = Math.min(radius * 3, 50000);
-        } else {
-          // Peu de résultats -> augmenter moyennement
-          radius = Math.min(radius * 2, 50000);
-        }
-        console.log(`➡️ Next radius: ${radius}m`);
-        
-        // Petit délai pour éviter de surcharger l'API
-        await new Promise(resolve => setTimeout(resolve, 150));
-      }
+      
+      typeIndex++;
+      
+      // Petit délai entre les recherches
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    console.log(`🎯 Search completed: ${businesses.length}/${maxResults} businesses found after ${attempts} attempts`);
+    console.log(`🎯 Search completed: ${businesses.length}/${maxResults} businesses found`);
 
     return businesses.slice(0, maxResults);
   }

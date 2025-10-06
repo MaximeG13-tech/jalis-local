@@ -14,32 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    const { latitude, longitude, radius } = await req.json();
+    const { latitude, longitude, radius, includedType } = await req.json();
 
-    console.log('Nearby search params:', { latitude, longitude, radius });
+    console.log('Nearby search params:', { latitude, longitude, radius, includedType });
 
-    // Call new Places API (New) Nearby Search with optimized fields and filters
-    const response = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': GOOGLE_API_KEY!,
-        // Request all needed fields in one call to minimize API costs
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.types,places.googleMapsUri',
-      },
-      body: JSON.stringify({
-        locationRestriction: {
-          circle: {
-            center: {
-              latitude,
-              longitude,
-            },
-            radius: radius || 1000,
-          },
-        },
-        // Include only business establishments - prioritized types
-        includedTypes: [
-          // Priorité 1: Restaurants, bars, cafés
+    // Build included types array - either specific type or all business types
+    const includedTypes = includedType ? [includedType] : [
+      // Priorité 1: Restaurants, bars, cafés
           'restaurant',
           'cafe',
           'bar',
@@ -109,7 +90,27 @@ serve(async (req) => {
           'pharmacy',
           'art_gallery',
           'museum',
-        ],
+    ];
+
+    // Call new Places API (New) Nearby Search
+    const response = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_API_KEY!,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.types,places.googleMapsUri',
+      },
+      body: JSON.stringify({
+        locationRestriction: {
+          circle: {
+            center: {
+              latitude,
+              longitude,
+            },
+            radius: radius || 1000,
+          },
+        },
+        includedTypes: includedTypes,
         maxResultCount: 20,
         rankPreference: 'DISTANCE',
       }),
