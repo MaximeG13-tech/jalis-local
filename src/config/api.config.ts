@@ -16,11 +16,5 @@
 // Cette configuration est uniquement pour un usage en développement/interne
 // ========================================
 
-export const GOOGLE_PLACES_API_KEY = 'YOUR_GOOGLE_PLACES_API_KEY';
+export const GOOGLE_PLACES_API_KEY = 'AIzaSyDdKwnuHNK0kBd5huGBtRtE_lBBHYEM16s';
 
-// Vérification de la configuration
-if (GOOGLE_PLACES_API_KEY === 'YOUR_GOOGLE_PLACES_API_KEY') {
-  console.warn(
-    '⚠️ ATTENTION : Vous devez configurer votre clé API Google Places dans src/config/api.config.ts'
-  );
-}
