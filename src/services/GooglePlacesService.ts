@@ -136,8 +136,8 @@ export class GooglePlacesService {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        // Only add if both phone and website are available
-        if (phoneNumber && website) {
+        // Only add if phone is available (website is optional)
+        if (phoneNumber) {
           // Create a simple Google Maps link that works in new tabs
           const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
           
