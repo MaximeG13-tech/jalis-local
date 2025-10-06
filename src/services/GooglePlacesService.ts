@@ -109,12 +109,12 @@ export class GooglePlacesService {
         }
         seenPlaceIds.add(place.place_id);
 
-        // Filter out large chains (liste réduite)
+        // Filter out ONLY the biggest chains (liste minimale)
         const nameLower = place.name.toLowerCase();
-        const isChain = excludedNames.some(excluded => nameLower.includes(excluded));
+        const isMajorChain = excludedNames.some(excluded => nameLower.includes(excluded));
         
-        if (isChain) {
-          console.log(`⛔ Filtered chain: ${place.name}`);
+        if (isMajorChain) {
+          console.log(`⛔ Filtered major chain: ${place.name}`);
           continue;
         }
 
@@ -133,16 +133,19 @@ export class GooglePlacesService {
           await new Promise(resolve => setTimeout(resolve, 50)); // Réduit à 50ms
         }
 
-        // Only add if phone is available (website is optional)
-        if (phoneNumber) {
+        // PLUS SOUPLE : Accepter si on a AU MOINS un moyen de contact
+        // Priorité : téléphone > site web, mais accepter les deux
+        if (phoneNumber || website) {
+          console.log(`✅ Accepting: ${place.name} (phone: ${phoneNumber ? 'yes' : 'no'}, website: ${website ? 'yes' : 'no'})`);
+          
           // Create a simple Google Maps link that works in new tabs
           const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
           
           businesses.push({
             nom: place.name,
             adresse: place.formatted_address || '',
-            telephone: phoneNumber,
-            site_web: website,
+            telephone: phoneNumber || 'Non disponible',
+            site_web: website || 'Non disponible',
             lien_maps: mapsLink,
           });
 
@@ -151,6 +154,8 @@ export class GooglePlacesService {
           if (onProgress) {
             onProgress(businesses.length, maxResults);
           }
+        } else {
+          console.log(`❌ Rejected (no contact): ${place.name}`);
         }
       }
 
