@@ -78,7 +78,7 @@ export const AddressAutocomplete = ({ value, onChange, onSelect, disabled }: Add
   };
 
   return (
-    <div ref={wrapperRef} className="space-y-3 relative">
+    <div ref={wrapperRef} className="space-y-4 relative">
       <Label htmlFor="address" className="text-sm font-bold text-foreground uppercase tracking-wide">
         Adresse ou nom de l'entreprise
       </Label>

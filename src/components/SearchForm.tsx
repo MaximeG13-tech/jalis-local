@@ -38,7 +38,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
               Nombre d'entreprises
             </Label>
