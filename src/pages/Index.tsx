@@ -8,8 +8,9 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building2, Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
+import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
 import logo from '@/assets/logo.svg';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -38,11 +39,28 @@ const Index = () => {
 
     try {
       if (searchMode === 'partners') {
-        // Pour le mode "rapporteurs d'affaires", on stocke juste les params
-        // La vraie recherche se fera lors de l'export
+        // Mode rapporteurs d'affaires: l'IA génère les catégories puis cherche
         toast({
-          title: "Mode partenaires activé",
-          description: "Cliquez sur 'Exporter en JSON' pour générer le guide intelligent avec l'IA",
+          title: "Analyse en cours",
+          description: "L'IA identifie les rapporteurs d'affaires pertinents...",
+        });
+
+        const { data, error } = await supabase.functions.invoke('search-business-partners', {
+          body: { 
+            activityDescription,
+            address,
+            placeId,
+            maxResults
+          }
+        });
+
+        if (error) throw error;
+
+        setBusinesses(data.businesses);
+        
+        toast({
+          title: "Recherche terminée",
+          description: `${data.businesses.length} rapporteur${data.businesses.length > 1 ? 's' : ''} d'affaires trouvé${data.businesses.length > 1 ? 's' : ''}`,
         });
         setIsLoading(false);
         setProgress({ current: 0, total: 0 });
@@ -147,29 +165,7 @@ const Index = () => {
             <ProgressIndicator current={progress.current} total={progress.total} />
           )}
 
-          {/* Results or Export Button */}
-          {lastSearch?.searchMode === 'partners' && businesses.length === 0 && !isLoading && (
-            <div className="max-w-3xl mx-auto">
-              <Card className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
-                <CardContent className="pt-6 pb-6 text-center space-y-4">
-                  <Sparkles className="h-12 w-12 mx-auto text-accent animate-pulse" />
-                  <h3 className="text-xl font-semibold">Mode Rapporteurs d'affaires activé</h3>
-                  <p className="text-muted-foreground">
-                    L'IA va générer un guide intelligent de rapporteurs d'affaires pour votre activité.
-                    Cliquez sur le bouton ci-dessous pour lancer la génération.
-                  </p>
-                  <ExportButton 
-                    businesses={[]}
-                    searchMode={lastSearch.searchMode}
-                    activityDescription={lastSearch.activityDescription}
-                    address={lastSearch.address}
-                    maxResults={lastSearch.maxResults}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          )}
-          
+          {/* Results */}
           {businesses.length > 0 && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">

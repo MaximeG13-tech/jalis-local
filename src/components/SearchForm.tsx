@@ -53,10 +53,10 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
                 </Label>
               </div>
               <div className="flex items-center space-x-2 p-3 rounded-lg border border-input hover:bg-accent/5 transition-colors">
-                <RadioGroupItem value="partners" id="partners" />
-                <Label htmlFor="partners" className="cursor-pointer flex-1 font-normal">
-                  Rapporteurs d'affaires (partenaires B2B)
-                </Label>
+            <RadioGroupItem value="partners" id="partners" />
+            <Label htmlFor="partners" className="cursor-pointer flex-1 font-normal">
+              Rapporteurs d'affaires
+            </Label>
               </div>
             </RadioGroup>
           </div>

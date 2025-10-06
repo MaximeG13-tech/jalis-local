@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.google-place-details]
 verify_jwt = false
+
+[functions.enrich-businesses]
+verify_jwt = false
+
+[functions.generate-partner-guide]
+verify_jwt = false
+
+[functions.search-business-partners]
+verify_jwt = false

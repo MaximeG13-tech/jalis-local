@@ -155,11 +155,22 @@ Entreprise à traiter :
 
 Instructions strictes :
 
-1. **activity** : Une phrase descriptive et unique de plus de 17 mots qui reformule la catégorie de l'entreprise de manière engageante pour un annuaire. Utilise des tournures de phrases variées et professionnelles, par exemple en commençant par "Entreprise spécialisée dans...", "Acteur reconnu pour...", "Expert en...", "Professionnel dédié à...", "Spécialiste reconnu pour...", etc. La phrase doit être grammaticalement correcte et pertinente pour l'entreprise.
+1. **activity** : Une phrase descriptive et unique de plus de 17 mots qui reformule la catégorie de l'entreprise de manière engageante pour un annuaire.
+
+FORMATS À VARIER (exemples) :
+- "Entreprise spécialisée dans {activité} proposant {produit/service} avec {spécificités} à"
+- "Expert en {activité} et {service}, installant {produit} avec {spécificités} près de"
+- "Société experte en {activité} pour {produit} adaptés à {spécificités} autour de"
+- "Votre partenaire en {activité} offrant {produit/service} performants grâce à {spécificités} à"
+- "Spécialiste en {activité}, nous proposons {produit/service} avec {spécificités} sur"
+- "Solutions de {activité} et {service} : {produit} avec {spécificités}, disponibles à"
+- "Professionnels de {activité} : {produit/service} avec {spécificités} disponibles proche de"
+
+TRÈS IMPORTANT : La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 
 2. **extract** : Un résumé court et percutant de 30 à 50 mots maximum de l'activité réelle de l'entreprise. Base-toi sur les informations disponibles (nom, adresse, site web) pour créer un contenu cohérent avec la vraie activité de l'entreprise.
 
-3. **description** : Une description détaillée de 100 à 150 mots en HTML avec des balises <p> pour structurer le texte en paragraphes. Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) et mentionne l'adresse si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
+3. **description** : Une description détaillée de 100 à 150 mots en HTML avec des balises <p> pour structurer le texte en paragraphes. Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) et mentionne l'adresse (${business.adresse}) si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
@@ -201,7 +212,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
       }
 
       enrichedBusinesses.push({
-        name: business.nom,
+        name: `- ${business.nom}`,
         activity: aiData.activity,
         city: formatCity(business.adresse),
         extract: aiData.extract,
