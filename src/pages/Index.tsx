@@ -155,7 +155,7 @@ const Index = () => {
                   <Sparkles className="h-12 w-12 mx-auto text-accent animate-pulse" />
                   <h3 className="text-xl font-semibold">Mode Rapporteurs d'affaires activé</h3>
                   <p className="text-muted-foreground">
-                    L'IA va générer un guide intelligent de partenaires B2B pour votre activité.
+                    L'IA va générer un guide intelligent de rapporteurs d'affaires pour votre activité.
                     Cliquez sur le bouton ci-dessous pour lancer la génération.
                   </p>
                   <ExportButton 

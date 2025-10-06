@@ -76,8 +76,8 @@ serve(async (req) => {
 
     console.log('Starting partner guide generation for:', activityDescription);
 
-    // Étape 1: Génération des catégories de partenaires B2B
-    const categoriesPrompt = `Tu es un expert en développement commercial et partenariats B2B.
+    // Étape 1: Génération des catégories de rapporteurs d'affaires
+    const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
 
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
@@ -106,14 +106,13 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'Tu es un expert en analyse commerciale B2B. Tu réponds toujours avec du JSON valide uniquement.' },
-          { role: 'user', content: categoriesPrompt }
-        ],
-        temperature: 0.7,
-      }),
+         body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: 'Tu es un expert en analyse commerciale. Tu réponds toujours avec du JSON valide uniquement.' },
+            { role: 'user', content: categoriesPrompt }
+          ],
+        }),
     });
 
     if (!categoriesResponse.ok) {
@@ -175,17 +174,16 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
           'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { 
-              role: 'system', 
-              content: 'Tu es un assistant de recherche web. Tu effectues des recherches en temps réel et réponds avec du JSON valide uniquement. Tu ne dois jamais inventer d\'informations.'
-            },
-            { role: 'user', content: searchPrompt }
-          ],
-          temperature: 0.3,
-        }),
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { 
+                role: 'system', 
+                content: 'Tu es un assistant de recherche web. Tu effectues des recherches en temps réel et réponds avec du JSON valide uniquement. Tu ne dois jamais inventer d\'informations.'
+              },
+              { role: 'user', content: searchPrompt }
+            ],
+          }),
       });
 
       if (!searchResponse.ok) {
@@ -224,7 +222,7 @@ Instructions strictes :
 
 2. **extract** : Un résumé court et percutant de 30 à 50 mots maximum de l'activité réelle de l'entreprise. Base-toi sur les informations disponibles pour créer un contenu cohérent avec la vraie activité de l'entreprise.
 
-3. **description** : Une description détaillée de 100 à 150 mots en texte brut (PAS de HTML, PAS de balises <p>, juste du texte). Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) si disponible et mentionne l'adresse si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
+3. **description** : Une description détaillée de 100 à 150 mots en HTML avec des balises <p> pour structurer le texte en paragraphes. Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) si disponible et mentionne l'adresse si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
@@ -243,7 +241,6 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
               },
               { role: 'user', content: enrichPrompt }
             ],
-            temperature: 0.8,
           }),
         });
 
@@ -265,9 +262,8 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
         }
 
         enrichedBusinesses.push({
-          activity: aiData.activity,
           name: business.nom,
-          address: business.adresse,
+          activity: aiData.activity,
           city: formatCity(business.adresse),
           extract: aiData.extract,
           description: aiData.description,

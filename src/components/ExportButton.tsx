@@ -4,6 +4,7 @@ import { Business } from '@/types/business';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
+import { PartnerGenerationProgress } from './PartnerGenerationProgress';
 
 interface ExportButtonProps {
   businesses: Business[];
@@ -16,15 +17,18 @@ interface ExportButtonProps {
 export const ExportButton = ({ businesses, searchMode = 'all', activityDescription, address, maxResults }: ExportButtonProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
-
+    
     try {
       if (searchMode === 'partners' && activityDescription && address && maxResults) {
+        setShowProgress(true);
+        
         toast({
-          title: "Génération intelligente en cours",
-          description: "L'IA analyse votre activité et génère des partenariats pertinents...",
+          title: "Génération intelligente lancée",
+          description: "L'IA analyse votre activité et identifie les rapporteurs d'affaires pertinents...",
         });
 
         const { data, error } = await supabase.functions.invoke('generate-partner-guide', {
@@ -43,15 +47,17 @@ export const ExportButton = ({ businesses, searchMode = 'all', activityDescripti
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'guide-partenaires.json';
+        link.download = 'rapporteurs-affaires.json';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
+        setShowProgress(false);
+        
         toast({
           title: "Export réussi",
-          description: `${enrichedData.length} partenaire${enrichedData.length > 1 ? 's' : ''} identifié${enrichedData.length > 1 ? 's' : ''} et exporté${enrichedData.length > 1 ? 's' : ''} en JSON`,
+          description: `${enrichedData.length} rapporteur${enrichedData.length > 1 ? 's' : ''} d'affaires identifié${enrichedData.length > 1 ? 's' : ''} et exporté${enrichedData.length > 1 ? 's' : ''} en JSON`,
         });
       } else {
         if (businesses.length === 0) {
@@ -93,6 +99,7 @@ export const ExportButton = ({ businesses, searchMode = 'all', activityDescripti
       }
     } catch (error) {
       console.error('Export error:', error);
+      setShowProgress(false);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'enrichissement des données",
@@ -104,23 +111,27 @@ export const ExportButton = ({ businesses, searchMode = 'all', activityDescripti
   };
 
   return (
-    <Button 
-      onClick={handleExport} 
-      disabled={(searchMode === 'all' && businesses.length === 0) || isExporting}
-      variant="outline"
-      className="w-full sm:w-auto"
-    >
-      {isExporting ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Enrichissement en cours...
-        </>
-      ) : (
-        <>
-          <Download className="mr-2 h-4 w-4" />
-          Exporter en JSON
-        </>
-      )}
-    </Button>
+    <>
+      {showProgress && <PartnerGenerationProgress isGenerating={showProgress} />}
+      
+      <Button 
+        onClick={handleExport} 
+        disabled={(searchMode === 'all' && businesses.length === 0) || isExporting}
+        variant="outline"
+        className="w-full sm:w-auto"
+      >
+        {isExporting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Enrichissement en cours...
+          </>
+        ) : (
+          <>
+            <Download className="mr-2 h-4 w-4" />
+            Exporter en JSON
+          </>
+        )}
+      </Button>
+    </>
   );
 };

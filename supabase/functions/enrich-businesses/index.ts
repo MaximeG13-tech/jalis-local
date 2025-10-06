@@ -159,7 +159,7 @@ Instructions strictes :
 
 2. **extract** : Un résumé court et percutant de 30 à 50 mots maximum de l'activité réelle de l'entreprise. Base-toi sur les informations disponibles (nom, adresse, site web) pour créer un contenu cohérent avec la vraie activité de l'entreprise.
 
-3. **description** : Une description détaillée de 100 à 150 mots en texte brut (PAS de HTML, PAS de balises <p>, juste du texte). Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) et mentionne l'adresse si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
+3. **description** : Une description détaillée de 100 à 150 mots en HTML avec des balises <p> pour structurer le texte en paragraphes. Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) et mentionne l'adresse si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
@@ -178,7 +178,6 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
             },
             { role: 'user', content: prompt }
           ],
-          temperature: 0.8,
         }),
       });
 
@@ -202,8 +201,8 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
       }
 
       enrichedBusinesses.push({
-        activity: aiData.activity,
         name: business.nom,
+        activity: aiData.activity,
         city: formatCity(business.adresse),
         extract: aiData.extract,
         description: aiData.description,
