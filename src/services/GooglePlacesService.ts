@@ -81,6 +81,22 @@ export class GooglePlacesService {
       'monoprix', 'franprix', 'aldi', 'lidl', 'super u', 'hyper u',
       'décathlon', 'leroy merlin', 'bricorama', 'castorama', 'brico dépôt',
       'fnac', 'darty', 'boulanger', 'cultura', 'micromania',
+      'picard', 'sephora', 'kiabi', 'zara', 'h&m', 'c&a', 'primark',
+      'ikea', 'but', 'conforama', 'maisons du monde',
+      'orange', 'bouygues', 'free', 'sfr', 'red', 'sosh',
+      'la poste', 'relay', 'point relais',
+      'crédit agricole', 'société générale', 'bnp', 'caisse d\'épargne', 'banque populaire', 'crédit mutuel', 'lcl',
+      'carrefour market', 'carrefour express', 'carrefour city', 'carrefour contact',
+      'e.leclerc', 'leclerc drive', 'simply market',
+      'système u', 'marché u', 'utile',
+      'cora', 'match', 'géant', 'continent',
+      'total', 'esso', 'shell', 'bp', 'elf', 'agip',
+      'paul', 'la mie câline', 'brioche dorée', 'maison kayser',
+      'jeff de bruges', 'leonidas', 'la cure gourmande',
+      'go sport', 'intersport', 'sport 2000', 'decathlon',
+      'norauto', 'feu vert', 'midas', 'speedy', 'euromaster',
+      'mairie', 'préfecture', 'sous-préfecture', 'pôle emploi', 'caf',
+      'cpam', 'sécurité sociale', 'hôpital', 'clinique',
     ];
 
     while (businesses.length < maxResults && attempts < maxAttempts) {

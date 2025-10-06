@@ -87,16 +87,13 @@ const Index = () => {
           <div className="inline-flex items-center justify-center gap-3 mb-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-sm border border-primary/20">
             <Sparkles className="h-5 w-5 text-accent animate-pulse" />
             <span className="text-sm font-medium bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Prospection Intelligente
+              Génération de liens utiles
             </span>
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
-            Trouvez vos clients
+            Guide local automatisé avec l'IA
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Générez automatiquement une liste d'entreprises qualifiées avec site web et téléphone
-          </p>
         </div>
 
         {/* Main Content */}
@@ -145,40 +142,6 @@ const Index = () => {
           )}
         </div>
 
-        {/* Footer Info */}
-        {!isLoading && businesses.length === 0 && (
-          <div className="mt-16 max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold mb-2">Filtrage intelligent</h3>
-                <p className="text-sm text-muted-foreground">
-                  Uniquement les entreprises avec téléphone ET site web
-                </p>
-              </div>
-              <div className="text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/10 text-accent mb-4">
-                  <Building2 className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold mb-2">Données complètes</h3>
-                <p className="text-sm text-muted-foreground">
-                  Nom, adresse, téléphone, site web et lien Google Maps
-                </p>
-              </div>
-              <div className="text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success/10 text-success mb-4">
-                  <span className="text-2xl">⚡</span>
-                </div>
-                <h3 className="font-semibold mb-2">Rapide et optimisé</h3>
-                <p className="text-sm text-muted-foreground">
-                  Résultats en quelques secondes avec minimisation des coûts API
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
