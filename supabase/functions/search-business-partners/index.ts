@@ -76,11 +76,35 @@ Exemple pour un vendeur de camping-cars :
       body: { placeId }
     });
 
-    if (placeError || !placeData?.result?.geometry?.location) {
-      throw new Error('Failed to get location coordinates');
+    console.log('Place details response:', { placeData, placeError });
+
+    if (placeError) {
+      throw new Error(`Failed to get place details: ${placeError.message || JSON.stringify(placeError)}`);
     }
 
-    const { lat, lng } = placeData.result.geometry.location;
+    if (!placeData?.result) {
+      throw new Error('No place result returned from google-place-details');
+    }
+
+    // Extract coordinates - handle different response formats
+    let lat: number, lng: number;
+    
+    if (placeData.result.geometry?.location) {
+      // Standard format
+      lat = placeData.result.geometry.location.lat;
+      lng = placeData.result.geometry.location.lng;
+    } else if (placeData.result.location) {
+      // Alternative format
+      lat = placeData.result.location.latitude || placeData.result.location.lat;
+      lng = placeData.result.location.longitude || placeData.result.location.lng;
+    } else {
+      throw new Error('No location coordinates found in place details response');
+    }
+
+    if (!lat || !lng) {
+      throw new Error(`Invalid coordinates: lat=${lat}, lng=${lng}`);
+    }
+
     console.log('Search center coordinates:', { lat, lng });
 
     // Progressive radius search: start small, expand if needed
