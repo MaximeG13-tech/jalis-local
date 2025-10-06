@@ -89,31 +89,30 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary/30 to-accent/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,hsl(var(--accent)/0.08),transparent_50%)]" />
-      
-      <div className="relative container mx-auto px-4 py-12 max-w-7xl">
+    <div className="min-h-screen bg-gradient-subtle">
+      <div className="container mx-auto px-4 py-16 max-w-6xl">
         {/* Header */}
-        <div className="mb-12 text-center">
+        <div className="mb-16 text-center space-y-6">
           <img 
             src={logo} 
             alt="Logo JLo" 
-            className="h-24 w-auto mx-auto mb-6"
+            className="h-20 w-auto mx-auto opacity-90"
           />
           
-          <div className="inline-flex items-center justify-center gap-3 mb-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-sm border border-primary/20">
-            <Sparkles className="h-5 w-5 text-accent animate-pulse" />
-            <span className="text-sm font-medium bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-muted border border-border">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Génération de liens utiles
             </span>
           </div>
           
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
-            Guide local automatisé avec l'IA
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-tight tracking-tight">
+            Guide local automatisé<br />avec l'IA
           </h1>
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
+            Trouvez et enrichissez automatiquement les informations des entreprises locales
+          </p>
         </div>
 
         {/* Main Content */}
@@ -130,17 +129,23 @@ const Index = () => {
 
           {/* Results */}
           {businesses.length > 0 && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <h2 className="text-2xl font-bold text-foreground">
-                  {businesses.length} entreprise{businesses.length > 1 ? 's' : ''} trouvée{businesses.length > 1 ? 's' : ''}
-                </h2>
-                <div className="flex flex-wrap gap-3">
+            <div className="space-y-8">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-6 bg-card rounded-lg border border-border shadow-card">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-1">
+                    {businesses.length} entreprise{businesses.length > 1 ? 's' : ''} trouvée{businesses.length > 1 ? 's' : ''}
+                  </h2>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    Résultats prêts à être exportés
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={handleRegenerate}
                     variant="outline"
                     disabled={isLoading}
-                    className="gap-2"
+                    className="gap-2 font-semibold"
+                    size="sm"
                   >
                     <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                     Régénérer
@@ -149,7 +154,8 @@ const Index = () => {
                     onClick={handleNewSearch}
                     variant="outline"
                     disabled={isLoading}
-                    className="gap-2"
+                    className="gap-2 font-semibold"
+                    size="sm"
                   >
                     <RotateCcw className="h-4 w-4" />
                     Nouvelle recherche

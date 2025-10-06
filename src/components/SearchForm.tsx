@@ -28,9 +28,9 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   };
 
   return (
-    <Card className="border-2 border-primary/10 shadow-elegant backdrop-blur-sm bg-card/80">
+    <Card className="border border-border shadow-card bg-card">
       <CardContent className="pt-8 pb-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <AddressAutocomplete
             value={address}
             onChange={setAddress}
@@ -40,14 +40,14 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="maxResults" className="text-base font-semibold">
-                Nombre d'entreprises à générer
+              <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
+                Nombre d'entreprises
               </Label>
-              <div className="flex items-center justify-center min-w-[60px] h-10 px-4 rounded-lg bg-primary/10 border border-primary/20">
-                <span className="text-lg font-bold text-primary">{maxResults}</span>
+              <div className="flex items-center justify-center min-w-[56px] h-9 px-3 rounded-md bg-muted border border-border">
+                <span className="text-base font-extrabold text-foreground tabular-nums">{maxResults}</span>
               </div>
             </div>
-            <div className="pt-2">
+            <div className="pt-1">
               <Slider
                 id="maxResults"
                 min={1}
@@ -58,7 +58,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
                 disabled={isLoading}
                 className="cursor-pointer"
               />
-              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+              <div className="flex justify-between mt-3 text-xs text-muted-foreground font-semibold tabular-nums">
                 <span>1</span>
                 <span>50</span>
               </div>
@@ -67,17 +67,17 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
 
           <Button 
             type="submit" 
-            className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-all shadow-elegant" 
+            className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 transition-all shadow-sm" 
             disabled={isLoading || !placeId}
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Recherche en cours...
               </>
             ) : (
               <>
-                <Search className="mr-2 h-5 w-5" />
+                <Search className="mr-2 h-4 w-4" />
                 Générer la liste
               </>
             )}
