@@ -88,7 +88,7 @@ const Index = () => {
           <img 
             src={logo} 
             alt="Logo JLo" 
-            className="h-16 w-auto mx-auto mb-6"
+            className="h-24 w-auto mx-auto mb-6"
           />
           
           <div className="inline-flex items-center justify-center gap-3 mb-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-sm border border-primary/20">
