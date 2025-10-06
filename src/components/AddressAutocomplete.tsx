@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
@@ -15,45 +15,72 @@ interface PlacePrediction {
   place_id: string;
 }
 
+declare global {
+  interface Window {
+    google: any;
+    initAutocomplete: () => void;
+  }
+}
+
 export const AddressAutocomplete = ({ value, onChange, disabled }: AddressAutocompleteProps) => {
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout>();
+  const autocompleteService = useRef<any>(null);
 
-  const fetchPredictions = async (input: string) => {
+  useEffect(() => {
+    // Load Google Maps JavaScript API
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=fr`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      };
+      document.head.appendChild(script);
+    } else {
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+    }
+  }, []);
+
+  const fetchPredictions = (input: string) => {
     if (input.length < 3) {
       setPredictions([]);
       setShowSuggestions(false);
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const url = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
-      url.searchParams.append('input', input);
-      url.searchParams.append('key', GOOGLE_PLACES_API_KEY);
-      url.searchParams.append('language', 'fr');
-      url.searchParams.append('components', 'country:fr');
-
-      const response = await fetch(url.toString());
-      const data = await response.json();
-
-      if (data.status === 'OK' && data.predictions) {
-        setPredictions(data.predictions);
-        setShowSuggestions(true);
-      } else {
-        setPredictions([]);
-        setShowSuggestions(false);
-      }
-    } catch (error) {
-      console.error('Autocomplete error:', error);
-      setPredictions([]);
-      setShowSuggestions(false);
-    } finally {
-      setIsLoading(false);
+    if (!autocompleteService.current) {
+      return;
     }
+
+    setIsLoading(true);
+    
+    autocompleteService.current.getPlacePredictions(
+      {
+        input: input,
+        componentRestrictions: { country: 'fr' },
+        language: 'fr',
+      },
+      (predictions: any[], status: string) => {
+        setIsLoading(false);
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setPredictions(
+            predictions.map((p) => ({
+              description: p.description,
+              place_id: p.place_id,
+            }))
+          );
+          setShowSuggestions(true);
+        } else {
+          setPredictions([]);
+          setShowSuggestions(false);
+        }
+      }
+    );
   };
 
   const handleInputChange = (newValue: string) => {
