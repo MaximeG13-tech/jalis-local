@@ -7,10 +7,8 @@ import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
 import logo from '@/assets/logo.svg';
-import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -20,69 +18,36 @@ const Index = () => {
     address: string; 
     placeId: string; 
     maxResults: number;
-    searchMode: 'all' | 'partners';
-    activityDescription?: string;
   } | null>(null);
   const { toast } = useToast();
 
   const handleSearch = async (
     address: string, 
     placeId: string, 
-    maxResults: number,
-    searchMode: 'all' | 'partners',
-    activityDescription?: string
+    maxResults: number
   ) => {
-    setLastSearch({ address, placeId, maxResults, searchMode, activityDescription });
+    setLastSearch({ address, placeId, maxResults });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
 
     try {
-      if (searchMode === 'partners') {
-        // Mode rapporteurs d'affaires: l'IA génère les catégories puis cherche
-        toast({
-          title: "Analyse en cours",
-          description: "L'IA identifie les rapporteurs d'affaires pertinents...",
-        });
+      const results = await GooglePlacesService.searchBusinesses(
+        placeId,
+        maxResults,
+        (current, total) => {
+          setProgress({ current, total });
+        }
+      );
 
-        const { data, error } = await supabase.functions.invoke('search-business-partners', {
-          body: { 
-            activityDescription,
-            address,
-            placeId,
-            maxResults
-          }
-        });
-
-        if (error) throw error;
-
-        setBusinesses(data.businesses);
-        
-        toast({
-          title: "Recherche terminée",
-          description: `${data.businesses.length} rapporteur${data.businesses.length > 1 ? 's' : ''} d'affaires trouvé${data.businesses.length > 1 ? 's' : ''}`,
-        });
-        setIsLoading(false);
-        setProgress({ current: 0, total: 0 });
-      } else {
-        // Mode classique: recherche Google Places
-        const results = await GooglePlacesService.searchBusinesses(
-          placeId,
-          maxResults,
-          (current, total) => {
-            setProgress({ current, total });
-          }
-        );
-
-        setBusinesses(results);
-        
-        toast({
-          title: "Recherche terminée",
-          description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
-        });
-        setIsLoading(false);
-        setProgress({ current: 0, total: 0 });
-      }
+      setBusinesses(results);
+      
+      toast({
+        title: "Recherche terminée",
+        description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
+      });
+      setIsLoading(false);
+      setProgress({ current: 0, total: 0 });
     } catch (error) {
       console.error('Search error:', error);
       toast({
@@ -100,9 +65,7 @@ const Index = () => {
       handleSearch(
         lastSearch.address, 
         lastSearch.placeId, 
-        lastSearch.maxResults,
-        lastSearch.searchMode,
-        lastSearch.activityDescription
+        lastSearch.maxResults
       );
     }
   };
@@ -193,8 +156,6 @@ const Index = () => {
                   </Button>
                   <ExportButton 
                     businesses={businesses}
-                    searchMode={lastSearch?.searchMode}
-                    activityDescription={lastSearch?.activityDescription}
                     address={lastSearch?.address}
                     maxResults={lastSearch?.maxResults}
                   />
