@@ -64,8 +64,6 @@ serve(async (req) => {
           'car_wash',
           'bicycle_store',
           'pet_store',
-          'laundry',
-          'dry_cleaning',
           'real_estate_agency',
           'travel_agency',
           'insurance_agency',
