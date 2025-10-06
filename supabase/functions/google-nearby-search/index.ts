@@ -49,10 +49,9 @@ serve(async (req) => {
           'meal_takeaway',
           'meal_delivery',
           
-          // Priorité 3: Salons de coiffure, beauté, barbiers
+          // Priorité 3: Salons de coiffure, beauté
           'hair_care',
           'beauty_salon',
-          'barber',
           
           // Priorité 4: Magasins indépendants
           'clothing_store',
@@ -63,42 +62,37 @@ serve(async (req) => {
           'home_goods_store',
           'store',
           
-          // Priorité 5: Artisans du bâtiment
+          // Priorité 5: Artisans (types supportés seulement)
           'plumber',
           'electrician',
-          'general_contractor',
           'painter',
           'roofing_contractor',
           
-          // Priorité 6: Paysagistes, jardiniers
-          'landscaper',
-          
-          // Priorité 7: Professionnels de santé
+          // Priorité 6: Professionnels de santé
           'physiotherapist',
           'doctor',
           'dentist',
-          'optician',
           
-          // Priorité 8: Sport et bien-être
+          // Priorité 7: Sport et bien-être
           'gym',
           'spa',
           
-          // Priorité 9: Vétérinaires
+          // Priorité 8: Vétérinaires
           'veterinary_care',
           
-          // Priorité 10: Immobilier et services financiers
+          // Priorité 9: Immobilier et services financiers
           'real_estate_agency',
           'insurance_agency',
           
-          // Priorité 11: Hébergement
+          // Priorité 10: Hébergement
           'lodging',
           
-          // Priorité 12: Loisirs
+          // Priorité 11: Loisirs
           'tourist_attraction',
           'night_club',
           'movie_theater',
           
-          // Priorité 13: Agences de voyage
+          // Priorité 12: Agences de voyage
           'travel_agency',
           
           // Autres commerces
