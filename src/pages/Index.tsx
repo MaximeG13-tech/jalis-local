@@ -8,6 +8,7 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Building2, Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
+import logo from '@/assets/logo.svg';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -84,6 +85,12 @@ const Index = () => {
       <div className="relative container mx-auto px-4 py-12 max-w-7xl">
         {/* Header */}
         <div className="mb-12 text-center">
+          <img 
+            src={logo} 
+            alt="Logo JLo" 
+            className="h-16 w-auto mx-auto mb-6"
+          />
+          
           <div className="inline-flex items-center justify-center gap-3 mb-6 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-sm border border-primary/20">
             <Sparkles className="h-5 w-5 text-accent animate-pulse" />
             <span className="text-sm font-medium bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
