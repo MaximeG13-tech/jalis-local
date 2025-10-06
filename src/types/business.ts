@@ -25,4 +25,6 @@ export interface GooglePlace {
 export interface SearchParams {
   address: string;
   maxResults: number;
+  searchMode: 'all' | 'partners';
+  activityDescription?: string;
 }

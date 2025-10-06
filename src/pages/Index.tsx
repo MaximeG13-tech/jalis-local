@@ -7,6 +7,7 @@ import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Building2, Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
 import logo from '@/assets/logo.svg';
 
@@ -14,30 +15,56 @@ const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [lastSearch, setLastSearch] = useState<{ address: string; placeId: string; maxResults: number } | null>(null);
+  const [lastSearch, setLastSearch] = useState<{ 
+    address: string; 
+    placeId: string; 
+    maxResults: number;
+    searchMode: 'all' | 'partners';
+    activityDescription?: string;
+  } | null>(null);
   const { toast } = useToast();
 
-  const handleSearch = async (address: string, placeId: string, maxResults: number) => {
-    setLastSearch({ address, placeId, maxResults });
+  const handleSearch = async (
+    address: string, 
+    placeId: string, 
+    maxResults: number,
+    searchMode: 'all' | 'partners',
+    activityDescription?: string
+  ) => {
+    setLastSearch({ address, placeId, maxResults, searchMode, activityDescription });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
 
     try {
-      const results = await GooglePlacesService.searchBusinesses(
-        placeId,
-        maxResults,
-        (current, total) => {
-          setProgress({ current, total });
-        }
-      );
+      if (searchMode === 'partners') {
+        // Pour le mode "rapporteurs d'affaires", on stocke juste les params
+        // La vraie recherche se fera lors de l'export
+        toast({
+          title: "Mode partenaires activé",
+          description: "Cliquez sur 'Exporter en JSON' pour générer le guide intelligent avec l'IA",
+        });
+        setIsLoading(false);
+        setProgress({ current: 0, total: 0 });
+      } else {
+        // Mode classique: recherche Google Places
+        const results = await GooglePlacesService.searchBusinesses(
+          placeId,
+          maxResults,
+          (current, total) => {
+            setProgress({ current, total });
+          }
+        );
 
-      setBusinesses(results);
-      
-      toast({
-        title: "Recherche terminée",
-        description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
-      });
+        setBusinesses(results);
+        
+        toast({
+          title: "Recherche terminée",
+          description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
+        });
+        setIsLoading(false);
+        setProgress({ current: 0, total: 0 });
+      }
     } catch (error) {
       console.error('Search error:', error);
       toast({
@@ -45,7 +72,6 @@ const Index = () => {
         description: error instanceof Error ? error.message : "Une erreur est survenue lors de la recherche",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
       setProgress({ current: 0, total: 0 });
     }
@@ -53,7 +79,13 @@ const Index = () => {
 
   const handleRegenerate = () => {
     if (lastSearch) {
-      handleSearch(lastSearch.address, lastSearch.placeId, lastSearch.maxResults);
+      handleSearch(
+        lastSearch.address, 
+        lastSearch.placeId, 
+        lastSearch.maxResults,
+        lastSearch.searchMode,
+        lastSearch.activityDescription
+      );
     }
   };
 
@@ -115,7 +147,29 @@ const Index = () => {
             <ProgressIndicator current={progress.current} total={progress.total} />
           )}
 
-          {/* Results */}
+          {/* Results or Export Button */}
+          {lastSearch?.searchMode === 'partners' && businesses.length === 0 && !isLoading && (
+            <div className="max-w-3xl mx-auto">
+              <Card className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
+                <CardContent className="pt-6 pb-6 text-center space-y-4">
+                  <Sparkles className="h-12 w-12 mx-auto text-accent animate-pulse" />
+                  <h3 className="text-xl font-semibold">Mode Rapporteurs d'affaires activé</h3>
+                  <p className="text-muted-foreground">
+                    L'IA va générer un guide intelligent de partenaires B2B pour votre activité.
+                    Cliquez sur le bouton ci-dessous pour lancer la génération.
+                  </p>
+                  <ExportButton 
+                    businesses={[]}
+                    searchMode={lastSearch.searchMode}
+                    activityDescription={lastSearch.activityDescription}
+                    address={lastSearch.address}
+                    maxResults={lastSearch.maxResults}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
           {businesses.length > 0 && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -141,7 +195,13 @@ const Index = () => {
                     <RotateCcw className="h-4 w-4" />
                     Nouvelle recherche
                   </Button>
-                  <ExportButton businesses={businesses} />
+                  <ExportButton 
+                    businesses={businesses}
+                    searchMode={lastSearch?.searchMode}
+                    activityDescription={lastSearch?.activityDescription}
+                    address={lastSearch?.address}
+                    maxResults={lastSearch?.maxResults}
+                  />
                 </div>
               </div>
               <ResultsTable businesses={businesses} onRemove={handleRemoveBusiness} />

@@ -7,52 +7,90 @@ import { useState } from 'react';
 
 interface ExportButtonProps {
   businesses: Business[];
+  searchMode?: 'all' | 'partners';
+  activityDescription?: string;
+  address?: string;
+  maxResults?: number;
 }
 
-export const ExportButton = ({ businesses }: ExportButtonProps) => {
+export const ExportButton = ({ businesses, searchMode = 'all', activityDescription, address, maxResults }: ExportButtonProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
-    if (businesses.length === 0) {
-      toast({
-        title: "Aucune donnée",
-        description: "Il n'y a aucune entreprise à exporter",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsExporting(true);
 
     try {
-      toast({
-        title: "Enrichissement en cours",
-        description: "L'IA génère le contenu optimisé pour chaque entreprise...",
-      });
+      if (searchMode === 'partners' && activityDescription && address && maxResults) {
+        toast({
+          title: "Génération intelligente en cours",
+          description: "L'IA analyse votre activité et génère des partenariats pertinents...",
+        });
 
-      const { data, error } = await supabase.functions.invoke('enrich-businesses', {
-        body: { businesses }
-      });
+        const { data, error } = await supabase.functions.invoke('generate-partner-guide', {
+          body: { 
+            activityDescription,
+            address,
+            maxResults
+          }
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const enrichedData = data.enrichedBusinesses;
-      const jsonString = JSON.stringify(enrichedData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'entreprises_enrichies.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+        const enrichedData = data.enrichedBusinesses;
+        const jsonString = JSON.stringify(enrichedData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'guide-partenaires.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-      toast({
-        title: "Export réussi",
-        description: `${enrichedData.length} entreprise${enrichedData.length > 1 ? 's' : ''} enrichie${enrichedData.length > 1 ? 's' : ''} et exportée${enrichedData.length > 1 ? 's' : ''} en JSON`,
-      });
+        toast({
+          title: "Export réussi",
+          description: `${enrichedData.length} partenaire${enrichedData.length > 1 ? 's' : ''} identifié${enrichedData.length > 1 ? 's' : ''} et exporté${enrichedData.length > 1 ? 's' : ''} en JSON`,
+        });
+      } else {
+        if (businesses.length === 0) {
+          toast({
+            title: "Aucune donnée",
+            description: "Il n'y a aucune entreprise à exporter",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Enrichissement en cours",
+          description: "L'IA génère le contenu optimisé pour chaque entreprise...",
+        });
+
+        const { data, error } = await supabase.functions.invoke('enrich-businesses', {
+          body: { businesses }
+        });
+
+        if (error) throw error;
+
+        const enrichedData = data.enrichedBusinesses;
+        const jsonString = JSON.stringify(enrichedData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'entreprises_enrichies.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: "Export réussi",
+          description: `${enrichedData.length} entreprise${enrichedData.length > 1 ? 's' : ''} enrichie${enrichedData.length > 1 ? 's' : ''} et exportée${enrichedData.length > 1 ? 's' : ''} en JSON`,
+        });
+      }
     } catch (error) {
       console.error('Export error:', error);
       toast({
@@ -68,7 +106,7 @@ export const ExportButton = ({ businesses }: ExportButtonProps) => {
   return (
     <Button 
       onClick={handleExport} 
-      disabled={businesses.length === 0 || isExporting}
+      disabled={(searchMode === 'all' && businesses.length === 0) || isExporting}
       variant="outline"
       className="w-full sm:w-auto"
     >
