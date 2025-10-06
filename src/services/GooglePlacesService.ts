@@ -84,16 +84,17 @@ export class GooglePlacesService {
       'store', 'meal_takeaway', 'lodging', 'car_repair',
     ];
 
-    // List of large chains and multinationals to exclude (TRÈS réduite)
+    // List of large chains and multinationals to exclude
     const excludedNames = [
-      'mcdonalds', 'burger king', 'kfc', 'starbucks',
-      'carrefour', 'auchan', 'leclerc',
-      'décathlon', 'fnac', 'ikea',
+      'mcdonalds', 'burger king', 'kfc', 'starbucks', 'subway', 'dominos',
+      'carrefour', 'auchan', 'leclerc', 'intermarché', 'lidl', 'aldi',
+      'décathlon', 'fnac', 'ikea', 'leroy merlin', 'castorama',
+      'casino', 'monoprix', 'franprix', 'carrefour city', 'carrefour express',
     ];
 
     // NOUVELLE APPROCHE : alterner les rayons et mélanger les types pour diversifier géographiquement
     let typeIndex = 0;
-    const radiusLevels = [3000, 7000, 15000, 30000, 50000]; // Rayons progressifs pour couverture géographique
+    const radiusLevels = [6000, 12000, 20000, 35000, 50000]; // Rayons progressifs pour couverture géographique
     let currentRadiusIndex = 0;
     
     // Mélanger les types pour éviter la concentration par activité
