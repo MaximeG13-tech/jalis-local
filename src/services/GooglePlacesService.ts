@@ -91,20 +91,26 @@ export class GooglePlacesService {
       'décathlon', 'fnac', 'ikea',
     ];
 
-    // NOUVELLE APPROCHE : chercher par type spécifique pour diversifier les résultats
+    // NOUVELLE APPROCHE : alterner les rayons et mélanger les types pour diversifier géographiquement
     let typeIndex = 0;
-    let radius = 1000;
+    const radiusLevels = [3000, 7000, 15000, 30000, 50000]; // Rayons progressifs pour couverture géographique
+    let currentRadiusIndex = 0;
     
-    while (businesses.length < maxResults && typeIndex < priorityTypes.length * 3) {
-      const currentType = priorityTypes[typeIndex % priorityTypes.length];
-      const attempt = Math.floor(typeIndex / priorityTypes.length) + 1;
+    // Mélanger les types pour éviter la concentration par activité
+    const shuffledTypes = [...priorityTypes].sort(() => Math.random() - 0.5);
+    
+    while (businesses.length < maxResults && typeIndex < shuffledTypes.length * 5) {
+      const currentType = shuffledTypes[typeIndex % shuffledTypes.length];
+      const cycle = Math.floor(typeIndex / shuffledTypes.length);
       
-      // Augmenter le rayon à chaque cycle complet des types
-      if (typeIndex > 0 && typeIndex % priorityTypes.length === 0) {
-        radius = Math.min(radius * 2, 50000);
+      // Augmenter le rayon tous les 2 cycles pour diversifier la zone géographique
+      if (typeIndex > 0 && typeIndex % (shuffledTypes.length * 2) === 0) {
+        currentRadiusIndex = Math.min(currentRadiusIndex + 1, radiusLevels.length - 1);
       }
       
-      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}", radius=${radius}m, found=${businesses.length}/${maxResults}`);
+      const radius = radiusLevels[currentRadiusIndex];
+      
+      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}", radius=${radius}m (level ${currentRadiusIndex + 1}/5), found=${businesses.length}/${maxResults}`);
       
       // Chercher spécifiquement ce type d'entreprise
       const searchResult = await this.nearbySearch(location, radius, currentType);
