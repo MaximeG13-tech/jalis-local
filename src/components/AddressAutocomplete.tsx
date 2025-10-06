@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
-import { GOOGLE_PLACES_API_KEY } from '@/config/api.config';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddressAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
+  onSelect?: (address: string, placeId: string) => void;
   disabled?: boolean;
 }
 
@@ -15,72 +16,43 @@ interface PlacePrediction {
   place_id: string;
 }
 
-declare global {
-  interface Window {
-    google: any;
-    initAutocomplete: () => void;
-  }
-}
-
-export const AddressAutocomplete = ({ value, onChange, disabled }: AddressAutocompleteProps) => {
+export const AddressAutocomplete = ({ value, onChange, onSelect, disabled }: AddressAutocompleteProps) => {
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout>();
-  const autocompleteService = useRef<any>(null);
 
-  useEffect(() => {
-    // Load Google Maps JavaScript API
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=fr`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      };
-      document.head.appendChild(script);
-    } else {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-    }
-  }, []);
-
-  const fetchPredictions = (input: string) => {
+  const fetchPredictions = async (input: string) => {
     if (input.length < 3) {
       setPredictions([]);
       setShowSuggestions(false);
       return;
     }
 
-    if (!autocompleteService.current) {
-      return;
-    }
-
     setIsLoading(true);
     
-    autocompleteService.current.getPlacePredictions(
-      {
-        input: input,
-        componentRestrictions: { country: 'fr' },
-        language: 'fr',
-      },
-      (predictions: any[], status: string) => {
-        setIsLoading(false);
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          setPredictions(
-            predictions.map((p) => ({
-              description: p.description,
-              place_id: p.place_id,
-            }))
-          );
-          setShowSuggestions(true);
-        } else {
-          setPredictions([]);
-          setShowSuggestions(false);
-        }
+    try {
+      const { data, error } = await supabase.functions.invoke('google-autocomplete', {
+        body: { input }
+      });
+
+      if (error) throw error;
+
+      if (data?.predictions && data.predictions.length > 0) {
+        setPredictions(data.predictions);
+        setShowSuggestions(true);
+      } else {
+        setPredictions([]);
+        setShowSuggestions(false);
       }
-    );
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+      setPredictions([]);
+      setShowSuggestions(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (newValue: string) => {
@@ -97,6 +69,9 @@ export const AddressAutocomplete = ({ value, onChange, disabled }: AddressAutoco
 
   const handleSelectPrediction = (prediction: PlacePrediction) => {
     onChange(prediction.description);
+    if (onSelect) {
+      onSelect(prediction.description, prediction.place_id);
+    }
     setShowSuggestions(false);
     setPredictions([]);
   };

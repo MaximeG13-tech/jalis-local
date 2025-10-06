@@ -14,14 +14,14 @@ const Index = () => {
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const { toast } = useToast();
 
-  const handleSearch = async (address: string, maxResults: number) => {
+  const handleSearch = async (address: string, placeId: string, maxResults: number) => {
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
 
     try {
       const results = await GooglePlacesService.searchBusinesses(
-        address,
+        placeId,
         maxResults,
         (current, total) => {
           setProgress({ current, total });

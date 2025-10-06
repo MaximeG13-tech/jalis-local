@@ -1,1 +1,10 @@
 project_id = "kjjkvevplfkceiwwnfnn"
+
+[functions.google-autocomplete]
+verify_jwt = false
+
+[functions.google-nearby-search]
+verify_jwt = false
+
+[functions.google-place-details]
+verify_jwt = false

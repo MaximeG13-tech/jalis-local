@@ -7,18 +7,24 @@ import { Search, Loader2 } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 
 interface SearchFormProps {
-  onSearch: (address: string, maxResults: number) => void;
+  onSearch: (address: string, placeId: string, maxResults: number) => void;
   isLoading: boolean;
 }
 
 export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [address, setAddress] = useState('');
+  const [placeId, setPlaceId] = useState('');
   const [maxResults, setMaxResults] = useState('20');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address.trim()) return;
-    onSearch(address, parseInt(maxResults));
+    if (!address.trim() || !placeId) return;
+    onSearch(address, placeId, parseInt(maxResults));
+  };
+
+  const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {
+    setAddress(selectedAddress);
+    setPlaceId(selectedPlaceId);
   };
 
   return (
@@ -28,6 +34,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
           <AddressAutocomplete
             value={address}
             onChange={setAddress}
+            onSelect={handleAddressSelect}
             disabled={isLoading}
           />
 
@@ -48,7 +55,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
           <Button 
             type="submit" 
             className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-all shadow-elegant" 
-            disabled={isLoading}
+            disabled={isLoading || !placeId}
           >
             {isLoading ? (
               <>

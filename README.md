@@ -1,52 +1,77 @@
-# Application Prospection Entreprises
+# Guide Local Jalis - Prospection Intelligente
 
-Application web de prospection intelligente permettant de générer automatiquement des listes d'entreprises qualifiées avec site web et numéro de téléphone.
+Générez automatiquement une liste d'entreprises qualifiées avec site web et téléphone à partir d'une adresse.
 
-## 🚀 Démarrage rapide
+## 🚀 Fonctionnalités
 
-### 1. Configuration de la clé API Google Places
+- **Autocomplétion d'adresse** : Recherche intelligente avec suggestions automatiques
+- **Filtrage intelligent** : Uniquement les entreprises avec téléphone ET site web
+- **Données complètes** : Nom, adresse, téléphone, site web et lien Google Maps
+- **Export JSON** : Téléchargez vos résultats en un clic
+- **Interface moderne** : Design élégant avec indicateur de progression
 
-**IMPORTANT** : Avant d'utiliser l'application, vous devez configurer votre clé API Google Places.
+## 🔧 Configuration
 
-1. Rendez-vous sur [Google Cloud Console](https://console.cloud.google.com/google/maps-apis/credentials)
-2. Créez un nouveau projet ou sélectionnez un projet existant
-3. Activez les APIs suivantes :
-   - **Places API**
+### Prérequis
+
+1. Créer un projet sur [Google Cloud Console](https://console.cloud.google.com)
+2. Activer les APIs suivantes :
+   - **Places API (New)** - API v1
    - **Geocoding API**
-4. Créez une clé API
-5. Ouvrez le fichier `src/config/api.config.ts`
-6. Remplacez `YOUR_GOOGLE_PLACES_API_KEY` par votre clé API
+3. Créer une clé API avec les restrictions appropriées
 
-```typescript
-// src/config/api.config.ts
-export const GOOGLE_PLACES_API_KEY = 'VOTRE_CLE_API_ICI';
-```
+### Installation
 
-### 2. Installation et lancement
+Le projet utilise **Lovable Cloud** pour sécuriser votre clé API côté backend.
 
-```sh
-# Installer les dépendances
-npm install
+La clé API Google Places est déjà configurée dans les secrets du backend. Si vous devez la modifier :
+1. Ouvrez le backend de votre projet
+2. Modifiez le secret `GOOGLE_PLACES_API_KEY` avec votre nouvelle clé API
 
-# Lancer l'application en mode développement
-npm run dev
-```
+## 🏗️ Architecture
 
-## ✨ Fonctionnalités
+### Backend (Edge Functions)
 
-- 🔍 **Recherche intelligente** : Trouvez des entreprises par adresse ou nom
-- 📊 **Filtrage automatique** : Uniquement les entreprises avec téléphone ET site web
-- 📈 **Suivi en temps réel** : Barre de progression pendant la recherche
-- 💾 **Export JSON** : Exportez vos résultats facilement
-- 🎨 **Design moderne** : Interface élégante et responsive
+Trois fonctions backend sécurisées :
+
+- **google-autocomplete** : Autocomplétion d'adresses via Places API (New)
+- **google-nearby-search** : Recherche à proximité via Nearby Search (New)  
+- **google-place-details** : Détails des lieux via Place Details (New)
+
+### Frontend
+
+- React + TypeScript + Vite
+- Tailwind CSS pour le design
+- Shadcn UI pour les composants
+- Supabase Client pour les appels backend
+
+## 📖 Utilisation
+
+1. Saisissez une adresse dans le champ de recherche
+2. Sélectionnez une suggestion de l'autocomplétion
+3. Choisissez le nombre d'entreprises à générer (10, 20 ou 50)
+4. Cliquez sur "Générer la liste"
+5. Attendez que la recherche se termine
+6. Exportez les résultats en JSON
+
+## 🔐 Sécurité
+
+- La clé API Google Places est stockée de manière sécurisée dans les secrets backend
+- Toutes les requêtes API passent par des edge functions sécurisées
+- Aucune clé API n'est exposée côté frontend
 
 ## 🛠️ Technologies
 
-- **React** + **TypeScript**
-- **Vite** pour le build
-- **Tailwind CSS** pour le design
-- **shadcn-ui** pour les composants
-- **Google Places API** pour les données
+- **Frontend** : React, TypeScript, Vite, Tailwind CSS
+- **Backend** : Lovable Cloud (Supabase Edge Functions)
+- **API** : Google Places API (New) v1
+- **Deployment** : Lovable
+
+## 📝 Notes
+
+- L'application utilise la **nouvelle API Google Places v1**
+- Les anciennes APIs (nearbysearch/json, details/json) ne sont pas utilisées
+- Les résultats sont filtrés pour inclure uniquement les entreprises avec téléphone ET site web
 
 ## How can I deploy this project?
 
