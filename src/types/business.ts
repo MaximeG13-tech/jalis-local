@@ -13,6 +13,7 @@ export interface GooglePlace {
   formatted_phone_number?: string;
   website?: string;
   url?: string;
+  types?: string[];
   geometry?: {
     location: {
       lat: number;

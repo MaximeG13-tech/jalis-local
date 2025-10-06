@@ -14,7 +14,7 @@ interface SearchFormProps {
 export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
-  const [maxResults, setMaxResults] = useState('20');
+  const [maxResults, setMaxResults] = useState('10');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +45,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="5">5 entreprises</SelectItem>
                 <SelectItem value="10">10 entreprises</SelectItem>
                 <SelectItem value="20">20 entreprises</SelectItem>
                 <SelectItem value="50">50 entreprises</SelectItem>

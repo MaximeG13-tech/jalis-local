@@ -73,6 +73,15 @@ export class GooglePlacesService {
     let attempts = 0;
     const maxAttempts = 5;
 
+    // List of large chains and multinationals to exclude
+    const excludedNames = [
+      'mcdonalds', 'mcdonald', 'burger king', 'kfc', 'quick', 'subway',
+      'starbucks', 'carrefour', 'auchan', 'leclerc', 'intermarché', 'casino',
+      'monoprix', 'franprix', 'aldi', 'lidl', 'super u', 'hyper u',
+      'décathlon', 'leroy merlin', 'bricorama', 'castorama', 'brico dépôt',
+      'fnac', 'darty', 'boulanger', 'cultura', 'micromania',
+    ];
+
     while (businesses.length < maxResults && attempts < maxAttempts) {
       attempts++;
       
@@ -82,25 +91,43 @@ export class GooglePlacesService {
       for (const place of places) {
         if (businesses.length >= maxResults) break;
 
-        const details = await this.getPlaceDetails(place.place_id);
-        
-        if (details) {
-          if (details.formatted_phone_number && details.website) {
-            businesses.push({
-              nom: details.name,
-              adresse: details.formatted_address || '',
-              telephone: details.formatted_phone_number,
-              site_web: details.website,
-              lien_maps: details.url || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-            });
-
-            if (onProgress) {
-              onProgress(businesses.length, maxResults);
-            }
-          }
+        // Filter out large chains
+        const nameLower = place.name.toLowerCase();
+        if (excludedNames.some(excluded => nameLower.includes(excluded))) {
+          continue;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Use data from nearby search if available (optimized to reduce API calls)
+        let phoneNumber = place.formatted_phone_number;
+        let website = place.website;
+        let mapsUrl = place.url;
+
+        // Only fetch details if phone or website is missing
+        if (!phoneNumber || !website) {
+          const details = await this.getPlaceDetails(place.place_id);
+          if (details) {
+            phoneNumber = phoneNumber || details.formatted_phone_number;
+            website = website || details.website;
+            mapsUrl = mapsUrl || details.url;
+          }
+          // Small delay only when we make an additional API call
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Only add if both phone and website are available
+        if (phoneNumber && website) {
+          businesses.push({
+            nom: place.name,
+            adresse: place.formatted_address || '',
+            telephone: phoneNumber,
+            site_web: website,
+            lien_maps: mapsUrl || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+          });
+
+          if (onProgress) {
+            onProgress(businesses.length, maxResults);
+          }
+        }
       }
 
       if (businesses.length < maxResults) {

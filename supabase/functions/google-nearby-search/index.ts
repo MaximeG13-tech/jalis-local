@@ -18,13 +18,14 @@ serve(async (req) => {
 
     console.log('Nearby search params:', { latitude, longitude, radius });
 
-    // Call new Places API (New) Nearby Search
+    // Call new Places API (New) Nearby Search with optimized fields and filters
     const response = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY!,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location',
+        // Request all needed fields in one call to minimize API costs
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.types,places.googleMapsUri',
       },
       body: JSON.stringify({
         locationRestriction: {
@@ -36,6 +37,33 @@ serve(async (req) => {
             radius: radius || 1000,
           },
         },
+        // Exclude large chains, public establishments, and corporate entities
+        excludedTypes: [
+          'hospital',
+          'school',
+          'university',
+          'library',
+          'post_office',
+          'city_hall',
+          'courthouse',
+          'embassy',
+          'fire_station',
+          'police',
+          'local_government_office',
+          'parking',
+          'transit_station',
+          'subway_station',
+          'train_station',
+          'bus_station',
+          'airport',
+          'atm',
+          'bank',
+          'drugstore',
+          'pharmacy',
+          'gas_station',
+          'supermarket',
+          'shopping_mall',
+        ],
         maxResultCount: 20,
       }),
     });
@@ -48,11 +76,15 @@ serve(async (req) => {
       throw new Error(data.error?.message || 'Failed to fetch nearby places');
     }
 
-    // Transform to match old format
+    // Transform and include all available data to minimize additional API calls
     const results = (data.places || []).map((place: any) => ({
       place_id: place.id?.replace('places/', '') || '',
       name: place.displayName?.text || '',
       formatted_address: place.formattedAddress || '',
+      formatted_phone_number: place.nationalPhoneNumber || place.internationalPhoneNumber || '',
+      website: place.websiteUri || '',
+      url: place.googleMapsUri || '',
+      types: place.types || [],
       geometry: {
         location: {
           lat: place.location?.latitude || 0,
