@@ -22,9 +22,9 @@ const Slider = React.forwardRef<
       <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
         <SliderPrimitive.Range className="absolute h-full bg-primary" />
       </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+      <SliderPrimitive.Thumb className="relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
         {showValue && (
-          <span className="text-xs font-bold text-foreground tabular-nums">
+          <span className="text-[10px] font-bold text-foreground tabular-nums">
             {value}
           </span>
         )}
