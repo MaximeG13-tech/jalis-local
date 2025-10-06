@@ -8,7 +8,6 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
-import logo from '@/assets/logo.svg';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -93,12 +92,6 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16 max-w-6xl">
         {/* Header */}
         <div className="mb-16 text-center space-y-6">
-          <img 
-            src={logo} 
-            alt="Logo JLo" 
-            className="h-20 w-auto mx-auto opacity-90"
-          />
-          
           <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-muted border border-border">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -109,10 +102,6 @@ const Index = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-tight tracking-tight">
             Guide local automatisé<br />avec l'IA
           </h1>
-          
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
-            Trouvez et enrichissez automatiquement les informations des entreprises locales
-          </p>
         </div>
 
         {/* Main Content */}

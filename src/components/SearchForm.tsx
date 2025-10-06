@@ -38,30 +38,26 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="space-y-3">
+            <div className="flex items-baseline justify-between">
               <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
                 Nombre d'entreprises
               </Label>
-              <div className="flex items-center justify-center min-w-[56px] h-9 px-3 rounded-md bg-muted border border-border">
-                <span className="text-base font-extrabold text-foreground tabular-nums">{maxResults}</span>
-              </div>
+              <span className="text-2xl font-black text-foreground tabular-nums">{maxResults}</span>
             </div>
-            <div className="pt-1">
-              <Slider
-                id="maxResults"
-                min={1}
-                max={50}
-                step={1}
-                value={[maxResults]}
-                onValueChange={(value) => setMaxResults(value[0])}
-                disabled={isLoading}
-                className="cursor-pointer"
-              />
-              <div className="flex justify-between mt-3 text-xs text-muted-foreground font-semibold tabular-nums">
-                <span>1</span>
-                <span>50</span>
-              </div>
+            <Slider
+              id="maxResults"
+              min={1}
+              max={50}
+              step={1}
+              value={[maxResults]}
+              onValueChange={(value) => setMaxResults(value[0])}
+              disabled={isLoading}
+              className="cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground font-medium tabular-nums">
+              <span>1</span>
+              <span>50</span>
             </div>
           </div>
 
@@ -78,7 +74,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             ) : (
               <>
                 <Search className="mr-2 h-4 w-4" />
-                Générer la liste
+                Générer la liste des entreprises
               </>
             )}
           </Button>

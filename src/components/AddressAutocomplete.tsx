@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { MapPin, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -78,31 +79,40 @@ export const AddressAutocomplete = ({ value, onChange, onSelect, disabled }: Add
 
   return (
     <div ref={wrapperRef} className="space-y-2 relative">
-      <Label htmlFor="address" className="text-base font-semibold">
+      <Label htmlFor="address" className="text-sm font-bold text-foreground uppercase tracking-wide">
         Adresse ou nom de l'entreprise
       </Label>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none">
-          {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <MapPin className="h-5 w-5" />
-          )}
-        </div>
-        <Input
-          id="address"
-          type="text"
-          value={value}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onFocus={() => value.length >= 3 && predictions.length > 0 && setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          placeholder="Ex: 1 Place du Capitole, Toulouse"
-          disabled={disabled}
-          required
-          className="h-12 text-base pl-11"
-          autoComplete="off"
-        />
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none">
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <MapPin className="h-5 w-5" />
+                )}
+              </div>
+              <Input
+                id="address"
+                type="text"
+                value={value}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onFocus={() => value.length >= 3 && predictions.length > 0 && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="Ex: 1 Place du Capitole, Toulouse"
+                disabled={disabled}
+                required
+                className="h-12 text-base pl-11"
+                autoComplete="off"
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <p className="text-sm">Commencez à taper pour voir les suggestions automatiques</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {/* Suggestions dropdown */}
       {showSuggestions && predictions.length > 0 && (
@@ -123,10 +133,6 @@ export const AddressAutocomplete = ({ value, onChange, onSelect, disabled }: Add
           ))}
         </div>
       )}
-
-      <p className="text-sm text-muted-foreground">
-        💡 Commencez à taper pour voir les suggestions automatiques
-      </p>
     </div>
   );
 };
