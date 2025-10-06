@@ -82,6 +82,7 @@ serve(async (req) => {
           'lodging',
         ],
         maxResultCount: 20,
+        rankPreference: 'DISTANCE',
       }),
     });
 

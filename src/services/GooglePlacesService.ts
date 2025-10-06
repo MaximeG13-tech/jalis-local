@@ -72,7 +72,7 @@ export class GooglePlacesService {
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
     let radius = 1000;
     let attempts = 0;
-    const maxAttempts = 5;
+    const maxAttempts = 10; // Augmenté pour chercher plus loin
 
     // List of large chains and multinationals to exclude
     const excludedNames = [
@@ -156,7 +156,7 @@ export class GooglePlacesService {
       }
 
       if (businesses.length < maxResults) {
-        radius = Math.min(radius * 1.5, 5000);
+        radius = Math.min(radius * 1.5, 10000); // Rayon max augmenté à 10km
       }
     }
 
