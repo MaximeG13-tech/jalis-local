@@ -37,49 +37,84 @@ serve(async (req) => {
             radius: radius || 1000,
           },
         },
-        // Include only business establishments
+        // Include only business establishments - prioritized types
         includedTypes: [
+          // Priorité 1: Restaurants, bars, cafés
           'restaurant',
           'cafe',
           'bar',
+          
+          // Priorité 2: Boulangeries, pâtisseries, traiteurs
           'bakery',
           'meal_takeaway',
           'meal_delivery',
-          'store',
+          
+          // Priorité 3: Salons de coiffure, beauté, barbiers
+          'hair_care',
+          'beauty_salon',
+          'barber',
+          
+          // Priorité 4: Magasins indépendants
           'clothing_store',
           'shoe_store',
           'jewelry_store',
+          'florist',
           'book_store',
+          'home_goods_store',
+          'store',
+          
+          // Priorité 5: Artisans du bâtiment
+          'plumber',
+          'electrician',
+          'general_contractor',
+          'painter',
+          'roofing_contractor',
+          
+          // Priorité 6: Paysagistes, jardiniers
+          'landscaper',
+          
+          // Priorité 7: Professionnels de santé
+          'physiotherapist',
+          'doctor',
+          'dentist',
+          'optician',
+          
+          // Priorité 8: Sport et bien-être
+          'gym',
+          'spa',
+          
+          // Priorité 9: Vétérinaires
+          'veterinary_care',
+          
+          // Priorité 10: Immobilier et services financiers
+          'real_estate_agency',
+          'insurance_agency',
+          
+          // Priorité 11: Hébergement
+          'lodging',
+          
+          // Priorité 12: Loisirs
+          'tourist_attraction',
+          'night_club',
+          'movie_theater',
+          
+          // Priorité 13: Agences de voyage
+          'travel_agency',
+          
+          // Autres commerces
+          'pet_store',
           'electronics_store',
           'furniture_store',
-          'home_goods_store',
           'hardware_store',
-          'florist',
-          'beauty_salon',
-          'hair_care',
-          'spa',
-          'gym',
           'car_repair',
           'car_dealer',
           'car_wash',
           'bicycle_store',
-          'pet_store',
-          'real_estate_agency',
-          'travel_agency',
-          'insurance_agency',
           'accounting',
           'lawyer',
-          'dentist',
-          'doctor',
-          'veterinary_care',
-          'physiotherapist',
           'pharmacy',
-          'night_club',
-          'movie_theater',
-          'tourist_attraction',
           'art_gallery',
           'museum',
-          'lodging',
         ],
         maxResultCount: 20,
         rankPreference: 'DISTANCE',
