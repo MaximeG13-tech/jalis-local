@@ -69,6 +69,7 @@ export class GooglePlacesService {
     }
 
     const businesses: Business[] = [];
+    const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
     let radius = 1000;
     let attempts = 0;
     const maxAttempts = 5;
@@ -91,6 +92,13 @@ export class GooglePlacesService {
       for (const place of places) {
         if (businesses.length >= maxResults) break;
 
+        // Skip duplicates
+        if (seenPlaceIds.has(place.place_id)) {
+          console.log(`Skipping duplicate: ${place.name}`);
+          continue;
+        }
+        seenPlaceIds.add(place.place_id);
+
         // Filter out large chains
         const nameLower = place.name.toLowerCase();
         if (excludedNames.some(excluded => nameLower.includes(excluded))) {
@@ -100,7 +108,6 @@ export class GooglePlacesService {
         // Use data from nearby search if available (optimized to reduce API calls)
         let phoneNumber = place.formatted_phone_number;
         let website = place.website;
-        let mapsUrl = place.url;
 
         // Only fetch details if phone or website is missing
         if (!phoneNumber || !website) {
@@ -108,7 +115,6 @@ export class GooglePlacesService {
           if (details) {
             phoneNumber = phoneNumber || details.formatted_phone_number;
             website = website || details.website;
-            mapsUrl = mapsUrl || details.url;
           }
           // Small delay only when we make an additional API call
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -116,12 +122,15 @@ export class GooglePlacesService {
 
         // Only add if both phone and website are available
         if (phoneNumber && website) {
+          // Create a simple Google Maps link that works in new tabs
+          const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
+          
           businesses.push({
             nom: place.name,
             adresse: place.formatted_address || '',
             telephone: phoneNumber,
             site_web: website,
-            lien_maps: mapsUrl || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+            lien_maps: mapsLink,
           });
 
           if (onProgress) {

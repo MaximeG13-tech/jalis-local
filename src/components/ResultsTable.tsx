@@ -1,78 +1,94 @@
 import { Business } from '@/types/business';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExternalLink, Phone, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, Phone, Globe, X, MapPin, Building2 } from 'lucide-react';
 
 interface ResultsTableProps {
   businesses: Business[];
+  onRemove: (index: number) => void;
 }
 
-export const ResultsTable = ({ businesses }: ResultsTableProps) => {
+export const ResultsTable = ({ businesses, onRemove }: ResultsTableProps) => {
   if (businesses.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Résultats de la recherche</CardTitle>
-        <CardDescription>
-          {businesses.length} entreprise{businesses.length > 1 ? 's' : ''} trouvée{businesses.length > 1 ? 's' : ''} avec téléphone et site web
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Nom</TableHead>
-                <TableHead className="w-[250px]">Adresse</TableHead>
-                <TableHead className="w-[150px]">Téléphone</TableHead>
-                <TableHead className="w-[200px]">Site web</TableHead>
-                <TableHead className="w-[100px]">Google Maps</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {businesses.map((business, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{business.nom}</TableCell>
-                  <TableCell className="text-sm">{business.adresse}</TableCell>
-                  <TableCell>
-                    <a
-                      href={`tel:${business.telephone}`}
-                      className="flex items-center gap-1 text-primary hover:underline"
-                    >
-                      <Phone className="h-3 w-3" />
-                      <span className="text-sm">{business.telephone}</span>
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      href={business.site_web}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-primary hover:underline"
-                    >
-                      <Globe className="h-3 w-3" />
-                      <span className="text-sm truncate max-w-[180px]">
-                        {business.site_web.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                      </span>
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      href={business.lien_maps}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {businesses.map((business, index) => (
+        <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+          {/* Gradient accent */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary-glow" />
+          
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                  <CardTitle className="text-xl">{business.nom}</CardTitle>
+                </div>
+                <div className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <CardDescription className="text-sm leading-relaxed">
+                    {business.adresse}
+                  </CardDescription>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onRemove(index)}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                title="Supprimer ce résultat"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {/* Phone */}
+              <a
+                href={`tel:${business.telephone}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/20 transition-colors group/link"
+              >
+                <Phone className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium group-hover/link:text-primary">
+                  {business.telephone}
+                </span>
+              </a>
+
+              {/* Website */}
+              <a
+                href={business.site_web}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/5 hover:bg-accent/10 border border-accent/20 transition-colors group/link"
+              >
+                <Globe className="h-4 w-4 text-accent" />
+                <span className="text-sm font-medium group-hover/link:text-accent truncate max-w-[200px]">
+                  {business.site_web.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </span>
+                <ExternalLink className="h-3 w-3 opacity-50" />
+              </a>
+
+              {/* Google Maps */}
+              <a
+                href={business.lien_maps}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success/5 hover:bg-success/10 border border-success/20 transition-colors group/link"
+              >
+                <MapPin className="h-4 w-4 text-success" />
+                <span className="text-sm font-medium group-hover/link:text-success">
+                  Google Maps
+                </span>
+                <ExternalLink className="h-3 w-3 opacity-50" />
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };

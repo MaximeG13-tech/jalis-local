@@ -6,15 +6,18 @@ import { ResultsTable } from '@/components/ResultsTable';
 import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [lastSearch, setLastSearch] = useState<{ address: string; placeId: string; maxResults: number } | null>(null);
   const { toast } = useToast();
 
   const handleSearch = async (address: string, placeId: string, maxResults: number) => {
+    setLastSearch({ address, placeId, maxResults });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
@@ -45,6 +48,30 @@ const Index = () => {
       setIsLoading(false);
       setProgress({ current: 0, total: 0 });
     }
+  };
+
+  const handleRegenerate = () => {
+    if (lastSearch) {
+      handleSearch(lastSearch.address, lastSearch.placeId, lastSearch.maxResults);
+    }
+  };
+
+  const handleNewSearch = () => {
+    setBusinesses([]);
+    setLastSearch(null);
+    toast({
+      title: "Recherche réinitialisée",
+      description: "Vous pouvez effectuer une nouvelle recherche",
+    });
+  };
+
+  const handleRemoveBusiness = (index: number) => {
+    const newBusinesses = businesses.filter((_, i) => i !== index);
+    setBusinesses(newBusinesses);
+    toast({
+      title: "Entreprise supprimée",
+      description: "L'entreprise a été retirée de la liste",
+    });
   };
 
   return (
@@ -87,13 +114,33 @@ const Index = () => {
           {/* Results */}
           {businesses.length > 0 && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                 <h2 className="text-2xl font-bold text-foreground">
                   {businesses.length} entreprise{businesses.length > 1 ? 's' : ''} trouvée{businesses.length > 1 ? 's' : ''}
                 </h2>
-                <ExportButton businesses={businesses} />
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={handleRegenerate}
+                    variant="outline"
+                    disabled={isLoading}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Régénérer
+                  </Button>
+                  <Button
+                    onClick={handleNewSearch}
+                    variant="outline"
+                    disabled={isLoading}
+                    className="gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Nouvelle recherche
+                  </Button>
+                  <ExportButton businesses={businesses} />
+                </div>
               </div>
-              <ResultsTable businesses={businesses} />
+              <ResultsTable businesses={businesses} onRemove={handleRemoveBusiness} />
             </div>
           )}
         </div>
