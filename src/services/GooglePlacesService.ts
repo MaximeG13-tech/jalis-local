@@ -72,7 +72,8 @@ export class GooglePlacesService {
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
     let radius = 1000;
     let attempts = 0;
-    const maxAttempts = 15; // Augmenté pour chercher plus loin
+    const maxAttempts = 20; // Encore plus de tentatives
+    let consecutiveEmptyResults = 0; // Compteur pour éviter les boucles infinies
 
     // List of large chains and multinationals to exclude
     const excludedNames = [
@@ -99,11 +100,14 @@ export class GooglePlacesService {
       'cpam', 'sécurité sociale', 'hôpital', 'clinique',
     ];
 
-    while (businesses.length < maxResults && attempts < maxAttempts) {
+    while (businesses.length < maxResults && attempts < maxAttempts && consecutiveEmptyResults < 3) {
       attempts++;
+      console.log(`Attempt ${attempts}: radius=${radius}m, found=${businesses.length}/${maxResults}`);
       
       const searchResult = await this.nearbySearch(location, radius);
       const places = searchResult.results;
+      
+      let newBusinessesInThisAttempt = 0;
 
       for (const place of places) {
         if (businesses.length >= maxResults) break;
@@ -149,16 +153,29 @@ export class GooglePlacesService {
             lien_maps: mapsLink,
           });
 
+          newBusinessesInThisAttempt++;
+
           if (onProgress) {
             onProgress(businesses.length, maxResults);
           }
         }
       }
 
+      // Si on n'a trouvé aucune nouvelle entreprise, incrémenter le compteur
+      if (newBusinessesInThisAttempt === 0) {
+        consecutiveEmptyResults++;
+        console.log(`No new businesses found in attempt ${attempts}, consecutiveEmpty=${consecutiveEmptyResults}`);
+      } else {
+        consecutiveEmptyResults = 0; // Réinitialiser si on a trouvé quelque chose
+      }
+
       if (businesses.length < maxResults) {
-        radius = Math.min(radius * 1.8, 20000); // Rayon max augmenté à 20km, progression plus rapide
+        radius = Math.min(radius * 2, 25000); // Rayon max augmenté à 25km, progression plus agressive (x2)
+        console.log(`Increasing radius to ${radius}m`);
       }
     }
+
+    console.log(`Search completed: ${businesses.length} businesses found after ${attempts} attempts`);
 
     return businesses.slice(0, maxResults);
   }

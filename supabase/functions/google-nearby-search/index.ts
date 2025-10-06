@@ -140,6 +140,8 @@ serve(async (req) => {
       },
     }));
 
+    console.log(`Found ${results.length} places in this search`);
+
     return new Response(
       JSON.stringify({ results }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
