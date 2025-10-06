@@ -18,10 +18,16 @@ serve(async (req) => {
     console.log('Searching business partners with params:', { activityDescription, address, maxResults });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
-    if (!GOOGLE_PLACES_API_KEY) throw new Error('GOOGLE_PLACES_API_KEY not configured');
+
+    // Create Supabase client to call other edge functions
+    const supabase = createClient(
+      SUPABASE_URL!,
+      SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Step 1: Generate partner categories using AI
     console.log('Step 1: Generating partner categories...');
@@ -59,60 +65,61 @@ Exemple pour un vendeur de camping-cars :
     const categories = JSON.parse(categoriesText.replace(/```json\n?|\n?```/g, ''));
     console.log('Generated categories:', categories);
 
-    // Step 2: Search businesses using Google Places API for each category
-    console.log('Step 2: Searching businesses via Google Places...');
+    // Step 2: Search businesses using existing edge functions for each category
+    console.log('Step 2: Searching businesses via edge functions...');
     const businesses: any[] = [];
     const seenBusinesses = new Set<string>();
-
-    // Get place details to extract coordinates
-    const placeDetailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry&key=${GOOGLE_PLACES_API_KEY}`;
-    const placeDetailsResponse = await fetch(placeDetailsUrl);
-    const placeDetails = await placeDetailsResponse.json();
-    
-    if (placeDetails.status !== 'OK') {
-      throw new Error(`Failed to get place details: ${placeDetails.status}`);
-    }
-
-    const location = placeDetails.result.geometry.location;
-    const lat = location.lat;
-    const lng = location.lng;
+    const businessesPerCategory = Math.ceil(maxResults / Math.min(categories.length, 5));
 
     // Search for businesses in each category
-    for (const category of categories) {
+    for (const category of categories.slice(0, 5)) { // Limit to 5 categories to avoid too many API calls
       if (businesses.length >= maxResults) break;
 
       console.log(`Searching for category: ${category}`);
       
-      const nearbySearchUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&keyword=${encodeURIComponent(category)}&key=${GOOGLE_PLACES_API_KEY}`;
-      const nearbyResponse = await fetch(nearbySearchUrl);
-      const nearbyData = await nearbyResponse.json();
+      // Use the google-nearby-search edge function
+      const { data: nearbyData, error: nearbyError } = await supabase.functions.invoke('google-nearby-search', {
+        body: { 
+          placeId,
+          keyword: category,
+          maxResults: businessesPerCategory
+        }
+      });
 
-      if (nearbyData.status === 'OK' && nearbyData.results) {
-        for (const place of nearbyData.results) {
+      if (nearbyError) {
+        console.error(`Error searching for ${category}:`, nearbyError);
+        continue;
+      }
+
+      if (nearbyData?.results) {
+        for (const placeId of nearbyData.results.slice(0, businessesPerCategory)) {
           if (businesses.length >= maxResults) break;
 
-          // Skip if we've already added this business
-          const businessKey = `${place.name}-${place.vicinity}`;
-          if (seenBusinesses.has(businessKey)) continue;
+          // Get detailed information using google-place-details edge function
+          const { data: detailsData, error: detailsError } = await supabase.functions.invoke('google-place-details', {
+            body: { placeId }
+          });
 
-          // Get detailed information
-          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,url&key=${GOOGLE_PLACES_API_KEY}`;
-          const detailsResponse = await fetch(detailsUrl);
-          const details = await detailsResponse.json();
-
-          if (details.status === 'OK' && details.result) {
-            const result = details.result;
-            
-            businesses.push({
-              nom: result.name || '',
-              adresse: result.formatted_address || '',
-              telephone: result.formatted_phone_number || '',
-              site_web: result.website || '',
-              lien_maps: result.url || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-            });
-
-            seenBusinesses.add(businessKey);
+          if (detailsError || !detailsData?.result) {
+            console.error(`Error getting details for ${placeId}:`, detailsError);
+            continue;
           }
+
+          const result = detailsData.result;
+          
+          // Skip if we've already added this business
+          const businessKey = `${result.name}-${result.formatted_address}`;
+          if (seenBusinesses.has(businessKey)) continue;
+          
+          businesses.push({
+            nom: result.name || '',
+            adresse: result.formatted_address || '',
+            telephone: result.formatted_phone_number || '',
+            site_web: result.website || '',
+            lien_maps: result.url || `https://www.google.com/maps/place/?q=place_id:${placeId}`,
+          });
+
+          seenBusinesses.add(businessKey);
 
           // Small delay to respect API rate limits
           await new Promise(resolve => setTimeout(resolve, 100));
