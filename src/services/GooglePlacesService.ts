@@ -70,9 +70,9 @@ export class GooglePlacesService {
 
     const businesses: Business[] = [];
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
-    let radius = 1000;
+    let radius = 500; // Démarrer avec un rayon plus petit
     let attempts = 0;
-    const maxAttempts = 20; // Encore plus de tentatives
+    const maxAttempts = 30; // Plus de tentatives pour compenser les appels multiples
     let consecutiveEmptyResults = 0; // Compteur pour éviter les boucles infinies
 
     // List of large chains and multinationals to exclude
@@ -100,12 +100,15 @@ export class GooglePlacesService {
       'cpam', 'sécurité sociale', 'hôpital', 'clinique',
     ];
 
-    while (businesses.length < maxResults && attempts < maxAttempts && consecutiveEmptyResults < 3) {
+    while (businesses.length < maxResults && attempts < maxAttempts && consecutiveEmptyResults < 5) {
       attempts++;
       console.log(`Attempt ${attempts}: radius=${radius}m, found=${businesses.length}/${maxResults}`);
       
+      // Faire plusieurs appels avec le même rayon si nécessaire
       const searchResult = await this.nearbySearch(location, radius);
       const places = searchResult.results;
+      
+      console.log(`API returned ${places.length} places (max 20 per call)`);
       
       let newBusinessesInThisAttempt = 0;
 
@@ -167,11 +170,22 @@ export class GooglePlacesService {
         console.log(`No new businesses found in attempt ${attempts}, consecutiveEmpty=${consecutiveEmptyResults}`);
       } else {
         consecutiveEmptyResults = 0; // Réinitialiser si on a trouvé quelque chose
+        console.log(`Added ${newBusinessesInThisAttempt} new businesses this attempt`);
       }
 
+      // Si on a encore besoin de plus d'entreprises et qu'on a eu des résultats
       if (businesses.length < maxResults) {
-        radius = Math.min(radius * 2, 25000); // Rayon max augmenté à 25km, progression plus agressive (x2)
+        // Si on a obtenu 20 résultats (le max de l'API), ça vaut le coup d'augmenter doucement
+        // Si on en a eu moins, augmenter plus agressivement le rayon
+        if (places.length >= 20) {
+          radius = Math.min(radius * 1.3, 30000); // Progression douce si beaucoup de résultats
+        } else {
+          radius = Math.min(radius * 2.5, 30000); // Progression agressive si peu de résultats
+        }
         console.log(`Increasing radius to ${radius}m`);
+        
+        // Petit délai pour éviter de surcharger l'API
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
 
