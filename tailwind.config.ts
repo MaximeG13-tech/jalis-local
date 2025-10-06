@@ -24,6 +24,10 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
           glow: "hsl(var(--primary-glow))",
         },
+        gradient: {
+          primary: "var(--gradient-primary)",
+          accent: "var(--gradient-accent)",
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",

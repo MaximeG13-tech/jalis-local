@@ -1,64 +1,52 @@
-# Welcome to your Lovable project
+# Application Prospection Entreprises
 
-## Project info
+Application web de prospection intelligente permettant de générer automatiquement des listes d'entreprises qualifiées avec site web et numéro de téléphone.
 
-**URL**: https://lovable.dev/projects/69a13559-0093-427a-a955-41b7006d01ed
+## 🚀 Démarrage rapide
 
-## How can I edit this code?
+### 1. Configuration de la clé API Google Places
 
-There are several ways of editing your application.
+**IMPORTANT** : Avant d'utiliser l'application, vous devez configurer votre clé API Google Places.
 
-**Use Lovable**
+1. Rendez-vous sur [Google Cloud Console](https://console.cloud.google.com/google/maps-apis/credentials)
+2. Créez un nouveau projet ou sélectionnez un projet existant
+3. Activez les APIs suivantes :
+   - **Places API**
+   - **Geocoding API**
+4. Créez une clé API
+5. Ouvrez le fichier `src/config/api.config.ts`
+6. Remplacez `YOUR_GOOGLE_PLACES_API_KEY` par votre clé API
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/69a13559-0093-427a-a955-41b7006d01ed) and start prompting.
+```typescript
+// src/config/api.config.ts
+export const GOOGLE_PLACES_API_KEY = 'VOTRE_CLE_API_ICI';
+```
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### 2. Installation et lancement
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Installer les dépendances
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Lancer l'application en mode développement
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## ✨ Fonctionnalités
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- 🔍 **Recherche intelligente** : Trouvez des entreprises par adresse ou nom
+- 📊 **Filtrage automatique** : Uniquement les entreprises avec téléphone ET site web
+- 📈 **Suivi en temps réel** : Barre de progression pendant la recherche
+- 💾 **Export JSON** : Exportez vos résultats facilement
+- 🎨 **Design moderne** : Interface élégante et responsive
 
-**Use GitHub Codespaces**
+## 🛠️ Technologies
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **React** + **TypeScript**
+- **Vite** pour le build
+- **Tailwind CSS** pour le design
+- **shadcn-ui** pour les composants
+- **Google Places API** pour les données
 
 ## How can I deploy this project?
 

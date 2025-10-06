@@ -22,26 +22,30 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
+    <Card className="border-2 border-primary/10 shadow-elegant backdrop-blur-sm bg-card/80">
+      <CardContent className="pt-8 pb-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="address">Adresse de recherche</Label>
+            <Label htmlFor="address" className="text-base font-semibold">Adresse ou nom de l'entreprise</Label>
             <Input
               id="address"
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Ex: 1 Place du Capitole, Toulouse"
+              placeholder="Ex: 1 Place du Capitole, Toulouse ou Le Capitole Restaurant"
               disabled={isLoading}
               required
+              className="h-12 text-base"
             />
+            <p className="text-sm text-muted-foreground">
+              💡 Vous pouvez saisir une adresse complète ou simplement le nom d'une entreprise
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="maxResults">Nombre d'entreprises</Label>
+            <Label htmlFor="maxResults" className="text-base font-semibold">Nombre d'entreprises à générer</Label>
             <Select value={maxResults} onValueChange={setMaxResults} disabled={isLoading}>
-              <SelectTrigger id="maxResults">
+              <SelectTrigger id="maxResults" className="h-12 text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -52,16 +56,20 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             </Select>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-all shadow-elegant" 
+            disabled={isLoading}
+          >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Recherche en cours...
               </>
             ) : (
               <>
-                <Search className="mr-2 h-4 w-4" />
-                Rechercher
+                <Search className="mr-2 h-5 w-5" />
+                Générer la liste
               </>
             )}
           </Button>

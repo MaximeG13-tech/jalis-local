@@ -1,26 +1,16 @@
 import { Business, GooglePlace } from '@/types/business';
+import { GOOGLE_PLACES_API_KEY } from '@/config/api.config';
 
 export class GooglePlacesService {
-  private static API_KEY_STORAGE_KEY = 'google_places_api_key';
+  private static readonly API_KEY = GOOGLE_PLACES_API_KEY;
   private static baseUrl = 'https://maps.googleapis.com/maps/api/place';
 
-  static saveApiKey(apiKey: string): void {
-    localStorage.setItem(this.API_KEY_STORAGE_KEY, apiKey);
-  }
-
-  static getApiKey(): string | null {
-    return localStorage.getItem(this.API_KEY_STORAGE_KEY);
-  }
-
   static async geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-    const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error('API key not configured');
-
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
           address
-        )}&key=${apiKey}`
+        )}&key=${this.API_KEY}`
       );
       const data = await response.json();
 
@@ -40,13 +30,10 @@ export class GooglePlacesService {
     radius: number,
     pageToken?: string
   ): Promise<{ results: GooglePlace[]; next_page_token?: string }> {
-    const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error('API key not configured');
-
-    let url = `${this.baseUrl}/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&key=${apiKey}`;
+    let url = `${this.baseUrl}/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&key=${this.API_KEY}`;
     
     if (pageToken) {
-      url = `${this.baseUrl}/nearbysearch/json?pagetoken=${pageToken}&key=${apiKey}`;
+      url = `${this.baseUrl}/nearbysearch/json?pagetoken=${pageToken}&key=${this.API_KEY}`;
     }
 
     try {
@@ -67,12 +54,9 @@ export class GooglePlacesService {
   }
 
   static async getPlaceDetails(placeId: string): Promise<GooglePlace | null> {
-    const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error('API key not configured');
-
     try {
       const response = await fetch(
-        `${this.baseUrl}/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,website,url&key=${apiKey}`
+        `${this.baseUrl}/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,website,url&key=${this.API_KEY}`
       );
       const data = await response.json();
 
