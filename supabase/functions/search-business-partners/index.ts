@@ -71,60 +71,89 @@ Exemple pour un vendeur de camping-cars :
     const seenBusinesses = new Set<string>();
     const businessesPerCategory = Math.ceil(maxResults / Math.min(categories.length, 5));
 
-    // Search for businesses in each category
-    for (const category of categories.slice(0, 5)) { // Limit to 5 categories to avoid too many API calls
+    // First, get coordinates from placeId
+    const { data: placeData, error: placeError } = await supabase.functions.invoke('google-place-details', {
+      body: { placeId }
+    });
+
+    if (placeError || !placeData?.result?.geometry?.location) {
+      throw new Error('Failed to get location coordinates');
+    }
+
+    const { lat, lng } = placeData.result.geometry.location;
+    console.log('Search center coordinates:', { lat, lng });
+
+    // Progressive radius search: start small, expand if needed
+    const radiusSteps = [5000, 10000, 20000, 50000]; // 5km, 10km, 20km, 50km
+
+    // Search for businesses in each category with progressive radius
+    for (const category of categories.slice(0, 5)) { // Limit to 5 categories
       if (businesses.length >= maxResults) break;
 
       console.log(`Searching for category: ${category}`);
       
-      // Use the google-nearby-search edge function
-      const { data: nearbyData, error: nearbyError } = await supabase.functions.invoke('google-nearby-search', {
-        body: { 
-          placeId,
-          keyword: category,
-          maxResults: businessesPerCategory
+      // Try each radius until we find enough businesses
+      for (const radius of radiusSteps) {
+        if (businesses.length >= maxResults) break;
+
+        console.log(`Trying radius: ${radius}m`);
+        
+        // Use the google-nearby-search edge function with current radius
+        const { data: nearbyData, error: nearbyError } = await supabase.functions.invoke('google-nearby-search', {
+          body: { 
+            latitude: lat,
+            longitude: lng,
+            radius: radius
+          }
+        });
+
+        if (nearbyError) {
+          console.error(`Error searching at radius ${radius}:`, nearbyError);
+          continue;
         }
-      });
 
-      if (nearbyError) {
-        console.error(`Error searching for ${category}:`, nearbyError);
-        continue;
-      }
-
-      if (nearbyData?.results) {
-        for (const placeId of nearbyData.results.slice(0, businessesPerCategory)) {
-          if (businesses.length >= maxResults) break;
-
-          // Get detailed information using google-place-details edge function
-          const { data: detailsData, error: detailsError } = await supabase.functions.invoke('google-place-details', {
-            body: { placeId }
+        if (nearbyData?.results && nearbyData.results.length > 0) {
+          console.log(`Found ${nearbyData.results.length} places at ${radius}m radius`);
+          
+          // Filter results by category keyword
+          const relevantResults = nearbyData.results.filter((result: any) => {
+            const searchText = `${result.name} ${result.types?.join(' ')}`.toLowerCase();
+            const keywords = category.toLowerCase().split(' ');
+            return keywords.some((keyword: string) => searchText.includes(keyword));
           });
 
-          if (detailsError || !detailsData?.result) {
-            console.error(`Error getting details for ${placeId}:`, detailsError);
-            continue;
+          console.log(`${relevantResults.length} relevant results for category "${category}"`);
+
+          for (const result of relevantResults.slice(0, businessesPerCategory)) {
+            if (businesses.length >= maxResults) break;
+
+            // Skip if we've already added this business
+            const businessKey = `${result.name}-${result.formatted_address}`;
+            if (seenBusinesses.has(businessKey)) continue;
+            
+            businesses.push({
+              nom: result.name || '',
+              adresse: result.formatted_address || '',
+              telephone: result.formatted_phone_number || '',
+              site_web: result.website || '',
+              lien_maps: result.url || `https://www.google.com/maps/place/?q=place_id:${result.place_id}`,
+            });
+
+            seenBusinesses.add(businessKey);
           }
 
-          const result = detailsData.result;
-          
-          // Skip if we've already added this business
-          const businessKey = `${result.name}-${result.formatted_address}`;
-          if (seenBusinesses.has(businessKey)) continue;
-          
-          businesses.push({
-            nom: result.name || '',
-            adresse: result.formatted_address || '',
-            telephone: result.formatted_phone_number || '',
-            site_web: result.website || '',
-            lien_maps: result.url || `https://www.google.com/maps/place/?q=place_id:${placeId}`,
-          });
-
-          seenBusinesses.add(businessKey);
-
-          // Small delay to respect API rate limits
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // If we found enough businesses for this category, move to next category
+          if (relevantResults.length >= businessesPerCategory) {
+            break; // Break radius loop, move to next category
+          }
         }
+
+        // Small delay between radius attempts
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
+
+      // Small delay between categories
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     console.log(`Found ${businesses.length} businesses`);
