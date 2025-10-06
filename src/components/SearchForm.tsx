@@ -29,8 +29,8 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
 
   return (
     <Card className="border border-border shadow-card bg-card">
-      <CardContent className="pt-8 pb-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
+      <CardContent className="pt-8 pb-8 px-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <AddressAutocomplete
             value={address}
             onChange={setAddress}
@@ -38,24 +38,24 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="space-y-3">
-            <div className="flex items-baseline justify-between">
-              <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
-                Nombre d'entreprises
-              </Label>
-              <span className="text-2xl font-black text-foreground tabular-nums">{maxResults}</span>
+          <div className="space-y-4">
+            <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
+              Nombre d'entreprises
+            </Label>
+            <div className="px-2">
+              <Slider
+                id="maxResults"
+                min={1}
+                max={50}
+                step={1}
+                value={[maxResults]}
+                onValueChange={(value) => setMaxResults(value[0])}
+                disabled={isLoading}
+                showValue
+                className="cursor-pointer"
+              />
             </div>
-            <Slider
-              id="maxResults"
-              min={1}
-              max={50}
-              step={1}
-              value={[maxResults]}
-              onValueChange={(value) => setMaxResults(value[0])}
-              disabled={isLoading}
-              className="cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground font-medium tabular-nums">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium tabular-nums px-2">
               <span>1</span>
               <span>50</span>
             </div>
@@ -74,7 +74,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             ) : (
               <>
                 <Search className="mr-2 h-4 w-4" />
-                Générer la liste des entreprises
+                Générer la liste de liens utiles
               </>
             )}
           </Button>
