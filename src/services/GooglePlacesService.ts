@@ -80,7 +80,7 @@ export class GooglePlacesService {
       'bakery',
       'hair_care', 'beauty_salon', 'spa',
       'clothing_store', 'shoe_store', 'florist', 'jewelry_store', 'book_store',
-      'plumber', 'electrician', 'painter', 'roofing_contractor', 'general_contractor',
+      'plumber', 'electrician', 'painter', 'roofing_contractor',
       'gym',
       'real_estate_agency', 'insurance_agency', 'travel_agency',
       'store', 'lodging', 'car_repair', 'car_dealer', 'car_wash',
