@@ -72,6 +72,8 @@ export class GooglePlacesService {
 
     const businesses: Business[] = [];
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
+    const businessCountByType = new Map<string, number>(); // Track count per type for diversity
+    const MAX_PER_TYPE = 3; // Maximum businesses per type for diversity
     
     // TPE/PME uniquement - exclusion des professions libérales et restaurants
     const priorityTypes = [
@@ -96,7 +98,7 @@ export class GooglePlacesService {
 
     // NOUVELLE APPROCHE : alterner les rayons et mélanger les types pour diversifier géographiquement
     let typeIndex = 0;
-    const radiusLevels = [10000, 20000, 35000, 50000]; // Commence à 10km pour couvrir toute la ville, pas juste le quartier
+    const radiusLevels = [15000, 25000, 40000, 50000]; // Commence à 15km pour couvrir large dès le début
     let currentRadiusIndex = 0;
     
     // Mélanger les types pour éviter la concentration par activité
@@ -106,6 +108,23 @@ export class GooglePlacesService {
       const currentType = shuffledTypes[typeIndex % shuffledTypes.length];
       const cycle = Math.floor(typeIndex / shuffledTypes.length);
       
+      // Re-mélanger les types à chaque nouveau cycle pour encore plus de variété
+      if (typeIndex > 0 && typeIndex % shuffledTypes.length === 0) {
+        shuffledTypes.sort(() => Math.random() - 0.5);
+      }
+      
+      // Augmenter le rayon tous les 2 cycles pour diversifier la zone géographique
+      if (typeIndex > 0 && typeIndex % (shuffledTypes.length * 2) === 0) {
+        currentRadiusIndex = Math.min(currentRadiusIndex + 1, radiusLevels.length - 1);
+      }
+      
+      // Skip ce type si on a déjà atteint le maximum pour ce type
+      const currentCount = businessCountByType.get(currentType) || 0;
+      if (currentCount >= MAX_PER_TYPE) {
+        typeIndex++;
+        continue;
+      }
+      
       // Augmenter le rayon tous les 2 cycles pour diversifier la zone géographique
       if (typeIndex > 0 && typeIndex % (shuffledTypes.length * 2) === 0) {
         currentRadiusIndex = Math.min(currentRadiusIndex + 1, radiusLevels.length - 1);
@@ -113,7 +132,7 @@ export class GooglePlacesService {
       
       const radius = radiusLevels[currentRadiusIndex];
       
-      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}", radius=${radius}m (level ${currentRadiusIndex + 1}/4), found=${businesses.length}/${maxResults}`);
+      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}" (${currentCount}/${MAX_PER_TYPE}), radius=${radius}m (level ${currentRadiusIndex + 1}/4), found=${businesses.length}/${maxResults}`);
       
       // Chercher spécifiquement ce type d'entreprise
       const searchResult = await this.nearbySearch(location, radius, currentType);
@@ -122,9 +141,14 @@ export class GooglePlacesService {
       console.log(`📍 Found ${places.length} places of type "${currentType}"`);
       
       let newBusinessesInThisSearch = 0;
+      let addedForThisType = 0;
 
       for (const place of places) {
         if (businesses.length >= maxResults) break;
+        
+        // Vérifier si on a atteint le max pour ce type
+        const typeCount = businessCountByType.get(currentType) || 0;
+        if (typeCount >= MAX_PER_TYPE) break;
 
         // Skip duplicates
         if (seenPlaceIds.has(place.place_id)) {
@@ -167,7 +191,12 @@ export class GooglePlacesService {
           });
 
           newBusinessesInThisSearch++;
-          console.log(`✅ ${businesses.length}/${maxResults}: ${place.name}`);
+          addedForThisType++;
+          
+          // Mettre à jour le compteur pour ce type
+          businessCountByType.set(currentType, typeCount + 1);
+          
+          console.log(`✅ ${businesses.length}/${maxResults}: ${place.name} (${currentType})`);
 
           if (onProgress) {
             onProgress(businesses.length, maxResults);
@@ -176,7 +205,7 @@ export class GooglePlacesService {
       }
       
       if (newBusinessesInThisSearch > 0) {
-        console.log(`✅ Added ${newBusinessesInThisSearch} businesses from type "${currentType}"`);
+        console.log(`✅ Added ${newBusinessesInThisSearch} businesses from type "${currentType}" (total for type: ${businessCountByType.get(currentType)}/${MAX_PER_TYPE})`);
       }
       
       typeIndex++;
