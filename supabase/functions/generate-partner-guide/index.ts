@@ -110,9 +110,15 @@ const DEPARTMENT_MAP: Record<string, string> = {
   "976": "à Mayotte",
 };
 
+// Helper function to extract postal code from address (prioritize city postal code)
 function extractPostalCode(address: string): string | null {
-  const match = address.match(/\b(\d{5})\b/);
-  return match ? match[1] : null;
+  // Match all 5-digit sequences
+  const allMatches = address.match(/\b\d{5}\b/g);
+  if (!allMatches) return null;
+  
+  // If multiple matches, take the last one (usually the city postal code)
+  // Street addresses often have numbers at the beginning, postal code at the end
+  return allMatches[allMatches.length - 1];
 }
 
 function formatCity(address: string): string {
@@ -134,7 +140,11 @@ serve(async (req) => {
   }
 
   try {
-    const { activityDescription, address, maxResults } = await req.json();
+    const { activityDescription, address, maxResults, companyName } = await req.json();
+    
+    if (!activityDescription || !address || !companyName) {
+      throw new Error('Missing required parameters: activityDescription, address, and companyName');
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -288,20 +298,17 @@ Entreprise à traiter :
 - Activité réelle : ${business.activite_reelle}
 - Catégorie : ${category}
 
+**Société cliente : ${companyName}**
+
 Instructions strictes pour un SEO optimal :
 
 1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
-
 
 EXEMPLES de formats à suivre STRICTEMENT :
 - "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
 - "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
 - "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
 - "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
-- "Architecte créatif concevant la rénovation et l'aménagement de vos espaces avec expertise à"
-- "Menuisier artisan proposant la fabrication sur-mesure et l'installation de menuiseries intérieures et extérieures à"
-- "Maçon expérimenté assurant la construction, la rénovation et l'agrandissement de bâtiments à"
-- "Professionnels de la coiffure proposant des coupes, colorations et soins capillaires pour toute la famille à"
 
 RÈGLES IMPÉRATIVES :
 - Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
@@ -310,23 +317,22 @@ RÈGLES IMPÉRATIVES :
 - Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
 - Utilise des participes présents et adjectifs pour décrire les services
 - Intègre des mots-clés SEO précis liés à l'activité réelle de l'entreprise
-- Rends le titre accrocheur, clair et donnant envie de cliquer
 - La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 - Compte exactement entre 10 et 15 mots (vérifie bien)
 
-2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée.
 
-3. **description** : Description détaillée de 120 à 180 mots en HTML avec des balises <p>. 
-CONSIGNES SEO :
-- Intègre naturellement des mots-clés pertinents sur l'activité principale (${category})
-- Structure en 2-3 paragraphes
-- Premier paragraphe : présentation de l'expertise et services avec mots-clés
-- Deuxième paragraphe : avantages concurrentiels, qualité, garanties
-- Troisième paragraphe (optionnel) : zone d'intervention géographique
-- Termine par un call to action percutant et personnalisé qui incite à l'action immédiate
-- Si téléphone disponible (${business.telephone}), l'intégrer dans le CTA
-- Si établissement physique, mentionner l'accessibilité/localisation (${business.adresse})
-- Varie les CTA : "Contactez dès maintenant", "Appelez pour un devis gratuit", "Prenez rendez-vous", "Demandez votre estimation", etc.
+3. **description** : PARAGRAPHE de 100 MOTS MAXIMUM structuré en 3 parties :
+   a) **Activités de l'entreprise** (30-40 mots) : Présente brièvement les services et spécialités avec mots-clés SEO
+   b) **Relation avec ${companyName}** (20-30 mots) : Explique en 1-2 phrases comment cette entreprise peut être un apporteur d'affaires pertinent pour ${companyName} et vice-versa (partenariat gagnant-gagnant, complémentarité des services, clientèle commune)
+   c) **Données de contact** (30-40 mots) : Intègre naturellement l'adresse (${business.adresse}), le téléphone (${business.telephone}) et le site web (${business.site_web}) de manière fluide dans le texte
+
+RÈGLES STRICTES pour la description :
+- MAXIMUM 100 mots au total (compte bien les mots)
+- Structure claire : activités → relation → contact
+- Ton professionnel et engageant
+- La phrase de relation doit montrer la synergie avec ${companyName}
+- Les coordonnées doivent être intégrées de façon naturelle
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
