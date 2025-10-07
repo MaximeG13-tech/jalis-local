@@ -155,7 +155,7 @@ Entreprise à traiter :
 
 Instructions strictes :
 
-1. **activity** : Un titre d'environ 10 mots qui donne l'activité du de l'entreprise et qui doit être accrocheur et donner envie de cliquer. Grammaire française irréprochable, zéro faute d'orthographe.
+1. **activity** : Un titre d'environ 10 mots qui donne l'activité de l'entreprise et qui doit être accrocheur et donner envie de cliquer. Grammaire française irréprochable, zéro faute d'orthographe.
 
 FORMATS À VARIER (exemples) :
 - "Entreprise spécialisée dans {activité} proposant {produit/service} avec {spécificités} à"
@@ -166,7 +166,7 @@ FORMATS À VARIER (exemples) :
 - "Solutions de {activité} et {service} : {produit} avec {spécificités}, disponibles à"
 - "Professionnels de {activité} : {produit/service} avec {spécificités} disponibles proche de"
 
-TRÈS IMPORTANT : La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
+TRÈS IMPORTANT : Le titre DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 
 2. **extract** : Un résumé court et percutant de 30 à 50 mots maximum de l'activité réelle de l'entreprise. RÉDIGE UNIQUEMENT À LA TROISIÈME PERSONNE DU PLURIEL (ils/elles). Base-toi sur les informations disponibles (nom, adresse, site web) pour créer un contenu cohérent avec la vraie activité de l'entreprise. Français impeccable, zéro faute.
 
