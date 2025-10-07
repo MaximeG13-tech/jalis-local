@@ -207,7 +207,7 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-        const enrichPrompt = `Tu es un expert en rédaction de contenus pour annuaires professionnels locaux. 
+        const enrichPrompt = `Tu es un expert en rédaction SEO et en contenus pour annuaires professionnels locaux. 
 
 Entreprise à traiter :
 - Nom : ${business.nom}
@@ -215,25 +215,42 @@ Entreprise à traiter :
 - Téléphone : ${business.telephone}
 - Site web : ${business.site_web}
 - Activité réelle : ${business.activite_reelle}
+- Catégorie : ${category}
 
-Instructions strictes :
+Instructions strictes pour un SEO optimal :
 
-1. **activity** : Une phrase descriptive et unique de plus de 17 mots qui reformule la catégorie "${category}" de manière engageante pour un annuaire.
+1. **activity** : TITRE LONGUE TRAÎNE SEO de 13 à 17 mots obligatoirement. 
+Structure impérative : [VERBE D'ACTION] + [SERVICES DÉTAILLÉS] + [SPÉCIFICITÉS/AVANTAGES]
 
-FORMATS À VARIER (exemples) :
-- "Entreprise spécialisée dans {activité} proposant {produit/service} avec {spécificités} à"
-- "Expert en {activité} et {service}, installant {produit} avec {spécificités} près de"
-- "Société experte en {activité} pour {produit} adaptés à {spécificités} autour de"
-- "Votre partenaire en {activité} offrant {produit/service} performants grâce à {spécificités} à"
-- "Spécialiste en {activité}, nous proposons {produit/service} avec {spécificités} sur"
-- "Solutions de {activité} et {service} : {produit} avec {spécificités}, disponibles à"
-- "Professionnels de {activité} : {produit/service} avec {spécificités} disponibles proche de"
+EXEMPLES de formats à varier :
+- "Découvrez notre expertise en {activité} avec {service1}, {service2} et {spécificité} adaptés à vos besoins professionnels à"
+- "Profitez de {service} de qualité en {activité} grâce à notre savoir-faire reconnu et nos solutions personnalisées à"
+- "Bénéficiez d'un service professionnel en {activité} incluant {service1}, {service2} avec une expertise locale confirmée à"
+- "Optimisez vos projets de {activité} avec nos solutions complètes en {service}, accompagnement personnalisé et garanties à"
+- "Réalisez vos travaux de {activité} en toute confiance grâce à notre équipe experte et nos prestations sur-mesure à"
+- "Confiez vos besoins en {activité} à des professionnels qualifiés proposant {service} avec intervention rapide à"
+- "Transformez vos projets grâce à notre expertise reconnue en {activité} et nos solutions innovantes sur-mesure à"
 
-TRÈS IMPORTANT : La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
+RÈGLES IMPÉRATIVES :
+- Commence TOUJOURS par un verbe d'action puissant (Découvrez, Profitez, Bénéficiez, Optimisez, Réalisez, Confiez, Transformez, Améliorez, etc.)
+- Intègre des mots-clés SEO liés à l'activité principale de l'entreprise
+- Rends le titre accrocheur et unique
+- La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
+- Compte exactement entre 13 et 17 mots (vérifie bien)
 
-2. **extract** : Un résumé court et percutant de 30 à 50 mots maximum de l'activité réelle de l'entreprise. Base-toi sur les informations disponibles pour créer un contenu cohérent avec la vraie activité de l'entreprise.
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
 
-3. **description** : Une description détaillée de 100 à 150 mots en HTML avec des balises <p> pour structurer le texte en paragraphes. Le texte doit être justifié et optimisé pour le référencement local. Termine par un call to action engageant qui rappelle le numéro de téléphone (${business.telephone}) si disponible et mentionne l'adresse (${business.adresse}) si c'est un établissement physique qui reçoit du public. Varie les formulations du call to action selon l'activité (exemples : "Contactez-nous au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à nous appeler au...", "Pour plus d'informations, appelez-nous au...").
+3. **description** : Description détaillée de 120 à 180 mots en HTML avec des balises <p>. 
+CONSIGNES SEO :
+- Intègre naturellement des mots-clés pertinents sur l'activité principale (${category})
+- Structure en 2-3 paragraphes
+- Premier paragraphe : présentation de l'expertise et services avec mots-clés
+- Deuxième paragraphe : avantages concurrentiels, qualité, garanties
+- Troisième paragraphe (optionnel) : zone d'intervention géographique
+- Termine par un call to action percutant et personnalisé qui incite à l'action immédiate
+- Si téléphone disponible (${business.telephone}), l'intégrer dans le CTA
+- Si établissement physique, mentionner l'accessibilité/localisation (${business.adresse})
+- Varie les CTA : "Contactez dès maintenant", "Appelez pour un devis gratuit", "Prenez rendez-vous", "Demandez votre estimation", etc.
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
