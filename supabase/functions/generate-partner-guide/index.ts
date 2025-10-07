@@ -178,15 +178,22 @@ Un rapporteur d'affaires est une entreprise qui :
 Exemples pour différents types d'entreprises :
 
 Pour une AGENCE WEB/DIGITALE qui crée des sites internet :
-✅ Graphistes et designers freelance (complémentaire - design graphique)
-✅ Photographes professionnels (complémentaire - contenus visuels)
-✅ Consultants SEO indépendants (complémentaire - référencement)
-✅ Agences de communication print (complémentaire - supports papier)
-✅ Rédacteurs web et copywriters (complémentaire - contenus)
-✅ Community managers (complémentaire - réseaux sociaux)
+✅ Experts-comptables et cabinets comptables (complémentaire - gestion TPE/PME)
+✅ Avocats en droit des affaires (complémentaire - conseil juridique)
+✅ Architectes (complémentaire - clientèle entreprises/commerces)
+✅ Artisans du bâtiment (complémentaire - besoin de présence web)
+✅ Imprimeurs (complémentaire - communication print)
+✅ Centres d'affaires et espaces de coworking (complémentaire - entrepreneurs)
+✅ Banques et chargés d'affaires (complémentaire - TPE/PME)
+✅ Assureurs professionnels (complémentaire - clientèle entreprises)
 ❌ Autres agences web/digitales (CONCURRENT DIRECT)
 ❌ Développeurs web freelance créant des sites (CONCURRENT DIRECT)
-❌ Agences de développement web (CONCURRENT DIRECT)
+❌ Agences de communication (même digitale) (CONCURRENT DIRECT)
+❌ Graphistes, designers (CONCURRENT - services adjacents)
+❌ Consultants SEO, référenceurs (CONCURRENT - services adjacents)
+❌ Rédacteurs web, copywriters (CONCURRENT - services adjacents)
+❌ Community managers (CONCURRENT - services adjacents)
+❌ Photographes professionnels (CONCURRENT - services adjacents)
 
 Pour une entreprise vendant des camping-cars :
 ✅ Garages spécialisés en mécanique de camping-cars (complémentaire)
