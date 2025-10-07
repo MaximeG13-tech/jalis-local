@@ -95,7 +95,7 @@ serve(async (req) => {
         },
         includedTypes: includedTypes,
         maxResultCount: 20,
-        rankPreference: 'RELEVANCE',
+        rankPreference: 'DISTANCE',
       }),
     });
 
