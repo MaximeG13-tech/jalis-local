@@ -291,7 +291,7 @@ Entreprise à traiter :
 Instructions strictes pour un SEO optimal :
 
 1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement. 
-Structure impérative : [VERBE D'ACTION] + [PROFESSION/MÉTIER] + "pour" + [SERVICES DÉTAILLÉS] + [SPÉCIFICITÉS/AVANTAGES]
+Structure impérative : [ACTIVITÉ] + "pour" + [SERVICE] + [SPÉCIFICITÉS/AVANTAGES]
 
 EXEMPLES de formats à suivre STRICTEMENT :
 - "Contactez un paysagiste pour la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
