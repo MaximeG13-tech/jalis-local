@@ -75,33 +75,26 @@ export class GooglePlacesService {
     const businessCountByType = new Map<string, number>(); // Track count per type for diversity
     const MAX_PER_TYPE = 3; // Maximum businesses per type for diversity
     
-    // TPE/PME uniquement - artisans et commerces avec personnel (>5 salariés)
+    // UNIQUEMENT artisans et TPE/PME démarchables
     const priorityTypes = [
-      // Artisans du bâtiment
+      // Artisans du bâtiment (CIBLE PRIORITAIRE)
       'plumber', 'electrician', 'painter', 'roofing_contractor',
       
-      // Salons et bien-être (avec personnel)
-      'hair_care', 'beauty_salon', 'spa',
-      
-      // Magasins spécialisés (avec personnel de vente)
-      'clothing_store', 'shoe_store', 'florist', 'jewelry_store', 'book_store',
-      'pet_store', 'electronics_store', 'furniture_store', 'hardware_store', 'bicycle_store',
-      
-      // Services professionnels
-      'gym',
+      // Services professionnels TPE/PME
       'real_estate_agency', 'insurance_agency', 'travel_agency',
       
       // Automobile (garages avec mécaniciens)
       'car_repair', 'car_dealer',
       
-      // Hébergement (hôtels avec personnel)
-      'lodging',
+      // Salons et bien-être (avec personnel)
+      'hair_care', 'beauty_salon',
+      
+      // Magasins spécialisés (avec équipe de vente)
+      'clothing_store', 'shoe_store', 'jewelry_store', 'furniture_store',
+      'electronics_store', 'hardware_store', 'bicycle_store',
       
       // Vétérinaires
       'veterinary_care',
-      
-      // Loisirs et culture (avec personnel)
-      'tourist_attraction', 'movie_theater', 'art_gallery', 'museum',
     ];
 
     // List of large chains and multinationals to exclude
@@ -112,47 +105,59 @@ export class GooglePlacesService {
       'casino', 'monoprix', 'franprix', 'carrefour city', 'carrefour express',
     ];
     
-    // Exclusions pour installations automatiques et structures non démarchables
+    // Exclusions STRICTES - tout ce qui n'est PAS artisan ou TPE/PME démarchable
     const excludedKeywords = [
+      // Installations automatiques
       'photomaton', 'photo booth', 'distributeur', 'atm', 'relais colis',
       'point relais', 'consigne', 'automate', 'borne', 'parking',
       'station-service', 'péage', 'laverie automatique',
-      // Exclusion restauration et alimentation de proximité
+      // Restauration et alimentation
       'boulangerie', 'patisserie', 'pâtisserie', 'pizzeria', 'pizza', 'kebab',
       'sandwich', 'snack', 'restaur', 'brasserie', 'bistro', 'café', 'bar',
-      // Exclusion stations de lavage
+      'burger', 'tacos', 'sushi',
+      // Stations de lavage
       'wash', 'lavage', 'car wash', 'station de lavage', 'pressing',
-      // Exclusion épiceries et petits commerces alimentaires
+      // Commerces alimentaires de proximité
       'épicerie', 'supérette', 'alimentaire', 'primeur', 'boucher', 'poissonnier',
-      'fromagerie', 'charcuterie', 'traiteur'
+      'fromagerie', 'charcuterie', 'traiteur', 'marché',
+      // Logements et résidences (PAS démarchables)
+      'résidence', 'residence', 'étudiant', 'student', 'logement', 'appartement',
+      'cité', 'foyer', 'dortoir', 'colocation', 'hlm', 'housing',
+      // Établissements publics/administratifs
+      'mairie', 'école', 'collège', 'lycée', 'université', 'poste', 'bibliothèque',
+      'hôpital', 'clinique', 'centre médical', 'pharmacie',
+      // Loisirs non TPE/PME
+      'parc', 'jardin', 'square', 'stade', 'piscine', 'médiathèque'
     ];
     
-    // Types Google Places à exclure (installations automatiques, pas de personnel)
+    // Types Google Places à exclure (installations automatiques, logements, établissements publics)
     const excludedTypes = [
       'atm', 'parking', 'gas_station', 'transit_station', 
-      'subway_station', 'train_station', 'bus_station'
+      'subway_station', 'train_station', 'bus_station',
+      'lodging', 'hospital', 'pharmacy', 'school', 'university',
+      'local_government_office', 'post_office', 'library'
     ];
 
-    // NOUVELLE APPROCHE : alterner les rayons et mélanger les types pour diversifier géographiquement
+    // STRATÉGIE : élargir automatiquement si pas assez de résultats
     let typeIndex = 0;
-    const radiusLevels = [15000, 25000, 40000, 50000]; // Commence à 15km pour couvrir large dès le début
+    const radiusLevels = [20000, 35000, 50000, 75000]; // Commence à 20km, monte jusqu'à 75km
     let currentRadiusIndex = 0;
     
     // Mélanger les types pour éviter la concentration par activité
     const shuffledTypes = [...priorityTypes].sort(() => Math.random() - 0.5);
     
-    while (businesses.length < maxResults && typeIndex < shuffledTypes.length * 5) {
+    while (businesses.length < maxResults && typeIndex < shuffledTypes.length * 8) { // Augmenté à 8 cycles max
       const currentType = shuffledTypes[typeIndex % shuffledTypes.length];
-      const cycle = Math.floor(typeIndex / shuffledTypes.length);
       
       // Re-mélanger les types à chaque nouveau cycle pour encore plus de variété
       if (typeIndex > 0 && typeIndex % shuffledTypes.length === 0) {
         shuffledTypes.sort(() => Math.random() - 0.5);
       }
       
-      // Augmenter le rayon tous les 2 cycles pour diversifier la zone géographique
-      if (typeIndex > 0 && typeIndex % (shuffledTypes.length * 2) === 0) {
+      // Augmenter le rayon plus rapidement si on trouve peu de résultats
+      if (typeIndex > 0 && typeIndex % shuffledTypes.length === 0) {
         currentRadiusIndex = Math.min(currentRadiusIndex + 1, radiusLevels.length - 1);
+        console.log(`🔄 Élargissement de la zone de recherche à ${radiusLevels[currentRadiusIndex]/1000}km`);
       }
       
       // Skip ce type si on a déjà atteint le maximum pour ce type
