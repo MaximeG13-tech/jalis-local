@@ -95,6 +95,19 @@ export class GooglePlacesService {
       'décathlon', 'fnac', 'ikea', 'leroy merlin', 'castorama',
       'casino', 'monoprix', 'franprix', 'carrefour city', 'carrefour express',
     ];
+    
+    // Exclusions pour installations automatiques et structures non démarchables
+    const excludedKeywords = [
+      'photomaton', 'photo booth', 'distributeur', 'atm', 'relais colis',
+      'point relais', 'consigne', 'automate', 'borne', 'parking',
+      'station-service', 'péage', 'laverie automatique'
+    ];
+    
+    // Types Google Places à exclure (installations automatiques, pas de personnel)
+    const excludedTypes = [
+      'atm', 'parking', 'gas_station', 'transit_station', 
+      'subway_station', 'train_station', 'bus_station'
+    ];
 
     // NOUVELLE APPROCHE : alterner les rayons et mélanger les types pour diversifier géographiquement
     let typeIndex = 0;
@@ -156,11 +169,25 @@ export class GooglePlacesService {
         }
         seenPlaceIds.add(place.place_id);
 
-        // Filter out ONLY the very biggest chains
+        // Filter out grandes chaînes
         const nameLower = place.name.toLowerCase();
         const isMajorChain = excludedNames.some(excluded => nameLower.includes(excluded));
         
         if (isMajorChain) {
+          continue;
+        }
+        
+        // Filter out installations automatiques et structures sans personnel
+        const hasExcludedKeyword = excludedKeywords.some(keyword => nameLower.includes(keyword));
+        if (hasExcludedKeyword) {
+          console.log(`⏭️ Skipping automated/unmanned: ${place.name}`);
+          continue;
+        }
+        
+        // Filter out types non démarchables
+        const hasExcludedType = place.types?.some(type => excludedTypes.includes(type));
+        if (hasExcludedType) {
+          console.log(`⏭️ Skipping excluded type: ${place.name}`);
           continue;
         }
 
