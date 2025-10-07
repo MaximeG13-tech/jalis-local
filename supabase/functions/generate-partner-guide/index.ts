@@ -220,21 +220,23 @@ Entreprise à traiter :
 Instructions strictes pour un SEO optimal :
 
 1. **activity** : TITRE LONGUE TRAÎNE SEO de 13 à 17 mots obligatoirement. 
-Structure impérative : [VERBE D'ACTION] + [SERVICES DÉTAILLÉS] + [SPÉCIFICITÉS/AVANTAGES]
+Structure impérative : [VERBE D'ACTION] + [PROFESSION/MÉTIER] + "pour" + [SERVICES DÉTAILLÉS] + [SPÉCIFICITÉS/AVANTAGES]
 
-EXEMPLES de formats à varier :
-- "Découvrez notre expertise en {activité} avec {service1}, {service2} et {spécificité} adaptés à vos besoins professionnels à"
-- "Profitez de {service} de qualité en {activité} grâce à notre savoir-faire reconnu et nos solutions personnalisées à"
-- "Bénéficiez d'un service professionnel en {activité} incluant {service1}, {service2} avec une expertise locale confirmée à"
-- "Optimisez vos projets de {activité} avec nos solutions complètes en {service}, accompagnement personnalisé et garanties à"
-- "Réalisez vos travaux de {activité} en toute confiance grâce à notre équipe experte et nos prestations sur-mesure à"
-- "Confiez vos besoins en {activité} à des professionnels qualifiés proposant {service} avec intervention rapide à"
-- "Transformez vos projets grâce à notre expertise reconnue en {activité} et nos solutions innovantes sur-mesure à"
+EXEMPLES de formats à suivre STRICTEMENT :
+- "Contactez un paysagiste pour la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
+- "Faites appel à un plombier pour l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
+- "Découvrez un expert-comptable pour la gestion comptable, fiscale et administrative de votre entreprise à"
+- "Profitez des services d'un électricien pour tous vos travaux d'installation et de mise aux normes électriques à"
+- "Confiez vos projets à un architecte pour la conception, la rénovation et l'aménagement de vos espaces à"
+- "Sollicitez un menuisier pour la fabrication sur-mesure et l'installation de menuiseries intérieures et extérieures à"
+- "Bénéficiez de l'expertise d'un maçon pour la construction, la rénovation et l'agrandissement de bâtiments à"
 
 RÈGLES IMPÉRATIVES :
-- Commence TOUJOURS par un verbe d'action puissant (Découvrez, Profitez, Bénéficiez, Optimisez, Réalisez, Confiez, Transformez, Améliorez, etc.)
-- Intègre des mots-clés SEO liés à l'activité principale de l'entreprise
-- Rends le titre accrocheur et unique
+- Commence TOUJOURS par un verbe d'action à l'impératif (Contactez, Faites appel à, Découvrez, Profitez, Confiez, Sollicitez, Bénéficiez, Consultez, etc.)
+- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise (paysagiste, plombier, avocat, garagiste, etc.)
+- Utilise "pour" suivi des services détaillés et spécificités
+- Intègre des mots-clés SEO précis liés à l'activité réelle de l'entreprise
+- Rends le titre accrocheur, clair et donnant envie de cliquer
 - La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 - Compte exactement entre 13 et 17 mots (vérifie bien)
 
