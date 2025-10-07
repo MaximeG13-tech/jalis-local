@@ -355,6 +355,12 @@ Entreprise à traiter :
 
 **Société cliente : ${companyName}**
 
+⚠️ POINT DE VUE NARRATIF CRITIQUE ⚠️
+Ce texte sera publié sur le site de ${companyName} pour présenter ses partenaires.
+Tu DOIS rédiger à la 3ÈME PERSONNE, comme si ${companyName} présentait cette entreprise partenaire à ses visiteurs.
+❌ JAMAIS "nous", "notre", "contactez-nous"
+✅ TOUJOURS "ils", "leur", "cette entreprise", "contactez-les", "pour les joindre"
+
 Instructions strictes pour un SEO optimal :
 
 1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
@@ -375,17 +381,18 @@ RÈGLES IMPÉRATIVES :
 - La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 - Compte exactement entre 10 et 15 mots (vérifie bien)
 
-2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée.
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Rédige à la 3ÈME PERSONNE (comme si ${companyName} présentait ce partenaire). Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée.
 
-3. **description** : PARAGRAPHE de 100 MOTS MAXIMUM structuré en 3 parties :
-   a) **Activités de l'entreprise** (30-40 mots) : Présente brièvement les services et spécialités avec mots-clés SEO
+3. **description** : PARAGRAPHE de 100 MOTS MAXIMUM structuré en 3 parties, RÉDIGÉ À LA 3ÈME PERSONNE :
+   a) **Activités de l'entreprise** (30-40 mots) : Présente brièvement les services et spécialités avec mots-clés SEO (à la 3ème personne : "Cette entreprise propose...", "Ils assurent...", "${business.nom} se spécialise dans...")
    b) **Relation avec ${companyName}** (20-30 mots) : Explique en 1-2 phrases comment cette entreprise peut être un apporteur d'affaires pertinent pour ${companyName} et vice-versa (partenariat gagnant-gagnant, complémentarité des services, clientèle commune)
-   c) **Données de contact** (30-40 mots) : Intègre naturellement l'adresse (${business.adresse}), le téléphone (${business.telephone}) et le site web (${business.site_web}) de manière fluide dans le texte
+   c) **Données de contact** (30-40 mots) : Intègre naturellement l'adresse (${business.adresse}), le téléphone (${business.telephone}) et le site web (${business.site_web}) de manière fluide dans le texte À LA 3ÈME PERSONNE (ex: "Pour les contacter : [téléphone]", "Leur site web : [url]", "Ils sont situés à [adresse]")
 
 RÈGLES STRICTES pour la description :
 - MAXIMUM 100 mots au total (compte bien les mots)
 - Structure claire : activités → relation → contact
 - Ton professionnel et engageant
+- IMPÉRATIF : Rédaction à la 3ÈME PERSONNE uniquement (point de vue de ${companyName} présentant son partenaire)
 - La phrase de relation doit montrer la synergie avec ${companyName}
 - Les coordonnées doivent être intégrées de façon naturelle
 
