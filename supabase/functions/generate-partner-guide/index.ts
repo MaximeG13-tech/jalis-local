@@ -290,22 +290,25 @@ Entreprise à traiter :
 
 Instructions strictes pour un SEO optimal :
 
-1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement. 
+1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
 
 
 EXEMPLES de formats à suivre STRICTEMENT :
-- "Contactez un paysagiste pour la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
-- "Faites appel à un plombier pour l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
-- "Découvrez un expert-comptable pour la gestion comptable, fiscale et administrative de votre entreprise à"
-- "Profitez des services d'un électricien pour tous vos travaux d'installation et de mise aux normes électriques à"
-- "Confiez vos projets à un architecte pour la conception, la rénovation et l'aménagement de vos espaces à"
-- "Sollicitez un menuisier pour la fabrication sur-mesure et l'installation de menuiseries intérieures et extérieures à"
-- "Bénéficiez de l'expertise d'un maçon pour la construction, la rénovation et l'agrandissement de bâtiments à"
+- "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
+- "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
+- "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
+- "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
+- "Architecte créatif concevant la rénovation et l'aménagement de vos espaces avec expertise à"
+- "Menuisier artisan proposant la fabrication sur-mesure et l'installation de menuiseries intérieures et extérieures à"
+- "Maçon expérimenté assurant la construction, la rénovation et l'agrandissement de bâtiments à"
+- "Professionnels de la coiffure proposant des coupes, colorations et soins capillaires pour toute la famille à"
 
 RÈGLES IMPÉRATIVES :
-- Commence TOUJOURS par un verbe d'action à l'impératif (Contactez, Faites appel à, Découvrez, Profitez, Confiez, Sollicitez, Bénéficiez, Consultez, etc.)
-- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise (paysagiste, plombier, avocat, garagiste, etc.)
-- Utilise "pour" suivi des services détaillés et spécificités
+- Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
+- JAMAIS de pronoms personnels (ils, elle, nous) - forme nominale uniquement
+- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise
+- Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
+- Utilise des participes présents et adjectifs pour décrire les services
 - Intègre des mots-clés SEO précis liés à l'activité réelle de l'entreprise
 - Rends le titre accrocheur, clair et donnant envie de cliquer
 - La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
