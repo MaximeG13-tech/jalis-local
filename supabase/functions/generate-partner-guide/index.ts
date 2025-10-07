@@ -156,23 +156,58 @@ serve(async (req) => {
     // Étape 1: Génération des catégories de rapporteurs d'affaires
     const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
 
+Entreprise cliente : ${companyName}
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
 
-Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents (PAS des concurrents).
+Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents pour ${companyName}.
+
+⚠️ RÈGLE CRITIQUE : EXCLURE TOUS LES CONCURRENTS DIRECTS ⚠️
 
 Un rapporteur d'affaires est une entreprise qui :
-- Peut recommander ou orienter des clients vers l'entreprise décrite
-- Offre des services complémentaires (pas identiques)
-- Cible une clientèle similaire
+- Offre des services COMPLÉMENTAIRES (jamais identiques ou similaires)
+- Peut recommander ou orienter des clients vers ${companyName}
+- Cible une clientèle similaire mais avec des besoins différents
 - Pourrait bénéficier d'un partenariat gagnant-gagnant
 
-Exemples pour une entreprise vendant des camping-cars :
-✅ Garages spécialisés en mécanique de camping-cars
-✅ Aires de services pour camping-cars
-✅ Magasins d'accessoires pour camping-cars
-✅ Agents d'assurance véhicules de loisirs
-❌ Autres concessionnaires de camping-cars (concurrent direct)
+❌ NE JAMAIS INCLURE :
+- Entreprises offrant les MÊMES services principaux que ${companyName}
+- Entreprises pouvant réaliser le MÊME travail que ${companyName}
+- Toute entreprise qui serait en COMPÉTITION DIRECTE avec ${companyName}
+
+Exemples pour différents types d'entreprises :
+
+Pour une AGENCE WEB/DIGITALE qui crée des sites internet :
+✅ Graphistes et designers freelance (complémentaire - design graphique)
+✅ Photographes professionnels (complémentaire - contenus visuels)
+✅ Consultants SEO indépendants (complémentaire - référencement)
+✅ Agences de communication print (complémentaire - supports papier)
+✅ Rédacteurs web et copywriters (complémentaire - contenus)
+✅ Community managers (complémentaire - réseaux sociaux)
+❌ Autres agences web/digitales (CONCURRENT DIRECT)
+❌ Développeurs web freelance créant des sites (CONCURRENT DIRECT)
+❌ Agences de développement web (CONCURRENT DIRECT)
+
+Pour une entreprise vendant des camping-cars :
+✅ Garages spécialisés en mécanique de camping-cars (complémentaire)
+✅ Aires de services pour camping-cars (complémentaire)
+✅ Magasins d'accessoires pour camping-cars (complémentaire)
+✅ Agents d'assurance véhicules de loisirs (complémentaire)
+❌ Autres concessionnaires de camping-cars (CONCURRENT DIRECT)
+
+Pour un PLOMBIER :
+✅ Électriciens (complémentaire - autre corps de métier)
+✅ Carreleurs (complémentaire - finitions salles de bain)
+✅ Chauffagistes (complémentaire mais distinct)
+✅ Magasins de sanitaires (complémentaire - fournitures)
+❌ Autres plombiers (CONCURRENT DIRECT)
+❌ Entreprises de plomberie (CONCURRENT DIRECT)
+
+Instructions strictes :
+1. Analyse l'activité PRINCIPALE de ${companyName}
+2. Identifie les services COMPLÉMENTAIRES (pas similaires)
+3. Ne suggère que des catégories qui ne font PAS la même chose que ${companyName}
+4. Vérifie que chaque catégorie aide ${companyName} sans lui faire concurrence
 
 Réponds UNIQUEMENT avec un tableau JSON de catégories (chaînes de caractères courtes et précises).
 Format attendu : ["catégorie 1", "catégorie 2", ...]`;
@@ -224,19 +259,32 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
 
       const searchPrompt = `Recherche web en temps réel pour : ${category} près de ${address}
 
+ENTREPRISE CLIENTE : ${companyName}
+Activité de l'entreprise cliente : ${activityDescription}
+
+⚠️ RÈGLE ABSOLUE : NE JAMAIS inclure de CONCURRENTS de ${companyName} ⚠️
+
 CONSIGNES STRICTES :
-1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent exactement à la catégorie "${category}"
+1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent à "${category}"
 2. Zone géographique : dans un rayon de 50km autour de ${address}
-3. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
+3. Les entreprises trouvées DOIVENT être COMPLÉMENTAIRES à ${companyName}, JAMAIS concurrentes
+4. VÉRIFIE que chaque entreprise n'offre PAS les mêmes services principaux que ${companyName}
+
+CRITÈRES D'EXCLUSION (à vérifier pour CHAQUE entreprise) :
+- Si l'entreprise fait le MÊME travail que ${companyName} → NE PAS L'INCLURE
+- Si l'entreprise offre les MÊMES services que ${companyName} → NE PAS L'INCLURE  
+- Si l'entreprise est en compétition directe avec ${companyName} → NE PAS L'INCLURE
+
+5. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
    - Le nom exact et complet de l'entreprise
    - L'adresse postale complète avec code postal
    - Le numéro de téléphone (si disponible, sinon "Non renseigné")
    - Le site web (si disponible, sinon "Non renseigné")
-   - Une brève description de l'activité réelle de l'entreprise basée sur tes recherches
+   - Une brève description de l'activité réelle de l'entreprise
 
-4. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
-5. Ne pas inclure de grandes chaînes nationales ou franchises
-6. Privilégier les TPE/PME locales
+6. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
+7. Ne pas inclure de grandes chaînes nationales ou franchises
+8. Privilégier les TPE/PME locales
 
 Réponds avec un tableau JSON d'objets avec ces champs exacts :
 {
