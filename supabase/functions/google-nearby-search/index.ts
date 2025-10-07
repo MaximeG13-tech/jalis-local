@@ -18,23 +18,21 @@ serve(async (req) => {
 
     console.log('Nearby search params:', { latitude, longitude, radius, includedType });
 
-    // Build included types array - either specific type or all business types
+    // Build included types array - TPE/PME uniquement (pas de professions libérales ni restaurants)
     const includedTypes = includedType ? [includedType] : [
-      // Priorité 1: Restaurants, bars, cafés
-          'restaurant',
-          'cafe',
-          'bar',
+          // Artisans et services
+          'plumber',
+          'electrician',
+          'painter',
+          'roofing_contractor',
+          'general_contractor',
           
-          // Priorité 2: Boulangeries, pâtisseries, traiteurs
-          'bakery',
-          'meal_takeaway',
-          'meal_delivery',
-          
-          // Priorité 3: Salons de coiffure, beauté
+          // Salons et beauté
           'hair_care',
           'beauty_salon',
+          'spa',
           
-          // Priorité 4: Magasins indépendants
+          // Magasins indépendants
           'clothing_store',
           'shoe_store',
           'jewelry_store',
@@ -42,52 +40,37 @@ serve(async (req) => {
           'book_store',
           'home_goods_store',
           'store',
+          'bakery',
           
-          // Priorité 5: Artisans (types supportés seulement)
-          'plumber',
-          'electrician',
-          'painter',
-          'roofing_contractor',
-          
-          // Priorité 6: Professionnels de santé
-          'physiotherapist',
-          'doctor',
-          'dentist',
-          
-          // Priorité 7: Sport et bien-être
-          'gym',
-          'spa',
-          
-          // Priorité 8: Vétérinaires
-          'veterinary_care',
-          
-          // Priorité 9: Immobilier et services financiers
-          'real_estate_agency',
-          'insurance_agency',
-          
-          // Priorité 10: Hébergement
-          'lodging',
-          
-          // Priorité 11: Loisirs
-          'tourist_attraction',
-          'night_club',
-          'movie_theater',
-          
-          // Priorité 12: Agences de voyage
-          'travel_agency',
-          
-          // Autres commerces
+          // Commerce et services
           'pet_store',
           'electronics_store',
           'furniture_store',
           'hardware_store',
+          'bicycle_store',
+          
+          // Automobile
           'car_repair',
           'car_dealer',
           'car_wash',
-          'bicycle_store',
-          'accounting',
-          'lawyer',
-          'pharmacy',
+          
+          // Agences
+          'real_estate_agency',
+          'insurance_agency',
+          'travel_agency',
+          
+          // Hébergement
+          'lodging',
+          
+          // Sport et bien-être
+          'gym',
+          
+          // Vétérinaires
+          'veterinary_care',
+          
+          // Loisirs et culture
+          'tourist_attraction',
+          'movie_theater',
           'art_gallery',
           'museum',
     ];
@@ -112,7 +95,7 @@ serve(async (req) => {
         },
         includedTypes: includedTypes,
         maxResultCount: 20,
-        rankPreference: 'DISTANCE',
+        rankPreference: 'RELEVANCE',
       }),
     });
 

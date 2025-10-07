@@ -73,15 +73,17 @@ export class GooglePlacesService {
     const businesses: Business[] = [];
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
     
-    // NOUVELLE STRATÉGIE : chercher par TYPE spécifique pour obtenir des résultats variés
+    // TPE/PME uniquement - exclusion des professions libérales et restaurants
     const priorityTypes = [
-      'restaurant', 'cafe', 'bar', 'bakery',
+      'bakery',
       'hair_care', 'beauty_salon', 'spa',
       'clothing_store', 'shoe_store', 'florist', 'jewelry_store', 'book_store',
-      'plumber', 'electrician', 'painter', 'roofing_contractor',
-      'gym', 'physiotherapist', 'doctor', 'dentist',
-      'real_estate_agency', 'insurance_agency', 'accounting', 'lawyer',
-      'store', 'meal_takeaway', 'lodging', 'car_repair',
+      'plumber', 'electrician', 'painter', 'roofing_contractor', 'general_contractor',
+      'gym',
+      'real_estate_agency', 'insurance_agency', 'travel_agency',
+      'store', 'lodging', 'car_repair', 'car_dealer', 'car_wash',
+      'pet_store', 'electronics_store', 'furniture_store', 'hardware_store', 'bicycle_store',
+      'veterinary_care', 'tourist_attraction', 'movie_theater', 'art_gallery', 'museum',
     ];
 
     // List of large chains and multinationals to exclude
@@ -94,7 +96,7 @@ export class GooglePlacesService {
 
     // NOUVELLE APPROCHE : alterner les rayons et mélanger les types pour diversifier géographiquement
     let typeIndex = 0;
-    const radiusLevels = [6000, 12000, 20000, 35000, 50000]; // Rayons progressifs pour couverture géographique
+    const radiusLevels = [10000, 20000, 35000, 50000]; // Commence à 10km pour couvrir toute la ville, pas juste le quartier
     let currentRadiusIndex = 0;
     
     // Mélanger les types pour éviter la concentration par activité
@@ -111,7 +113,7 @@ export class GooglePlacesService {
       
       const radius = radiusLevels[currentRadiusIndex];
       
-      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}", radius=${radius}m (level ${currentRadiusIndex + 1}/5), found=${businesses.length}/${maxResults}`);
+      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}", radius=${radius}m (level ${currentRadiusIndex + 1}/4), found=${businesses.length}/${maxResults}`);
       
       // Chercher spécifiquement ce type d'entreprise
       const searchResult = await this.nearbySearch(location, radius, currentType);
