@@ -75,17 +75,33 @@ export class GooglePlacesService {
     const businessCountByType = new Map<string, number>(); // Track count per type for diversity
     const MAX_PER_TYPE = 3; // Maximum businesses per type for diversity
     
-    // TPE/PME uniquement - exclusion des professions libérales et restaurants
+    // TPE/PME uniquement - artisans et commerces avec personnel (>5 salariés)
     const priorityTypes = [
-      'bakery',
-      'hair_care', 'beauty_salon', 'spa',
-      'clothing_store', 'shoe_store', 'florist', 'jewelry_store', 'book_store',
+      // Artisans du bâtiment
       'plumber', 'electrician', 'painter', 'roofing_contractor',
+      
+      // Salons et bien-être (avec personnel)
+      'hair_care', 'beauty_salon', 'spa',
+      
+      // Magasins spécialisés (avec personnel de vente)
+      'clothing_store', 'shoe_store', 'florist', 'jewelry_store', 'book_store',
+      'pet_store', 'electronics_store', 'furniture_store', 'hardware_store', 'bicycle_store',
+      
+      // Services professionnels
       'gym',
       'real_estate_agency', 'insurance_agency', 'travel_agency',
-      'store', 'lodging', 'car_repair', 'car_dealer', 'car_wash',
-      'pet_store', 'electronics_store', 'furniture_store', 'hardware_store', 'bicycle_store',
-      'veterinary_care', 'tourist_attraction', 'movie_theater', 'art_gallery', 'museum',
+      
+      // Automobile (garages avec mécaniciens)
+      'car_repair', 'car_dealer',
+      
+      // Hébergement (hôtels avec personnel)
+      'lodging',
+      
+      // Vétérinaires
+      'veterinary_care',
+      
+      // Loisirs et culture (avec personnel)
+      'tourist_attraction', 'movie_theater', 'art_gallery', 'museum',
     ];
 
     // List of large chains and multinationals to exclude
@@ -100,7 +116,15 @@ export class GooglePlacesService {
     const excludedKeywords = [
       'photomaton', 'photo booth', 'distributeur', 'atm', 'relais colis',
       'point relais', 'consigne', 'automate', 'borne', 'parking',
-      'station-service', 'péage', 'laverie automatique'
+      'station-service', 'péage', 'laverie automatique',
+      // Exclusion restauration et alimentation de proximité
+      'boulangerie', 'patisserie', 'pâtisserie', 'pizzeria', 'pizza', 'kebab',
+      'sandwich', 'snack', 'restaur', 'brasserie', 'bistro', 'café', 'bar',
+      // Exclusion stations de lavage
+      'wash', 'lavage', 'car wash', 'station de lavage', 'pressing',
+      // Exclusion épiceries et petits commerces alimentaires
+      'épicerie', 'supérette', 'alimentaire', 'primeur', 'boucher', 'poissonnier',
+      'fromagerie', 'charcuterie', 'traiteur'
     ];
     
     // Types Google Places à exclure (installations automatiques, pas de personnel)
