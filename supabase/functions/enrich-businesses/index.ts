@@ -2,8 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const DEPARTMENT_MAP: Record<string, string> = {
@@ -118,27 +118,27 @@ function extractPostalCode(address: string): string | null {
 function formatCity(address: string): string {
   const postalCode = extractPostalCode(address);
   if (!postalCode) return address;
-  
+
   const cityMatch = address.match(/\d{5}\s+([^,]+)/);
   const cityName = cityMatch ? cityMatch[1].trim() : address;
-  
+
   const deptCode = postalCode.substring(0, 2);
   const deptPhrase = DEPARTMENT_MAP[deptCode] || DEPARTMENT_MAP[postalCode.substring(0, 3)] || "";
-  
+
   return `${cityName} (${postalCode}) ${deptPhrase}`.trim();
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { businesses } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const enrichedBusinesses = [];
@@ -155,7 +155,7 @@ Entreprise à traiter :
 
 Instructions strictes :
 
-1. **activity** : Une phrase descriptive et unique de plus de 17 mots qui reformule la catégorie de l'entreprise de manière engageante pour un annuaire. Grammaire française irréprochable, zéro faute d'orthographe.
+1. **activity** : Un titre d'environ 10 mots qui donne l'activité du de l'entreprise et qui doit être accrocheur et donner envie de cliquer. Grammaire française irréprochable, zéro faute d'orthographe.
 
 FORMATS À VARIER (exemples) :
 - "Entreprise spécialisée dans {activité} proposant {produit/service} avec {spécificités} à"
@@ -176,41 +176,42 @@ RAPPEL CRITIQUE : Tout le contenu doit être en français parfait, avec une gram
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: "google/gemini-2.5-flash",
           messages: [
-            { 
-              role: 'system', 
-              content: 'Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d\'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire.'
+            {
+              role: "system",
+              content:
+                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire.",
             },
-            { role: 'user', content: prompt }
+            { role: "user", content: prompt },
           ],
         }),
       });
 
       if (!response.ok) {
-        console.error('AI API error:', response.status);
+        console.error("AI API error:", response.status);
         throw new Error(`AI API returned status ${response.status}`);
       }
 
       const data = await response.json();
       const content = data.choices[0].message.content;
-      
+
       // Parse the JSON response
       let aiData;
       try {
         // Remove markdown code blocks if present
-        const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+        const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
         aiData = JSON.parse(cleanContent);
       } catch (e) {
-        console.error('Failed to parse AI response:', content);
-        throw new Error('Invalid JSON from AI');
+        console.error("Failed to parse AI response:", content);
+        throw new Error("Invalid JSON from AI");
       }
 
       enrichedBusinesses.push({
@@ -222,18 +223,18 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
       });
 
       // Small delay to avoid rate limits
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     return new Response(JSON.stringify({ enrichedBusinesses }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error('Error in enrich-businesses function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("Error in enrich-businesses function:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
