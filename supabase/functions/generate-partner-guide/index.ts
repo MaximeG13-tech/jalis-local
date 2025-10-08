@@ -293,15 +293,22 @@ CRITÈRES D'EXCLUSION (à vérifier pour CHAQUE entreprise) :
 7. Ne pas inclure de grandes chaînes nationales ou franchises
 8. Privilégier les TPE/PME locales
 
-Réponds avec un tableau JSON d'objets avec ces champs exacts :
-{
-  "nom": "Nom de l'entreprise",
-  "adresse": "Adresse complète avec code postal",
-  "telephone": "Numéro ou 'Non renseigné'",
-  "site_web": "URL ou 'Non renseigné'",
-  "lien_maps": "URL Google Maps si trouvé, sinon ''",
-  "activite_reelle": "Description courte de l'activité réelle trouvée"
-}`;
+⚠️ FORMAT DE RÉPONSE OBLIGATOIRE ⚠️
+Tu DOIS retourner UNIQUEMENT un tableau JSON (array) d'objets.
+❌ INTERDIT : Retourner un objet avec une propriété "businesses"
+✅ OBLIGATOIRE : Retourner directement un tableau : [{ ... }, { ... }]
+
+Exemple de format CORRECT :
+[
+  {
+    "nom": "Nom de l'entreprise",
+    "adresse": "Adresse complète avec code postal",
+    "telephone": "Numéro ou 'Non renseigné'",
+    "site_web": "URL ou 'Non renseigné'",
+    "lien_maps": "URL Google Maps si trouvé, sinon ''",
+    "activite_reelle": "Description courte de l'activité réelle trouvée"
+  }
+]`;
 
       const searchResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -333,7 +340,23 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       try {
         const content = searchData.choices[0].message.content;
         const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-        businesses = JSON.parse(cleanContent);
+        const parsed = JSON.parse(cleanContent);
+        
+        // Ensure we have an array
+        if (Array.isArray(parsed)) {
+          businesses = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+          // If it's an object, try to extract an array from common property names
+          businesses = parsed.businesses || parsed.results || parsed.data || [parsed];
+        } else {
+          console.error(`Invalid businesses format for ${category}:`, parsed);
+          continue;
+        }
+        
+        if (businesses.length === 0) {
+          console.log(`No businesses found for category: ${category}`);
+          continue;
+        }
       } catch (e) {
         console.error(`Failed to parse businesses for ${category}:`, searchData.choices[0].message.content);
         continue;
