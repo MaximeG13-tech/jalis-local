@@ -1,70 +1,49 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { Business } from '@/types/business';
+import { GooglePlacesService } from '@/services/GooglePlacesService';
 import { SearchForm } from '@/components/SearchForm';
-import { EnrichedResultsTable } from '@/components/EnrichedResultsTable';
+import { ResultsTable } from '@/components/ResultsTable';
+import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Sparkles, RefreshCw, RotateCcw, Download } from 'lucide-react';
-
-interface EnrichedBusiness {
-  name: string;
-  activity: string;
-  city: string;
-  extract: string;
-  description: string;
-}
+import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
 
 const Index = () => {
-  const [businesses, setBusinesses] = useState<EnrichedBusiness[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [lastSearch, setLastSearch] = useState<{ 
     address: string; 
     placeId: string; 
     maxResults: number;
-    companyName: string;
   } | null>(null);
   const { toast } = useToast();
 
   const handleSearch = async (
     address: string, 
     placeId: string, 
-    maxResults: number,
-    companyName: string
+    maxResults: number
   ) => {
-    setLastSearch({ address, placeId, maxResults, companyName });
+    setLastSearch({ address, placeId, maxResults });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
 
     try {
-      const { data, error: functionError } = await supabase.functions.invoke(
-        'generate-partner-guide',
-        {
-          body: {
-            activityDescription: "Recherche d'apporteurs d'affaires",
-            address: address,
-            maxResults: maxResults,
-            companyName: companyName,
-          },
+      const results = await GooglePlacesService.searchBusinesses(
+        placeId,
+        maxResults,
+        (current, total) => {
+          setProgress({ current, total });
         }
       );
 
-      if (functionError) {
-        throw new Error(functionError.message);
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      const enrichedBusinesses = data?.enrichedBusinesses || [];
-      setBusinesses(enrichedBusinesses);
+      setBusinesses(results);
       
       toast({
         title: "Recherche terminée",
-        description: `${enrichedBusinesses.length} entreprise${enrichedBusinesses.length > 1 ? 's' : ''} trouvée${enrichedBusinesses.length > 1 ? 's' : ''}`,
+        description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
       });
       setIsLoading(false);
       setProgress({ current: 0, total: 0 });
@@ -85,8 +64,7 @@ const Index = () => {
       handleSearch(
         lastSearch.address, 
         lastSearch.placeId, 
-        lastSearch.maxResults,
-        lastSearch.companyName
+        lastSearch.maxResults
       );
     }
   };
@@ -106,24 +84,6 @@ const Index = () => {
     toast({
       title: "Entreprise supprimée",
       description: "L'entreprise a été retirée de la liste",
-    });
-  };
-
-  const handleExport = () => {
-    const dataStr = JSON.stringify(businesses, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `apporteurs-affaires-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Export réussi",
-      description: "Les données ont été exportées avec succès",
     });
   };
 
@@ -189,18 +149,14 @@ const Index = () => {
                     <RotateCcw className="h-4 w-4" />
                     Nouvelle recherche
                   </Button>
-                  <Button
-                    onClick={handleExport}
-                    disabled={isLoading}
-                    className="gap-2 font-semibold"
-                    size="sm"
-                  >
-                    <Download className="h-4 w-4" />
-                    Exporter JSON
-                  </Button>
+                  <ExportButton 
+                    businesses={businesses}
+                    address={lastSearch?.address}
+                    maxResults={lastSearch?.maxResults}
+                  />
                 </div>
               </div>
-              <EnrichedResultsTable businesses={businesses} onRemove={handleRemoveBusiness} />
+              <ResultsTable businesses={businesses} onRemove={handleRemoveBusiness} />
             </div>
           )}
         </div>

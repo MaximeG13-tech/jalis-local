@@ -110,15 +110,9 @@ const DEPARTMENT_MAP: Record<string, string> = {
   "976": "à Mayotte",
 };
 
-// Helper function to extract postal code from address (prioritize city postal code)
 function extractPostalCode(address: string): string | null {
-  // Match all 5-digit sequences
-  const allMatches = address.match(/\b\d{5}\b/g);
-  if (!allMatches) return null;
-  
-  // If multiple matches, take the last one (usually the city postal code)
-  // Street addresses often have numbers at the beginning, postal code at the end
-  return allMatches[allMatches.length - 1];
+  const match = address.match(/\b(\d{5})\b/);
+  return match ? match[1] : null;
 }
 
 function formatCity(address: string): string {
@@ -140,11 +134,7 @@ serve(async (req) => {
   }
 
   try {
-    const { activityDescription, address, maxResults, companyName } = await req.json();
-    
-    if (!activityDescription || !address || !companyName) {
-      throw new Error('Missing required parameters: activityDescription, address, and companyName');
-    }
+    const { activityDescription, address, maxResults } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -156,65 +146,23 @@ serve(async (req) => {
     // Étape 1: Génération des catégories de rapporteurs d'affaires
     const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
 
-Entreprise cliente : ${companyName}
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
 
-Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents pour ${companyName}.
-
-⚠️ RÈGLE CRITIQUE : EXCLURE TOUS LES CONCURRENTS DIRECTS ⚠️
+Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents (PAS des concurrents).
 
 Un rapporteur d'affaires est une entreprise qui :
-- Offre des services COMPLÉMENTAIRES (jamais identiques ou similaires)
-- Peut recommander ou orienter des clients vers ${companyName}
-- Cible une clientèle similaire mais avec des besoins différents
+- Peut recommander ou orienter des clients vers l'entreprise décrite
+- Offre des services complémentaires (pas identiques)
+- Cible une clientèle similaire
 - Pourrait bénéficier d'un partenariat gagnant-gagnant
 
-❌ NE JAMAIS INCLURE :
-- Entreprises offrant les MÊMES services principaux que ${companyName}
-- Entreprises pouvant réaliser le MÊME travail que ${companyName}
-- Toute entreprise qui serait en COMPÉTITION DIRECTE avec ${companyName}
-
-Exemples pour différents types d'entreprises :
-
-Pour une AGENCE WEB/DIGITALE qui crée des sites internet :
-✅ Experts-comptables et cabinets comptables (complémentaire - gestion TPE/PME)
-✅ Avocats en droit des affaires (complémentaire - conseil juridique)
-✅ Architectes (complémentaire - clientèle entreprises/commerces)
-✅ Artisans du bâtiment (complémentaire - besoin de présence web)
-✅ Imprimeurs (complémentaire - communication print)
-✅ Centres d'affaires et espaces de coworking (complémentaire - entrepreneurs)
-✅ Banques et chargés d'affaires (complémentaire - TPE/PME)
-✅ Assureurs professionnels (complémentaire - clientèle entreprises)
-❌ Autres agences web/digitales (CONCURRENT DIRECT)
-❌ Développeurs web freelance créant des sites (CONCURRENT DIRECT)
-❌ Agences de communication (même digitale) (CONCURRENT DIRECT)
-❌ Graphistes, designers (CONCURRENT - services adjacents)
-❌ Consultants SEO, référenceurs (CONCURRENT - services adjacents)
-❌ Rédacteurs web, copywriters (CONCURRENT - services adjacents)
-❌ Community managers (CONCURRENT - services adjacents)
-❌ Photographes professionnels (CONCURRENT - services adjacents)
-
-Pour une entreprise vendant des camping-cars :
-✅ Garages spécialisés en mécanique de camping-cars (complémentaire)
-✅ Aires de services pour camping-cars (complémentaire)
-✅ Magasins d'accessoires pour camping-cars (complémentaire)
-✅ Agents d'assurance véhicules de loisirs (complémentaire)
-❌ Autres concessionnaires de camping-cars (CONCURRENT DIRECT)
-
-Pour un PLOMBIER :
-✅ Électriciens (complémentaire - autre corps de métier)
-✅ Carreleurs (complémentaire - finitions salles de bain)
-✅ Chauffagistes (complémentaire mais distinct)
-✅ Magasins de sanitaires (complémentaire - fournitures)
-❌ Autres plombiers (CONCURRENT DIRECT)
-❌ Entreprises de plomberie (CONCURRENT DIRECT)
-
-Instructions strictes :
-1. Analyse l'activité PRINCIPALE de ${companyName}
-2. Identifie les services COMPLÉMENTAIRES (pas similaires)
-3. Ne suggère que des catégories qui ne font PAS la même chose que ${companyName}
-4. Vérifie que chaque catégorie aide ${companyName} sans lui faire concurrence
+Exemples pour une entreprise vendant des camping-cars :
+✅ Garages spécialisés en mécanique de camping-cars
+✅ Aires de services pour camping-cars
+✅ Magasins d'accessoires pour camping-cars
+✅ Agents d'assurance véhicules de loisirs
+❌ Autres concessionnaires de camping-cars (concurrent direct)
 
 Réponds UNIQUEMENT avec un tableau JSON de catégories (chaînes de caractères courtes et précises).
 Format attendu : ["catégorie 1", "catégorie 2", ...]`;
@@ -266,32 +214,19 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
 
       const searchPrompt = `Recherche web en temps réel pour : ${category} près de ${address}
 
-ENTREPRISE CLIENTE : ${companyName}
-Activité de l'entreprise cliente : ${activityDescription}
-
-⚠️ RÈGLE ABSOLUE : NE JAMAIS inclure de CONCURRENTS de ${companyName} ⚠️
-
 CONSIGNES STRICTES :
-1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent à "${category}"
+1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent exactement à la catégorie "${category}"
 2. Zone géographique : dans un rayon de 50km autour de ${address}
-3. Les entreprises trouvées DOIVENT être COMPLÉMENTAIRES à ${companyName}, JAMAIS concurrentes
-4. VÉRIFIE que chaque entreprise n'offre PAS les mêmes services principaux que ${companyName}
-
-CRITÈRES D'EXCLUSION (à vérifier pour CHAQUE entreprise) :
-- Si l'entreprise fait le MÊME travail que ${companyName} → NE PAS L'INCLURE
-- Si l'entreprise offre les MÊMES services que ${companyName} → NE PAS L'INCLURE  
-- Si l'entreprise est en compétition directe avec ${companyName} → NE PAS L'INCLURE
-
-5. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
+3. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
    - Le nom exact et complet de l'entreprise
    - L'adresse postale complète avec code postal
    - Le numéro de téléphone (si disponible, sinon "Non renseigné")
    - Le site web (si disponible, sinon "Non renseigné")
-   - Une brève description de l'activité réelle de l'entreprise
+   - Une brève description de l'activité réelle de l'entreprise basée sur tes recherches
 
-6. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
-7. Ne pas inclure de grandes chaînes nationales ou franchises
-8. Privilégier les TPE/PME locales
+4. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
+5. Ne pas inclure de grandes chaînes nationales ou franchises
+6. Privilégier les TPE/PME locales
 
 Réponds avec un tableau JSON d'objets avec ces champs exacts :
 {
@@ -353,23 +288,20 @@ Entreprise à traiter :
 - Activité réelle : ${business.activite_reelle}
 - Catégorie : ${category}
 
-**Société cliente : ${companyName}**
-
-⚠️ POINT DE VUE NARRATIF CRITIQUE ⚠️
-Ce texte sera publié sur le site de ${companyName} pour présenter ses partenaires.
-Tu DOIS rédiger à la 3ÈME PERSONNE, comme si ${companyName} présentait cette entreprise partenaire à ses visiteurs.
-❌ JAMAIS "nous", "notre", "contactez-nous"
-✅ TOUJOURS "ils", "leur", "cette entreprise", "contactez-les", "pour les joindre"
-
 Instructions strictes pour un SEO optimal :
 
 1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
+
 
 EXEMPLES de formats à suivre STRICTEMENT :
 - "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
 - "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
 - "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
 - "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
+- "Architecte créatif concevant la rénovation et l'aménagement de vos espaces avec expertise à"
+- "Menuisier artisan proposant la fabrication sur-mesure et l'installation de menuiseries intérieures et extérieures à"
+- "Maçon expérimenté assurant la construction, la rénovation et l'agrandissement de bâtiments à"
+- "Professionnels de la coiffure proposant des coupes, colorations et soins capillaires pour toute la famille à"
 
 RÈGLES IMPÉRATIVES :
 - Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
@@ -378,23 +310,23 @@ RÈGLES IMPÉRATIVES :
 - Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
 - Utilise des participes présents et adjectifs pour décrire les services
 - Intègre des mots-clés SEO précis liés à l'activité réelle de l'entreprise
+- Rends le titre accrocheur, clair et donnant envie de cliquer
 - La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 - Compte exactement entre 10 et 15 mots (vérifie bien)
 
-2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Rédige à la 3ÈME PERSONNE (comme si ${companyName} présentait ce partenaire). Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée.
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
 
-3. **description** : PARAGRAPHE de 100 MOTS MAXIMUM structuré en 3 parties, RÉDIGÉ À LA 3ÈME PERSONNE :
-   a) **Activités de l'entreprise** (30-40 mots) : Présente brièvement les services et spécialités avec mots-clés SEO (à la 3ème personne : "Cette entreprise propose...", "Ils assurent...", "${business.nom} se spécialise dans...")
-   b) **Relation avec ${companyName}** (20-30 mots) : Explique en 1-2 phrases comment cette entreprise peut être un apporteur d'affaires pertinent pour ${companyName} et vice-versa (partenariat gagnant-gagnant, complémentarité des services, clientèle commune)
-   c) **Données de contact** (30-40 mots) : Intègre naturellement l'adresse (${business.adresse}), le téléphone (${business.telephone}) et le site web (${business.site_web}) de manière fluide dans le texte À LA 3ÈME PERSONNE (ex: "Pour les contacter : [téléphone]", "Leur site web : [url]", "Ils sont situés à [adresse]")
-
-RÈGLES STRICTES pour la description :
-- MAXIMUM 100 mots au total (compte bien les mots)
-- Structure claire : activités → relation → contact
-- Ton professionnel et engageant
-- IMPÉRATIF : Rédaction à la 3ÈME PERSONNE uniquement (point de vue de ${companyName} présentant son partenaire)
-- La phrase de relation doit montrer la synergie avec ${companyName}
-- Les coordonnées doivent être intégrées de façon naturelle
+3. **description** : Description détaillée de 120 à 180 mots en HTML avec des balises <p>. 
+CONSIGNES SEO :
+- Intègre naturellement des mots-clés pertinents sur l'activité principale (${category})
+- Structure en 2-3 paragraphes
+- Premier paragraphe : présentation de l'expertise et services avec mots-clés
+- Deuxième paragraphe : avantages concurrentiels, qualité, garanties
+- Troisième paragraphe (optionnel) : zone d'intervention géographique
+- Termine par un call to action percutant et personnalisé qui incite à l'action immédiate
+- Si téléphone disponible (${business.telephone}), l'intégrer dans le CTA
+- Si établissement physique, mentionner l'accessibilité/localisation (${business.adresse})
+- Varie les CTA : "Contactez dès maintenant", "Appelez pour un devis gratuit", "Prenez rendez-vous", "Demandez votre estimation", etc.
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 

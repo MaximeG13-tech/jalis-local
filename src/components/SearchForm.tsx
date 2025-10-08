@@ -7,7 +7,7 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
 
 interface SearchFormProps {
-  onSearch: (address: string, placeId: string, maxResults: number, companyName: string) => void;
+  onSearch: (address: string, placeId: string, maxResults: number) => void;
   isLoading: boolean;
 }
 
@@ -15,12 +15,11 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
   const [maxResults, setMaxResults] = useState(10);
-  const [companyName, setCompanyName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address.trim() || !placeId || !companyName.trim()) return;
-    onSearch(address, placeId, maxResults, companyName.trim());
+    if (!address.trim() || !placeId) return;
+    onSearch(address, placeId, maxResults);
   };
 
   const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {
@@ -32,22 +31,6 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
     <Card className="border border-border shadow-card bg-card">
       <CardContent className="pt-8 pb-8 px-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="companyName" className="text-sm font-bold text-foreground uppercase tracking-wide">
-              Nom de votre société
-            </Label>
-            <input
-              id="companyName"
-              type="text"
-              placeholder="Ex: Agence Immobilière Martin"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              disabled={isLoading}
-              required
-              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
           <AddressAutocomplete
             value={address}
             onChange={setAddress}
@@ -81,7 +64,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
           <Button 
             type="submit" 
             className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 transition-all shadow-sm" 
-            disabled={isLoading || !placeId || !companyName.trim()}
+            disabled={isLoading || !placeId}
           >
             {isLoading ? (
               <>
