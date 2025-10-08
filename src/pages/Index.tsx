@@ -14,6 +14,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [lastSearch, setLastSearch] = useState<{ 
+    companyName: string;
     address: string; 
     placeId: string; 
     maxResults: number;
@@ -21,17 +22,19 @@ const Index = () => {
   const { toast } = useToast();
 
   const handleSearch = async (
+    companyName: string,
     address: string, 
     placeId: string, 
     maxResults: number
   ) => {
-    setLastSearch({ address, placeId, maxResults });
+    setLastSearch({ companyName, address, placeId, maxResults });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
 
     try {
       const results = await GooglePlacesService.searchBusinesses(
+        companyName,
         placeId,
         maxResults,
         (current, total) => {
@@ -62,6 +65,7 @@ const Index = () => {
   const handleRegenerate = () => {
     if (lastSearch) {
       handleSearch(
+        lastSearch.companyName,
         lastSearch.address, 
         lastSearch.placeId, 
         lastSearch.maxResults
@@ -151,6 +155,7 @@ const Index = () => {
                   </Button>
                   <ExportButton 
                     businesses={businesses}
+                    companyName={lastSearch?.companyName}
                     address={lastSearch?.address}
                     maxResults={lastSearch?.maxResults}
                   />

@@ -7,11 +7,12 @@ import { useState } from 'react';
 
 interface ExportButtonProps {
   businesses: Business[];
+  companyName?: string;
   address?: string;
   maxResults?: number;
 }
 
-export const ExportButton = ({ businesses }: ExportButtonProps) => {
+export const ExportButton = ({ businesses, companyName }: ExportButtonProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -34,7 +35,7 @@ export const ExportButton = ({ businesses }: ExportButtonProps) => {
       });
 
       const { data, error } = await supabase.functions.invoke('enrich-businesses', {
-        body: { businesses }
+        body: { businesses, companyName: companyName || "votre entreprise" }
       });
 
       if (error) throw error;

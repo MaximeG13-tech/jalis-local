@@ -60,6 +60,7 @@ export class GooglePlacesService {
   }
 
   static async searchBusinesses(
+    companyName: string,
     placeId: string,
     maxResults: number,
     onProgress?: (current: number, total: number) => void

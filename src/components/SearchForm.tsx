@@ -1,25 +1,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Loader2 } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
 
 interface SearchFormProps {
-  onSearch: (address: string, placeId: string, maxResults: number) => void;
+  onSearch: (companyName: string, address: string, placeId: string, maxResults: number) => void;
   isLoading: boolean;
 }
 
 export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
+  const [companyName, setCompanyName] = useState('');
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
   const [maxResults, setMaxResults] = useState(10);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address.trim() || !placeId) return;
-    onSearch(address, placeId, maxResults);
+    if (!companyName.trim() || !address.trim() || !placeId) return;
+    onSearch(companyName, address, placeId, maxResults);
   };
 
   const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {
@@ -31,6 +33,21 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
     <Card className="border border-border shadow-card bg-card">
       <CardContent className="pt-8 pb-8 px-8">
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="companyName" className="text-sm font-bold text-foreground uppercase tracking-wide">
+              Nom de votre entreprise
+            </Label>
+            <Input
+              id="companyName"
+              type="text"
+              placeholder="Ex: Jalis"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+
           <AddressAutocomplete
             value={address}
             onChange={setAddress}
@@ -64,7 +81,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
           <Button 
             type="submit" 
             className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 transition-all shadow-sm" 
-            disabled={isLoading || !placeId}
+            disabled={isLoading || !placeId || !companyName.trim()}
           >
             {isLoading ? (
               <>

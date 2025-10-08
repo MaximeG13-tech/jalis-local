@@ -116,12 +116,15 @@ function extractPostalCode(address: string): string | null {
 }
 
 function formatCity(address: string): string {
+  // Extract postal code from the address
   const postalCode = extractPostalCode(address);
   if (!postalCode) return address;
 
+  // Extract city name (after postal code)
   const cityMatch = address.match(/\d{5}\s+([^,]+)/);
   const cityName = cityMatch ? cityMatch[1].trim() : address;
 
+  // Use postal code from the address (not from a different location)
   const deptCode = postalCode.substring(0, 2);
   const deptPhrase = DEPARTMENT_MAP[deptCode] || DEPARTMENT_MAP[postalCode.substring(0, 3)] || "";
 
@@ -134,28 +137,45 @@ serve(async (req) => {
   }
 
   try {
-    const { activityDescription, address, maxResults } = await req.json();
+    const { companyName, activityDescription, address, maxResults } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log("Starting partner guide generation for:", activityDescription);
+    console.log("Starting partner guide generation for:", companyName, activityDescription);
 
     // Étape 1: Génération des catégories de rapporteurs d'affaires
     const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
 
+Entreprise cliente : ${companyName}
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
 
 Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents (PAS des concurrents).
 
+RÈGLES STRICTES ANTI-CONCURRENCE :
+- NE JAMAIS proposer d'entreprises qui font la MÊME activité que ${companyName}
+- NE JAMAIS proposer d'entreprises qui offrent des services identiques ou similaires
+- Exclure TOUS les métiers qui pourraient être perçus comme concurrents
+
 Un rapporteur d'affaires est une entreprise qui :
-- Peut recommander ou orienter des clients vers l'entreprise décrite
-- Offre des services complémentaires (pas identiques)
-- Cible une clientèle similaire
+- Peut recommander ou orienter des clients vers ${companyName}
+- Offre des services COMPLÉMENTAIRES (pas identiques ou similaires)
+- Cible une clientèle similaire mais avec des besoins différents
 - Pourrait bénéficier d'un partenariat gagnant-gagnant
+
+Exemples pour une agence web comme Jalis :
+✅ Comptables, experts-comptables
+✅ Avocats d'affaires
+✅ Agents immobiliers
+✅ Photographes professionnels
+✅ Imprimeurs
+❌ Autres agences web (concurrent direct)
+❌ Graphistes indépendants (concurrent partiel)
+❌ Consultants SEO (concurrent partiel)
+❌ Rédacteurs web (concurrent partiel)
 
 Exemples pour une entreprise vendant des camping-cars :
 ✅ Garages spécialisés en mécanique de camping-cars
@@ -278,9 +298,15 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-        const enrichPrompt = `Tu es un expert en rédaction SEO et en contenus pour annuaires professionnels locaux. 
+        const enrichPrompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente ses partenaires sur son site web.
 
-Entreprise à traiter :
+CONTEXTE IMPORTANT :
+- Le texte sera publié sur le site de ${companyName}
+- C'est ${companyName} qui parle de l'entreprise partenaire
+- Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
+- JAMAIS "nous", "notre", "contactez-nous" car ce n'est PAS l'entreprise qui parle d'elle-même
+
+Entreprise partenaire à présenter :
 - Nom : ${business.nom}
 - Adresse : ${business.adresse}
 - Téléphone : ${business.telephone}
@@ -292,41 +318,34 @@ Instructions strictes pour un SEO optimal :
 
 1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
 
-
 EXEMPLES de formats à suivre STRICTEMENT :
 - "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
 - "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
 - "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
 - "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
-- "Architecte créatif concevant la rénovation et l'aménagement de vos espaces avec expertise à"
-- "Menuisier artisan proposant la fabrication sur-mesure et l'installation de menuiseries intérieures et extérieures à"
-- "Maçon expérimenté assurant la construction, la rénovation et l'agrandissement de bâtiments à"
-- "Professionnels de la coiffure proposant des coupes, colorations et soins capillaires pour toute la famille à"
 
 RÈGLES IMPÉRATIVES :
 - Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
 - JAMAIS de pronoms personnels (ils, elle, nous) - forme nominale uniquement
 - Mentionne EXPLICITEMENT la profession/le métier de l'entreprise
 - Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
-- Utilise des participes présents et adjectifs pour décrire les services
-- Intègre des mots-clés SEO précis liés à l'activité réelle de l'entreprise
-- Rends le titre accrocheur, clair et donnant envie de cliquer
 - La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
 - Compte exactement entre 10 et 15 mots (vérifie bien)
 
-2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée.
 
-3. **description** : Description détaillée de 120 à 180 mots en HTML avec des balises <p>. 
-CONSIGNES SEO :
-- Intègre naturellement des mots-clés pertinents sur l'activité principale (${category})
-- Structure en 2-3 paragraphes
-- Premier paragraphe : présentation de l'expertise et services avec mots-clés
-- Deuxième paragraphe : avantages concurrentiels, qualité, garanties
-- Troisième paragraphe (optionnel) : zone d'intervention géographique
-- Termine par un call to action percutant et personnalisé qui incite à l'action immédiate
-- Si téléphone disponible (${business.telephone}), l'intégrer dans le CTA
-- Si établissement physique, mentionner l'accessibilité/localisation (${business.adresse})
-- Varie les CTA : "Contactez dès maintenant", "Appelez pour un devis gratuit", "Prenez rendez-vous", "Demandez votre estimation", etc.
+3. **description** : Description de MAXIMUM 100 MOTS en HTML avec des balises <p>.
+
+STRUCTURE OBLIGATOIRE :
+- Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
+- Paragraphe 2 (20-30 mots) : Expliquer BRIÈVEMENT le lien de partenariat avec ${companyName} (pourquoi ce partenariat est pertinent, comment les deux entreprises se complètent)
+- Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
+
+CONSIGNES DE TON CRITIQUES :
+- Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
+- Utilise "leur", "ils", "cette entreprise", "${business.nom}"
+- CTA : "Contactez-les au ${business.telephone}" ou "Rendez-vous sur leur site" (JAMAIS "contactez-nous")
+- C'est ${companyName} qui recommande ce partenaire à ses clients
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
