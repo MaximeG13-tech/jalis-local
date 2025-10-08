@@ -145,87 +145,79 @@ serve(async (req) => {
     if (!activityDescription || !address || !companyName) {
       throw new Error('Missing required parameters: activityDescription, address, and companyName');
     }
-    
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const GOOGLE_PLACES_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
-    
-    if (!GOOGLE_PLACES_API_KEY) {
-      throw new Error("GOOGLE_PLACES_API_KEY is not configured");
-    }
 
     console.log("Starting partner guide generation for:", activityDescription);
-    
-    // Step 0: Geocode the address to get coordinates
-    console.log("Geocoding address:", address);
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_PLACES_API_KEY}`;
-    const geocodeResponse = await fetch(geocodeUrl);
-    const geocodeData = await geocodeResponse.json();
-    
-    if (!geocodeData.results || geocodeData.results.length === 0) {
-      throw new Error("Could not geocode the provided address");
-    }
-    
-    const location = geocodeData.results[0].geometry.location;
-    console.log("Location coordinates:", location);
 
-    // Étape 1: Génération des catégories avec types Google Places
+    // Étape 1: Génération des catégories de rapporteurs d'affaires
     const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
 
 Entreprise cliente : ${companyName}
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
 
-Mission : Génère une liste de EXACTEMENT 6 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents pour ${companyName}.
+Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents pour ${companyName}.
 
 ⚠️ RÈGLE CRITIQUE : EXCLURE TOUS LES CONCURRENTS DIRECTS ⚠️
 
-Pour CHAQUE catégorie, tu dois fournir :
-1. Un nom de catégorie en français (description lisible)
-2. Un type Google Places correspondant (voir liste ci-dessous)
+Un rapporteur d'affaires est une entreprise qui :
+- Offre des services COMPLÉMENTAIRES (jamais identiques ou similaires)
+- Peut recommander ou orienter des clients vers ${companyName}
+- Cible une clientèle similaire mais avec des besoins différents
+- Pourrait bénéficier d'un partenariat gagnant-gagnant
 
-TYPES GOOGLE PLACES DISPONIBLES :
-- general_contractor (entreprises générales du bâtiment)
-- architect (architectes)
-- electrician (électriciens)
-- plumber (plombiers)
-- painter (peintres)
-- roofing_contractor (couvreurs)
-- carpenter (menuisiers, charpentiers)
-- home_goods_store (magasins de matériaux)
-- furniture_store (magasins de meubles)
-- hardware_store (quincailleries)
-- real_estate_agency (agences immobilières)
-- lawyer (avocats)
-- accounting (comptables)
-- insurance_agency (assurances)
-- locksmith (serruriers)
-- moving_company (déménageurs)
+❌ NE JAMAIS INCLURE :
+- Entreprises offrant les MÊMES services principaux que ${companyName}
+- Entreprises pouvant réaliser le MÊME travail que ${companyName}
+- Toute entreprise qui serait en COMPÉTITION DIRECTE avec ${companyName}
 
-❌ NE JAMAIS INCLURE des types qui correspondent à l'activité de ${companyName}
+Exemples pour différents types d'entreprises :
 
-Format de réponse OBLIGATOIRE - un tableau JSON d'objets :
-[
-  {
-    "nom": "Nom de la catégorie en français",
-    "type": "google_place_type"
-  }
-]
+Pour une AGENCE WEB/DIGITALE qui crée des sites internet :
+✅ Experts-comptables et cabinets comptables (complémentaire - gestion TPE/PME)
+✅ Avocats en droit des affaires (complémentaire - conseil juridique)
+✅ Architectes (complémentaire - clientèle entreprises/commerces)
+✅ Artisans du bâtiment (complémentaire - besoin de présence web)
+✅ Imprimeurs (complémentaire - communication print)
+✅ Centres d'affaires et espaces de coworking (complémentaire - entrepreneurs)
+✅ Banques et chargés d'affaires (complémentaire - TPE/PME)
+✅ Assureurs professionnels (complémentaire - clientèle entreprises)
+❌ Autres agences web/digitales (CONCURRENT DIRECT)
+❌ Développeurs web freelance créant des sites (CONCURRENT DIRECT)
+❌ Agences de communication (même digitale) (CONCURRENT DIRECT)
+❌ Graphistes, designers (CONCURRENT - services adjacents)
+❌ Consultants SEO, référenceurs (CONCURRENT - services adjacents)
+❌ Rédacteurs web, copywriters (CONCURRENT - services adjacents)
+❌ Community managers (CONCURRENT - services adjacents)
+❌ Photographes professionnels (CONCURRENT - services adjacents)
 
-Exemple :
-[
-  {
-    "nom": "Architectes",
-    "type": "architect"
-  },
-  {
-    "nom": "Entreprises générales du bâtiment",
-    "type": "general_contractor"
-  }
-]`;
+Pour une entreprise vendant des camping-cars :
+✅ Garages spécialisés en mécanique de camping-cars (complémentaire)
+✅ Aires de services pour camping-cars (complémentaire)
+✅ Magasins d'accessoires pour camping-cars (complémentaire)
+✅ Agents d'assurance véhicules de loisirs (complémentaire)
+❌ Autres concessionnaires de camping-cars (CONCURRENT DIRECT)
+
+Pour un PLOMBIER :
+✅ Électriciens (complémentaire - autre corps de métier)
+✅ Carreleurs (complémentaire - finitions salles de bain)
+✅ Chauffagistes (complémentaire mais distinct)
+✅ Magasins de sanitaires (complémentaire - fournitures)
+❌ Autres plombiers (CONCURRENT DIRECT)
+❌ Entreprises de plomberie (CONCURRENT DIRECT)
+
+Instructions strictes :
+1. Analyse l'activité PRINCIPALE de ${companyName}
+2. Identifie les services COMPLÉMENTAIRES (pas similaires)
+3. Ne suggère que des catégories qui ne font PAS la même chose que ${companyName}
+4. Vérifie que chaque catégorie aide ${companyName} sans lui faire concurrence
+
+Réponds UNIQUEMENT avec un tableau JSON de catégories (chaînes de caractères courtes et précises).
+Format attendu : ["catégorie 1", "catégorie 2", ...]`;
 
     const categoriesResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -250,7 +242,7 @@ Exemple :
     }
 
     const categoriesData = await categoriesResponse.json();
-    let categories: Array<{nom: string, type: string}>;
+    let categories: string[];
 
     try {
       const content = categoriesData.choices[0].message.content;
@@ -263,89 +255,92 @@ Exemple :
 
     console.log("Generated categories:", categories);
 
-    // Step 2: Search real businesses using Google Places API
+    // Étape 2 & 3: Recherche et enrichissement pour chaque catégorie
     const enrichedBusinesses = [];
     const businessesPerCategory = Math.ceil(maxResults / categories.length);
 
     for (const category of categories) {
       if (enrichedBusinesses.length >= maxResults) break;
 
-      console.log(`Searching for real businesses: ${category.nom} (type: ${category.type})`);
-      
-      // Try expanding radius from 6km to 50km if needed
-      let radius = 6000; // Start at 6km
-      let realBusinesses = [];
-      
-      while (realBusinesses.length < 2 && radius <= 50000) {
-        console.log(`Searching within ${radius}m radius for: ${category.nom}`);
-        
-        // Use Nearby Search with type parameter (more reliable than keywords)
-        const nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&type=${category.type}&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
-        
-        const searchResponse = await fetch(nearbyUrl);
-        const searchData = await searchResponse.json();
-        
-        console.log(`API Status: ${searchData.status}`);
-        
-        if (searchData.status === "ZERO_RESULTS") {
-          console.log(`No results for radius ${radius}m, expanding...`);
-          radius += 5000;
-          continue;
-        }
-        
-        if (searchData.status !== "OK") {
-          console.error(`API Error: ${searchData.status} - ${searchData.error_message || 'No details'}`);
-          radius += 5000;
-          continue;
-        }
-        
-        if (searchData.results && searchData.results.length > 0) {
-          console.log(`Found ${searchData.results.length} potential businesses`);
-          
-          // Filter and get details for each place
-          for (const place of searchData.results.slice(0, 5)) {
-            if (realBusinesses.length >= 2) break;
-            
-            const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,business_status,types,user_ratings_total,rating&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
-            const detailsResponse = await fetch(detailsUrl);
-            const detailsData = await detailsResponse.json();
-            
-            if (detailsData.result && detailsData.result.business_status === "OPERATIONAL") {
-              const details = detailsData.result;
-              
-              // Keep businesses that seem established (have some presence)
-              // Lower threshold to find more businesses
-              if (details.user_ratings_total && details.user_ratings_total >= 3) {
-                console.log(`Adding business: ${details.name} (${details.user_ratings_total} reviews)`);
-                realBusinesses.push({
-                  nom: details.name,
-                  adresse: details.formatted_address || "Non renseigné",
-                  telephone: details.formatted_phone_number || "Non renseigné",
-                  site_web: details.website || "Non renseigné",
-                  lien_maps: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-                  activite_reelle: category.nom
-                });
-              } else {
-                console.log(`Skipping ${details.name}: only ${details.user_ratings_total || 0} reviews`);
-              }
-            }
-            
-            // Rate limiting delay
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-        }
-        
-        // Expand radius if not enough results
-        if (realBusinesses.length < 2) {
-          console.log(`Only found ${realBusinesses.length} businesses, expanding radius...`);
-          radius += 5000; // Add 5km each iteration
-        }
-      }
-      
-      console.log(`Found ${realBusinesses.length} real businesses for ${category.nom}`);
+      console.log(`Searching for category: ${category}`);
 
-      // Step 3: AI enrichment for SEO content
-      for (const business of realBusinesses) {
+      const searchPrompt = `Recherche web en temps réel pour : ${category} près de ${address}
+
+ENTREPRISE CLIENTE : ${companyName}
+Activité de l'entreprise cliente : ${activityDescription}
+
+⚠️ RÈGLE ABSOLUE : NE JAMAIS inclure de CONCURRENTS de ${companyName} ⚠️
+
+CONSIGNES STRICTES :
+1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent à "${category}"
+2. Zone géographique : dans un rayon de 50km autour de ${address}
+3. Les entreprises trouvées DOIVENT être COMPLÉMENTAIRES à ${companyName}, JAMAIS concurrentes
+4. VÉRIFIE que chaque entreprise n'offre PAS les mêmes services principaux que ${companyName}
+
+CRITÈRES D'EXCLUSION (à vérifier pour CHAQUE entreprise) :
+- Si l'entreprise fait le MÊME travail que ${companyName} → NE PAS L'INCLURE
+- Si l'entreprise offre les MÊMES services que ${companyName} → NE PAS L'INCLURE  
+- Si l'entreprise est en compétition directe avec ${companyName} → NE PAS L'INCLURE
+
+5. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
+   - Le nom exact et complet de l'entreprise
+   - L'adresse postale complète avec code postal
+   - Le numéro de téléphone (si disponible, sinon "Non renseigné")
+   - Le site web (si disponible, sinon "Non renseigné")
+   - Une brève description de l'activité réelle de l'entreprise
+
+6. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
+7. Ne pas inclure de grandes chaînes nationales ou franchises
+8. Privilégier les TPE/PME locales
+
+Réponds avec un tableau JSON d'objets avec ces champs exacts :
+{
+  "nom": "Nom de l'entreprise",
+  "adresse": "Adresse complète avec code postal",
+  "telephone": "Numéro ou 'Non renseigné'",
+  "site_web": "URL ou 'Non renseigné'",
+  "lien_maps": "URL Google Maps si trouvé, sinon ''",
+  "activite_reelle": "Description courte de l'activité réelle trouvée"
+}`;
+
+      const searchResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Tu es un assistant de recherche web. Tu effectues des recherches en temps réel et réponds avec du JSON valide uniquement. Tu ne dois jamais inventer d'informations.",
+            },
+            { role: "user", content: searchPrompt },
+          ],
+        }),
+      });
+
+      if (!searchResponse.ok) {
+        console.error(`Search failed for category ${category}`);
+        continue;
+      }
+
+      const searchData = await searchResponse.json();
+      let businesses;
+
+      try {
+        const content = searchData.choices[0].message.content;
+        const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        businesses = JSON.parse(cleanContent);
+      } catch (e) {
+        console.error(`Failed to parse businesses for ${category}:`, searchData.choices[0].message.content);
+        continue;
+      }
+
+      // Étape 3: Enrichissement de chaque entreprise trouvée
+      for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
         const enrichPrompt = `Tu es un expert en rédaction SEO et en contenus pour annuaires professionnels locaux. 
@@ -356,7 +351,7 @@ Entreprise à traiter :
 - Téléphone : ${business.telephone}
 - Site web : ${business.site_web}
 - Activité réelle : ${business.activite_reelle}
-- Catégorie : ${category.nom}
+- Catégorie : ${category}
 
 **Société cliente : ${companyName}**
 
@@ -401,19 +396,6 @@ RÈGLES STRICTES pour la description :
 - La phrase de relation doit montrer la synergie avec ${companyName}
 - Les coordonnées doivent être intégrées de façon naturelle
 
-⚠️ FORMAT JSON CRITIQUE ⚠️
-Tu DOIS retourner un objet JSON VALIDE. 
-❌ N'utilise JAMAIS le symbole + pour concaténer des chaînes
-❌ INTERDIT : "description": "texte" + " suite"
-✅ OBLIGATOIRE : "description": "texte suite en une seule chaîne de caractères"
-
-Exemple de réponse VALIDE :
-{
-  "activity": "Titre de 10 à 15 mots se terminant par à",
-  "extract": "Un paragraphe de 40-60 mots...",
-  "description": "Un seul paragraphe continu de 100 mots maximum sans aucun symbole + pour la concaténation."
-}
-
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
         const enrichResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -445,14 +427,10 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
 
         try {
           const content = enrichData.choices[0].message.content;
-          // Remove markdown code blocks and trim
-          let cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-          // Remove any + concatenation operators that might slip through
-          cleanContent = cleanContent.replace(/"\s*\+\s*"/g, "");
+          const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
           aiData = JSON.parse(cleanContent);
         } catch (e) {
           console.error("Failed to parse enrichment data:", enrichData.choices[0].message.content);
-          console.error("Parse error:", e);
           continue;
         }
 

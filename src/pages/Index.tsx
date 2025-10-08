@@ -62,18 +62,10 @@ const Index = () => {
       const enrichedBusinesses = data?.enrichedBusinesses || [];
       setBusinesses(enrichedBusinesses);
       
-      if (enrichedBusinesses.length === 0) {
-        toast({
-          title: "Aucune entreprise trouvée",
-          description: "Essayez d'élargir votre zone de recherche ou de modifier vos critères",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Recherche terminée",
-          description: `${enrichedBusinesses.length} entreprise${enrichedBusinesses.length > 1 ? 's' : ''} trouvée${enrichedBusinesses.length > 1 ? 's' : ''}`,
-        });
-      }
+      toast({
+        title: "Recherche terminée",
+        description: `${enrichedBusinesses.length} entreprise${enrichedBusinesses.length > 1 ? 's' : ''} trouvée${enrichedBusinesses.length > 1 ? 's' : ''}`,
+      });
       setIsLoading(false);
       setProgress({ current: 0, total: 0 });
     } catch (error) {
