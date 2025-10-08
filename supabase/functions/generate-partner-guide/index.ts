@@ -288,24 +288,40 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
       let realBusinesses = [];
       
       while (realBusinesses.length < 2 && radius <= 50000) {
-        console.log(`Searching within ${radius}m radius`);
+        console.log(`Searching within ${radius}m radius for: ${category}`);
         
-        const nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&keyword=${encodeURIComponent(category)}&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
-        const nearbyResponse = await fetch(nearbyUrl);
-        const nearbyData = await nearbyResponse.json();
+        // Use Text Search instead of Nearby Search for better keyword matching
+        const searchQuery = `${category} near ${address}`;
+        const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&location=${location.lat},${location.lng}&radius=${radius}&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
         
-        if (nearbyData.results && nearbyData.results.length > 0) {
+        console.log(`Text search query: ${searchQuery}`);
+        const searchResponse = await fetch(textSearchUrl);
+        const searchData = await searchResponse.json();
+        
+        if (searchData.status === "ZERO_RESULTS") {
+          console.log(`No results for radius ${radius}m, expanding...`);
+          radius += 5000;
+          continue;
+        }
+        
+        if (searchData.results && searchData.results.length > 0) {
+          console.log(`Found ${searchData.results.length} potential businesses`);
+          
           // Filter and get details for each place
-          for (const place of nearbyData.results.slice(0, 2)) {
-            const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,business_status,types,user_ratings_total&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+          for (const place of searchData.results.slice(0, 5)) {
+            if (realBusinesses.length >= 2) break;
+            
+            const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,business_status,types,user_ratings_total,rating&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
             const detailsResponse = await fetch(detailsUrl);
             const detailsData = await detailsResponse.json();
             
             if (detailsData.result && detailsData.result.business_status === "OPERATIONAL") {
               const details = detailsData.result;
               
-              // Only keep businesses with at least some ratings (indicator of established business)
-              if (details.user_ratings_total && details.user_ratings_total >= 5) {
+              // Keep businesses that seem established (have some presence)
+              // Lower threshold to find more businesses
+              if (details.user_ratings_total && details.user_ratings_total >= 3) {
+                console.log(`Adding business: ${details.name} (${details.user_ratings_total} reviews)`);
                 realBusinesses.push({
                   nom: details.name,
                   adresse: details.formatted_address || "Non renseigné",
@@ -314,8 +330,8 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
                   lien_maps: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
                   activite_reelle: category
                 });
-                
-                if (realBusinesses.length >= 2) break;
+              } else {
+                console.log(`Skipping ${details.name}: only ${details.user_ratings_total} reviews`);
               }
             }
             
@@ -326,6 +342,7 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
         
         // Expand radius if not enough results
         if (realBusinesses.length < 2) {
+          console.log(`Only found ${realBusinesses.length} businesses, expanding radius...`);
           radius += 5000; // Add 5km each iteration
         }
       }
