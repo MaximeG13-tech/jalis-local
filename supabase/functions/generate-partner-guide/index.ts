@@ -160,7 +160,7 @@ Entreprise cliente : ${companyName}
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
 
-Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents pour ${companyName}.
+Mission : Génère une liste de EXACTEMENT 6 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents pour ${companyName}.
 
 ⚠️ RÈGLE CRITIQUE : EXCLURE TOUS LES CONCURRENTS DIRECTS ⚠️
 
@@ -272,7 +272,7 @@ Activité de l'entreprise cliente : ${activityDescription}
 ⚠️ RÈGLE ABSOLUE : NE JAMAIS inclure de CONCURRENTS de ${companyName} ⚠️
 
 CONSIGNES STRICTES :
-1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent à "${category}"
+1. Trouve MAXIMUM 2 entreprises réelles qui correspondent à "${category}"
 2. Zone géographique : dans un rayon de 50km autour de ${address}
 3. Les entreprises trouvées DOIVENT être COMPLÉMENTAIRES à ${companyName}, JAMAIS concurrentes
 4. VÉRIFIE que chaque entreprise n'offre PAS les mêmes services principaux que ${companyName}
@@ -396,6 +396,19 @@ RÈGLES STRICTES pour la description :
 - La phrase de relation doit montrer la synergie avec ${companyName}
 - Les coordonnées doivent être intégrées de façon naturelle
 
+⚠️ FORMAT JSON CRITIQUE ⚠️
+Tu DOIS retourner un objet JSON VALIDE. 
+❌ N'utilise JAMAIS le symbole + pour concaténer des chaînes
+❌ INTERDIT : "description": "texte" + " suite"
+✅ OBLIGATOIRE : "description": "texte suite en une seule chaîne de caractères"
+
+Exemple de réponse VALIDE :
+{
+  "activity": "Titre de 10 à 15 mots se terminant par à",
+  "extract": "Un paragraphe de 40-60 mots...",
+  "description": "Un seul paragraphe continu de 100 mots maximum sans aucun symbole + pour la concaténation."
+}
+
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
         const enrichResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -427,10 +440,14 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
 
         try {
           const content = enrichData.choices[0].message.content;
-          const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+          // Remove markdown code blocks and trim
+          let cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+          // Remove any + concatenation operators that might slip through
+          cleanContent = cleanContent.replace(/"\s*\+\s*"/g, "");
           aiData = JSON.parse(cleanContent);
         } catch (e) {
           console.error("Failed to parse enrichment data:", enrichData.choices[0].message.content);
+          console.error("Parse error:", e);
           continue;
         }
 
