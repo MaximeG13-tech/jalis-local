@@ -172,7 +172,7 @@ serve(async (req) => {
     const location = geocodeData.results[0].geometry.location;
     console.log("Location coordinates:", location);
 
-    // Étape 1: Génération des catégories de rapporteurs d'affaires
+    // Étape 1: Génération des catégories avec types Google Places
     const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
 
 Entreprise cliente : ${companyName}
@@ -183,60 +183,49 @@ Mission : Génère une liste de EXACTEMENT 6 catégories d'entreprises qui serai
 
 ⚠️ RÈGLE CRITIQUE : EXCLURE TOUS LES CONCURRENTS DIRECTS ⚠️
 
-Un rapporteur d'affaires est une entreprise qui :
-- Offre des services COMPLÉMENTAIRES (jamais identiques ou similaires)
-- Peut recommander ou orienter des clients vers ${companyName}
-- Cible une clientèle similaire mais avec des besoins différents
-- Pourrait bénéficier d'un partenariat gagnant-gagnant
+Pour CHAQUE catégorie, tu dois fournir :
+1. Un nom de catégorie en français (description lisible)
+2. Un type Google Places correspondant (voir liste ci-dessous)
 
-❌ NE JAMAIS INCLURE :
-- Entreprises offrant les MÊMES services principaux que ${companyName}
-- Entreprises pouvant réaliser le MÊME travail que ${companyName}
-- Toute entreprise qui serait en COMPÉTITION DIRECTE avec ${companyName}
+TYPES GOOGLE PLACES DISPONIBLES :
+- general_contractor (entreprises générales du bâtiment)
+- architect (architectes)
+- electrician (électriciens)
+- plumber (plombiers)
+- painter (peintres)
+- roofing_contractor (couvreurs)
+- carpenter (menuisiers, charpentiers)
+- home_goods_store (magasins de matériaux)
+- furniture_store (magasins de meubles)
+- hardware_store (quincailleries)
+- real_estate_agency (agences immobilières)
+- lawyer (avocats)
+- accounting (comptables)
+- insurance_agency (assurances)
+- locksmith (serruriers)
+- moving_company (déménageurs)
 
-Exemples pour différents types d'entreprises :
+❌ NE JAMAIS INCLURE des types qui correspondent à l'activité de ${companyName}
 
-Pour une AGENCE WEB/DIGITALE qui crée des sites internet :
-✅ Experts-comptables et cabinets comptables (complémentaire - gestion TPE/PME)
-✅ Avocats en droit des affaires (complémentaire - conseil juridique)
-✅ Architectes (complémentaire - clientèle entreprises/commerces)
-✅ Artisans du bâtiment (complémentaire - besoin de présence web)
-✅ Imprimeurs (complémentaire - communication print)
-✅ Centres d'affaires et espaces de coworking (complémentaire - entrepreneurs)
-✅ Banques et chargés d'affaires (complémentaire - TPE/PME)
-✅ Assureurs professionnels (complémentaire - clientèle entreprises)
-❌ Autres agences web/digitales (CONCURRENT DIRECT)
-❌ Développeurs web freelance créant des sites (CONCURRENT DIRECT)
-❌ Agences de communication (même digitale) (CONCURRENT DIRECT)
-❌ Graphistes, designers (CONCURRENT - services adjacents)
-❌ Consultants SEO, référenceurs (CONCURRENT - services adjacents)
-❌ Rédacteurs web, copywriters (CONCURRENT - services adjacents)
-❌ Community managers (CONCURRENT - services adjacents)
-❌ Photographes professionnels (CONCURRENT - services adjacents)
+Format de réponse OBLIGATOIRE - un tableau JSON d'objets :
+[
+  {
+    "nom": "Nom de la catégorie en français",
+    "type": "google_place_type"
+  }
+]
 
-Pour une entreprise vendant des camping-cars :
-✅ Garages spécialisés en mécanique de camping-cars (complémentaire)
-✅ Aires de services pour camping-cars (complémentaire)
-✅ Magasins d'accessoires pour camping-cars (complémentaire)
-✅ Agents d'assurance véhicules de loisirs (complémentaire)
-❌ Autres concessionnaires de camping-cars (CONCURRENT DIRECT)
-
-Pour un PLOMBIER :
-✅ Électriciens (complémentaire - autre corps de métier)
-✅ Carreleurs (complémentaire - finitions salles de bain)
-✅ Chauffagistes (complémentaire mais distinct)
-✅ Magasins de sanitaires (complémentaire - fournitures)
-❌ Autres plombiers (CONCURRENT DIRECT)
-❌ Entreprises de plomberie (CONCURRENT DIRECT)
-
-Instructions strictes :
-1. Analyse l'activité PRINCIPALE de ${companyName}
-2. Identifie les services COMPLÉMENTAIRES (pas similaires)
-3. Ne suggère que des catégories qui ne font PAS la même chose que ${companyName}
-4. Vérifie que chaque catégorie aide ${companyName} sans lui faire concurrence
-
-Réponds UNIQUEMENT avec un tableau JSON de catégories (chaînes de caractères courtes et précises).
-Format attendu : ["catégorie 1", "catégorie 2", ...]`;
+Exemple :
+[
+  {
+    "nom": "Architectes",
+    "type": "architect"
+  },
+  {
+    "nom": "Entreprises générales du bâtiment",
+    "type": "general_contractor"
+  }
+]`;
 
     const categoriesResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -261,7 +250,7 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
     }
 
     const categoriesData = await categoriesResponse.json();
-    let categories: string[];
+    let categories: Array<{nom: string, type: string}>;
 
     try {
       const content = categoriesData.choices[0].message.content;
@@ -281,25 +270,31 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
     for (const category of categories) {
       if (enrichedBusinesses.length >= maxResults) break;
 
-      console.log(`Searching for real businesses: ${category}`);
+      console.log(`Searching for real businesses: ${category.nom} (type: ${category.type})`);
       
       // Try expanding radius from 6km to 50km if needed
       let radius = 6000; // Start at 6km
       let realBusinesses = [];
       
       while (realBusinesses.length < 2 && radius <= 50000) {
-        console.log(`Searching within ${radius}m radius for: ${category}`);
+        console.log(`Searching within ${radius}m radius for: ${category.nom}`);
         
-        // Use Text Search instead of Nearby Search for better keyword matching
-        const searchQuery = `${category} near ${address}`;
-        const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&location=${location.lat},${location.lng}&radius=${radius}&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+        // Use Nearby Search with type parameter (more reliable than keywords)
+        const nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&type=${category.type}&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
         
-        console.log(`Text search query: ${searchQuery}`);
-        const searchResponse = await fetch(textSearchUrl);
+        const searchResponse = await fetch(nearbyUrl);
         const searchData = await searchResponse.json();
+        
+        console.log(`API Status: ${searchData.status}`);
         
         if (searchData.status === "ZERO_RESULTS") {
           console.log(`No results for radius ${radius}m, expanding...`);
+          radius += 5000;
+          continue;
+        }
+        
+        if (searchData.status !== "OK") {
+          console.error(`API Error: ${searchData.status} - ${searchData.error_message || 'No details'}`);
           radius += 5000;
           continue;
         }
@@ -328,10 +323,10 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
                   telephone: details.formatted_phone_number || "Non renseigné",
                   site_web: details.website || "Non renseigné",
                   lien_maps: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-                  activite_reelle: category
+                  activite_reelle: category.nom
                 });
               } else {
-                console.log(`Skipping ${details.name}: only ${details.user_ratings_total} reviews`);
+                console.log(`Skipping ${details.name}: only ${details.user_ratings_total || 0} reviews`);
               }
             }
             
@@ -347,7 +342,7 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
         }
       }
       
-      console.log(`Found ${realBusinesses.length} real businesses for ${category}`);
+      console.log(`Found ${realBusinesses.length} real businesses for ${category.nom}`);
 
       // Step 3: AI enrichment for SEO content
       for (const business of realBusinesses) {
@@ -361,7 +356,7 @@ Entreprise à traiter :
 - Téléphone : ${business.telephone}
 - Site web : ${business.site_web}
 - Activité réelle : ${business.activite_reelle}
-- Catégorie : ${category}
+- Catégorie : ${category.nom}
 
 **Société cliente : ${companyName}**
 
