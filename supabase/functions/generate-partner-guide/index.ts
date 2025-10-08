@@ -145,13 +145,32 @@ serve(async (req) => {
     if (!activityDescription || !address || !companyName) {
       throw new Error('Missing required parameters: activityDescription, address, and companyName');
     }
+    
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GOOGLE_PLACES_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+    
+    if (!GOOGLE_PLACES_API_KEY) {
+      throw new Error("GOOGLE_PLACES_API_KEY is not configured");
+    }
 
     console.log("Starting partner guide generation for:", activityDescription);
+    
+    // Step 0: Geocode the address to get coordinates
+    console.log("Geocoding address:", address);
+    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_PLACES_API_KEY}`;
+    const geocodeResponse = await fetch(geocodeUrl);
+    const geocodeData = await geocodeResponse.json();
+    
+    if (!geocodeData.results || geocodeData.results.length === 0) {
+      throw new Error("Could not geocode the provided address");
+    }
+    
+    const location = geocodeData.results[0].geometry.location;
+    console.log("Location coordinates:", location);
 
     // Étape 1: Génération des catégories de rapporteurs d'affaires
     const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
@@ -255,115 +274,66 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
 
     console.log("Generated categories:", categories);
 
-    // Étape 2 & 3: Recherche et enrichissement pour chaque catégorie
+    // Step 2: Search real businesses using Google Places API
     const enrichedBusinesses = [];
     const businessesPerCategory = Math.ceil(maxResults / categories.length);
 
     for (const category of categories) {
       if (enrichedBusinesses.length >= maxResults) break;
 
-      console.log(`Searching for category: ${category}`);
-
-      const searchPrompt = `Recherche web en temps réel pour : ${category} près de ${address}
-
-ENTREPRISE CLIENTE : ${companyName}
-Activité de l'entreprise cliente : ${activityDescription}
-
-⚠️ RÈGLE ABSOLUE : NE JAMAIS inclure de CONCURRENTS de ${companyName} ⚠️
-
-CONSIGNES STRICTES :
-1. Trouve MAXIMUM 2 entreprises réelles qui correspondent à "${category}"
-2. Zone géographique : dans un rayon de 50km autour de ${address}
-3. Les entreprises trouvées DOIVENT être COMPLÉMENTAIRES à ${companyName}, JAMAIS concurrentes
-4. VÉRIFIE que chaque entreprise n'offre PAS les mêmes services principaux que ${companyName}
-
-CRITÈRES D'EXCLUSION (à vérifier pour CHAQUE entreprise) :
-- Si l'entreprise fait le MÊME travail que ${companyName} → NE PAS L'INCLURE
-- Si l'entreprise offre les MÊMES services que ${companyName} → NE PAS L'INCLURE  
-- Si l'entreprise est en compétition directe avec ${companyName} → NE PAS L'INCLURE
-
-5. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
-   - Le nom exact et complet de l'entreprise
-   - L'adresse postale complète avec code postal
-   - Le numéro de téléphone (si disponible, sinon "Non renseigné")
-   - Le site web (si disponible, sinon "Non renseigné")
-   - Une brève description de l'activité réelle de l'entreprise
-
-6. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
-7. Ne pas inclure de grandes chaînes nationales ou franchises
-8. Privilégier les TPE/PME locales
-
-⚠️ FORMAT DE RÉPONSE OBLIGATOIRE ⚠️
-Tu DOIS retourner UNIQUEMENT un tableau JSON (array) d'objets.
-❌ INTERDIT : Retourner un objet avec une propriété "businesses"
-✅ OBLIGATOIRE : Retourner directement un tableau : [{ ... }, { ... }]
-
-Exemple de format CORRECT :
-[
-  {
-    "nom": "Nom de l'entreprise",
-    "adresse": "Adresse complète avec code postal",
-    "telephone": "Numéro ou 'Non renseigné'",
-    "site_web": "URL ou 'Non renseigné'",
-    "lien_maps": "URL Google Maps si trouvé, sinon ''",
-    "activite_reelle": "Description courte de l'activité réelle trouvée"
-  }
-]`;
-
-      const searchResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "Tu es un assistant de recherche web. Tu effectues des recherches en temps réel et réponds avec du JSON valide uniquement. Tu ne dois jamais inventer d'informations.",
-            },
-            { role: "user", content: searchPrompt },
-          ],
-        }),
-      });
-
-      if (!searchResponse.ok) {
-        console.error(`Search failed for category ${category}`);
-        continue;
-      }
-
-      const searchData = await searchResponse.json();
-      let businesses;
-
-      try {
-        const content = searchData.choices[0].message.content;
-        const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-        const parsed = JSON.parse(cleanContent);
+      console.log(`Searching for real businesses: ${category}`);
+      
+      // Try expanding radius from 6km to 50km if needed
+      let radius = 6000; // Start at 6km
+      let realBusinesses = [];
+      
+      while (realBusinesses.length < 2 && radius <= 50000) {
+        console.log(`Searching within ${radius}m radius`);
         
-        // Ensure we have an array
-        if (Array.isArray(parsed)) {
-          businesses = parsed;
-        } else if (parsed && typeof parsed === 'object') {
-          // If it's an object, try to extract an array from common property names
-          businesses = parsed.businesses || parsed.results || parsed.data || [parsed];
-        } else {
-          console.error(`Invalid businesses format for ${category}:`, parsed);
-          continue;
+        const nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&keyword=${encodeURIComponent(category)}&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+        const nearbyResponse = await fetch(nearbyUrl);
+        const nearbyData = await nearbyResponse.json();
+        
+        if (nearbyData.results && nearbyData.results.length > 0) {
+          // Filter and get details for each place
+          for (const place of nearbyData.results.slice(0, 2)) {
+            const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,business_status,types,user_ratings_total&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+            const detailsResponse = await fetch(detailsUrl);
+            const detailsData = await detailsResponse.json();
+            
+            if (detailsData.result && detailsData.result.business_status === "OPERATIONAL") {
+              const details = detailsData.result;
+              
+              // Only keep businesses with at least some ratings (indicator of established business)
+              if (details.user_ratings_total && details.user_ratings_total >= 5) {
+                realBusinesses.push({
+                  nom: details.name,
+                  adresse: details.formatted_address || "Non renseigné",
+                  telephone: details.formatted_phone_number || "Non renseigné",
+                  site_web: details.website || "Non renseigné",
+                  lien_maps: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+                  activite_reelle: category
+                });
+                
+                if (realBusinesses.length >= 2) break;
+              }
+            }
+            
+            // Rate limiting delay
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
         }
         
-        if (businesses.length === 0) {
-          console.log(`No businesses found for category: ${category}`);
-          continue;
+        // Expand radius if not enough results
+        if (realBusinesses.length < 2) {
+          radius += 5000; // Add 5km each iteration
         }
-      } catch (e) {
-        console.error(`Failed to parse businesses for ${category}:`, searchData.choices[0].message.content);
-        continue;
       }
+      
+      console.log(`Found ${realBusinesses.length} real businesses for ${category}`);
 
-      // Étape 3: Enrichissement de chaque entreprise trouvée
-      for (const business of businesses) {
+      // Step 3: AI enrichment for SEO content
+      for (const business of realBusinesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
         const enrichPrompt = `Tu es un expert en rédaction SEO et en contenus pour annuaires professionnels locaux. 
