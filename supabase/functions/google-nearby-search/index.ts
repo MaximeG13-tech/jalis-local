@@ -126,35 +126,21 @@ serve(async (req) => {
     }
 
     // Transform and include all available data to minimize additional API calls
-    const results = (data.places || []).map((place: any) => {
-      const placeId = place.id?.replace("places/", "") || "";
-      const name = place.displayName?.text || "";
-      const address = place.formattedAddress || "";
-      
-      // Use native Google Maps URI or create a simple search URL
-      let mapsUrl = place.googleMapsUri || "";
-      if (!mapsUrl && name && address) {
-        // Fallback: create a simple search URL that works reliably
-        const query = encodeURIComponent(`${name}, ${address}`);
-        mapsUrl = `https://www.google.com/maps/search/${query}`;
-      }
-      
-      return {
-        place_id: placeId,
-        name,
-        formatted_address: address,
-        formatted_phone_number: place.nationalPhoneNumber || place.internationalPhoneNumber || "",
-        website: place.websiteUri || "",
-        url: mapsUrl,
-        types: place.types || [],
-        geometry: {
-          location: {
-            lat: place.location?.latitude || 0,
-            lng: place.location?.longitude || 0,
-          },
+    const results = (data.places || []).map((place: any) => ({
+      place_id: place.id?.replace("places/", "") || "",
+      name: place.displayName?.text || "",
+      formatted_address: place.formattedAddress || "",
+      formatted_phone_number: place.nationalPhoneNumber || place.internationalPhoneNumber || "",
+      website: place.websiteUri || "",
+      url: place.googleMapsUri || "", // Use native Google URL only
+      types: place.types || [],
+      geometry: {
+        location: {
+          lat: place.location?.latitude || 0,
+          lng: place.location?.longitude || 0,
         },
-      };
-    });
+      },
+    }));
 
     console.log(`Found ${results.length} places in this search`);
 

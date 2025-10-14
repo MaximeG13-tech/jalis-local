@@ -37,25 +37,13 @@ serve(async (req) => {
     }
 
     // Transform to match old format
-    const extractedPlaceId = data.id?.replace('places/', '') || '';
-    const name = data.displayName?.text || '';
-    const address = data.formattedAddress || '';
-    
-    // Use native Google Maps URI or create a simple search URL
-    let mapsUrl = data.googleMapsUri || "";
-    if (!mapsUrl && name && address) {
-      // Fallback: create a simple search URL that works reliably
-      const query = encodeURIComponent(`${name}, ${address}`);
-      mapsUrl = `https://www.google.com/maps/search/${query}`;
-    }
-    
     const result = {
-      place_id: extractedPlaceId,
-      name,
-      formatted_address: address,
+      place_id: data.id?.replace('places/', '') || '',
+      name: data.displayName?.text || '',
+      formatted_address: data.formattedAddress || '',
       formatted_phone_number: data.nationalPhoneNumber || '',
       website: data.websiteUri || '',
-      url: mapsUrl,
+      url: data.googleMapsUri || '', // Use native Google URL only
       geometry: {
         location: {
           lat: data.location?.latitude || 0,
