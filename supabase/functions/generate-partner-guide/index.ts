@@ -355,19 +355,28 @@ RÈGLES IMPÉRATIVES :
 
 STRUCTURE OBLIGATOIRE :
 - Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : ${companyName} met en avant cette entreprise. Utilise UNIQUEMENT ces formulations :
-  * "${companyName} est fier de mettre en avant cette entreprise"
-  * "Pour [type de prestations/services], ${companyName} vous présente cette entreprise"
-  * "${companyName} vous présente cette entreprise pour tous vos besoins en [domaine]"
-  * "${companyName} recommande cette entreprise pour [domaine]"
-  * "Cette entreprise est mise en avant par ${companyName}"
+- Paragraphe 2 (20-30 mots) : ${companyName} met en avant cette entreprise - UTILISE UNIQUEMENT CES FORMULATIONS EXACTES :
+  * "${companyName} est fier de vous présenter ${business.nom}"
+  * "${companyName} est fier de mettre en avant ${business.nom}"
+  * "${companyName} est fier de soutenir les commerces locaux en mettant en lumière ${business.nom}"
+  * "Pour vos besoins en [domaine], ${companyName} vous présente ${business.nom}"
+  * "${companyName} recommande ${business.nom} pour [type de services]"
 - Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
 
-INTERDICTIONS STRICTES POUR LE PARAGRAPHE 2 :
-❌ NE JAMAIS utiliser les mots : "partenariat", "partenaire", "collaborer", "collaboration", "s'associer", "association"
-❌ NE JAMAIS écrire : "fier de collaborer", "fier de s'associer", "ce partenariat", "notre partenaire"
-❌ NE PAS inventer de relation commerciale entre les deux entreprises
-✅ SEULEMENT : "mettre en avant", "présenter", "recommander"
+INTERDICTIONS ABSOLUES POUR LE PARAGRAPHE 2 - EXEMPLES CONCRETS :
+❌ INTERDIT : "${companyName} est fier de s'associer avec ${business.nom}"
+❌ INTERDIT : "${companyName} est fier de collaborer avec ${business.nom}"
+❌ INTERDIT : "${companyName} est fier de s'associer à ${business.nom}"
+❌ INTERDIT : "Ce partenariat permet..."
+❌ INTERDIT : "Cette collaboration renforce..."
+❌ INTERDIT : "un partenaire de confiance"
+❌ INTERDIT : tout mot contenant "partenaire", "partenariat", "collabor", "associer", "association"
+
+✅ AUTORISÉ : "${companyName} est fier de vous présenter ${business.nom}"
+✅ AUTORISÉ : "${companyName} est fier de mettre en avant ${business.nom}"
+✅ AUTORISÉ : "${companyName} est fier de soutenir les commerces locaux"
+✅ AUTORISÉ : "${companyName} recommande ${business.nom}"
+✅ SEULEMENT ces verbes : "présenter", "mettre en avant", "recommander", "soutenir"
 
 CONSIGNES DE TON CRITIQUES :
 - Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
