@@ -182,21 +182,28 @@ RÈGLES IMPÉRATIVES :
 
 2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
 
-3. **description** : Description de MAXIMUM 100 MOTS en TEXTE BRUT (pas de HTML, pas de balises).
+3. **description** : Description de 100 à 150 MOTS en TEXTE BRUT (pas de HTML, pas de balises).
 
-🚫 INTERDICTIONS ABSOLUES - MOTS À NE JAMAIS UTILISER 🚫
-❌ partenariat
-❌ partenaire  
-❌ collaborer
-❌ collaboration
-❌ s'associer
-❌ associer
-❌ apporteur d'affaires
+🚫 MOTS TOTALEMENT INTERDITS 🚫
+❌ partenariat / partenaire
+❌ collaborer / collaboration
+❌ s'associer / associer
+❌ apporteur d'affaires / rapporteur
 
-STRUCTURE OBLIGATOIRE :
-- Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : COPIE-COLLE EXACTEMENT : "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
-- Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
+PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplicate content) :
+1. "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
+2. "${companyName} met en avant ${business.nom} pour la qualité de ses services."
+3. "${companyName} vous recommande ${business.nom} pour leur expertise reconnue."
+4. "${companyName} souhaite mettre en lumière ${business.nom}, acteur local de confiance."
+5. "Découvrez ${business.nom}, une entreprise que ${companyName} vous présente aujourd'hui."
+6. "${companyName} valorise les entreprises locales comme ${business.nom}."
+
+Choisis-en une AU HASARD pour varier le contenu.
+
+STRUCTURE OBLIGATOIRE (100-150 mots total) :
+- Paragraphe 1 (40-60 mots) : Présenter l'activité et l'expertise de ${business.nom}
+- Paragraphe 2 (20-30 mots) : UNE des 6 formulations ci-dessus (varie)
+- Paragraphe 3 (30-40 mots) : Coordonnées et call-to-action en 3ème personne
 
 CONSIGNES DE TON :
 - Parle TOUJOURS à la 3ème personne de l'entreprise

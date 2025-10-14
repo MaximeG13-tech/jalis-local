@@ -307,22 +307,23 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-      const enrichPrompt = `🚫 RÈGLE ABSOLUE - PARAGRAPHE 2 🚫
+      const enrichPrompt = `🚫 MOTS TOTALEMENT INTERDITS 🚫
+❌ partenariat / partenaire
+❌ collaborer / collaboration
+❌ s'associer / associer
+❌ apporteur d'affaires / rapporteur
 
-LE PARAGRAPHE 2 DOIT ÊTRE EXACTEMENT (copie-colle) :
-"${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
+---
 
-AUCUNE autre formulation n'est autorisée. Copie-colle cette phrase EXACTEMENT.
+PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplicate content) :
+1. "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
+2. "${companyName} met en avant ${business.nom} pour la qualité de ses services."
+3. "${companyName} vous recommande ${business.nom} pour leur expertise reconnue."
+4. "${companyName} souhaite mettre en lumière ${business.nom}, acteur local de confiance."
+5. "Découvrez ${business.nom}, une entreprise que ${companyName} vous présente aujourd'hui."
+6. "${companyName} valorise les entreprises locales comme ${business.nom}."
 
-MOTS TOTALEMENT INTERDITS partout dans la description :
-❌ partenariat
-❌ partenaire
-❌ collaborer
-❌ collaboration
-❌ s'associer
-❌ associer
-❌ apporteur d'affaires
-❌ rapporteur
+Choisis-en une AU HASARD pour varier le contenu.
 
 ---
 
@@ -351,16 +352,16 @@ RÈGLES IMPÉRATIVES :
 
 2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée.
 
-3. **description** : Description de MAXIMUM 100 MOTS en HTML avec des balises <p>.
+3. **description** : Description de 100 à 150 MOTS en HTML avec des balises <p>.
 
 Format JSON attendu :
 {
   "activity": "titre SEO 10-15 mots se terminant par 'à'",
   "extract": "résumé 40-60 mots",
-  "description": "<p>Paragraphe 1 sur l'entreprise</p><p>${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité.</p><p>Paragraphe 3 avec coordonnées</p>"
+  "description": "<p>Paragraphe 1 (40-60 mots) sur l'entreprise</p><p>Paragraphe 2 : UNE des 6 formulations au-dessus (varie à chaque entreprise)</p><p>Paragraphe 3 (30-40 mots) avec coordonnées</p>"
 }
 
-RAPPEL : Paragraphe 2 = copie-colle exact de : "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
+RAPPEL : Total 100-150 mots. Paragraphe 2 = choisis UNE des 6 formulations listées (varie).
 
 CONSIGNES DE TON :
 - Parle TOUJOURS à la 3ème personne de l'entreprise
