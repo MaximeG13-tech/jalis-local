@@ -126,21 +126,36 @@ serve(async (req) => {
     }
 
     // Transform and include all available data to minimize additional API calls
-    const results = (data.places || []).map((place: any) => ({
-      place_id: place.id?.replace("places/", "") || "",
-      name: place.displayName?.text || "",
-      formatted_address: place.formattedAddress || "",
-      formatted_phone_number: place.nationalPhoneNumber || place.internationalPhoneNumber || "",
-      website: place.websiteUri || "",
-      url: place.googleMapsUri || "",
-      types: place.types || [],
-      geometry: {
-        location: {
-          lat: place.location?.latitude || 0,
-          lng: place.location?.longitude || 0,
+    const results = (data.places || []).map((place: any) => {
+      const placeId = place.id?.replace("places/", "") || "";
+      const name = place.displayName?.text || "";
+      const address = place.formattedAddress || "";
+      
+      // Create a working Google Maps link using place_id or search query
+      let mapsUrl = "";
+      if (placeId) {
+        mapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+      } else if (name && address) {
+        const query = encodeURIComponent(`${name} ${address}`);
+        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      }
+      
+      return {
+        place_id: placeId,
+        name,
+        formatted_address: address,
+        formatted_phone_number: place.nationalPhoneNumber || place.internationalPhoneNumber || "",
+        website: place.websiteUri || "",
+        url: mapsUrl,
+        types: place.types || [],
+        geometry: {
+          location: {
+            lat: place.location?.latitude || 0,
+            lng: place.location?.longitude || 0,
+          },
         },
-      },
-    }));
+      };
+    });
 
     console.log(`Found ${results.length} places in this search`);
 

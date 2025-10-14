@@ -37,13 +37,26 @@ serve(async (req) => {
     }
 
     // Transform to match old format
+    const extractedPlaceId = data.id?.replace('places/', '') || '';
+    const name = data.displayName?.text || '';
+    const address = data.formattedAddress || '';
+    
+    // Create a working Google Maps link using place_id or search query
+    let mapsUrl = "";
+    if (extractedPlaceId) {
+      mapsUrl = `https://www.google.com/maps/place/?q=place_id:${extractedPlaceId}`;
+    } else if (name && address) {
+      const query = encodeURIComponent(`${name} ${address}`);
+      mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    
     const result = {
-      place_id: data.id?.replace('places/', '') || '',
-      name: data.displayName?.text || '',
-      formatted_address: data.formattedAddress || '',
+      place_id: extractedPlaceId,
+      name,
+      formatted_address: address,
       formatted_phone_number: data.nationalPhoneNumber || '',
       website: data.websiteUri || '',
-      url: data.googleMapsUri || '',
+      url: mapsUrl,
       geometry: {
         location: {
           lat: data.location?.latitude || 0,
