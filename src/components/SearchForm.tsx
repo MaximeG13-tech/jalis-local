@@ -1,26 +1,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Loader2 } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
 
 interface SearchFormProps {
-  onSearch: (address: string, placeId: string, maxResults: number, companyName: string) => void;
+  onSearch: (companyName: string, address: string, placeId: string, maxResults: number) => void;
   isLoading: boolean;
 }
 
 export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
+  const [companyName, setCompanyName] = useState('');
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
   const [maxResults, setMaxResults] = useState(10);
-  const [companyName, setCompanyName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address.trim() || !placeId || !companyName.trim()) return;
-    onSearch(address, placeId, maxResults, companyName.trim());
+    if (!companyName.trim() || !address.trim() || !placeId) return;
+    onSearch(companyName, address, placeId, maxResults);
   };
 
   const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {
@@ -34,17 +35,16 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="companyName" className="text-sm font-bold text-foreground uppercase tracking-wide">
-              Nom de votre société
+              Nom de votre entreprise
             </Label>
-            <input
+            <Input
               id="companyName"
               type="text"
-              placeholder="Ex: Agence Immobilière Martin"
+              placeholder="Ex: Jalis"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               disabled={isLoading}
               required
-              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 

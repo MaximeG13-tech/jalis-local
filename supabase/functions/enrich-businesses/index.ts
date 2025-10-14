@@ -116,12 +116,15 @@ function extractPostalCode(address: string): string | null {
 }
 
 function formatCity(address: string): string {
+  // Extract postal code from the address
   const postalCode = extractPostalCode(address);
   if (!postalCode) return address;
 
+  // Extract city name (after postal code)
   const cityMatch = address.match(/\d{5}\s+([^,]+)/);
   const cityName = cityMatch ? cityMatch[1].trim() : address;
 
+  // Use postal code from the address (not from a different location)
   const deptCode = postalCode.substring(0, 2);
   const deptPhrase = DEPARTMENT_MAP[deptCode] || DEPARTMENT_MAP[postalCode.substring(0, 3)] || "";
 
@@ -134,7 +137,7 @@ serve(async (req) => {
   }
 
   try {
-    const { businesses } = await req.json();
+    const { businesses, companyName } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -144,35 +147,53 @@ serve(async (req) => {
     const enrichedBusinesses = [];
 
     for (const business of businesses) {
-      const prompt = `Tu es un expert en rédaction de contenus pour annuaires professionnels locaux. Tu dois produire un contenu en français avec une grammaire irréprochable, sans aucune faute d'orthographe, et chaque phrase doit avoir du sens et de la pertinence.
+      const prompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente ses partenaires sur son site web.
 
-Entreprise à traiter :
+CONTEXTE IMPORTANT :
+- Le texte sera publié sur le site de ${companyName}
+- C'est ${companyName} qui parle de l'entreprise partenaire
+- Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
+- JAMAIS "nous", "notre", "contactez-nous" car ce n'est PAS l'entreprise qui parle d'elle-même
+
+Entreprise partenaire à présenter :
 - Nom : ${business.nom}
 - Adresse : ${business.adresse}
 - Téléphone : ${business.telephone}
 - Site web : ${business.site_web}
 - Lien Google Maps : ${business.lien_maps}
 
-Instructions strictes :
+Instructions strictes pour un SEO optimal :
 
-1. **activity** : Un titre d'environ 10 mots qui donne l'activité de l'entreprise et qui doit être accrocheur et donner envie de cliquer. Grammaire française irréprochable, zéro faute d'orthographe.
+1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
 
-FORMATS À VARIER (exemples) :
-- "Entreprise spécialisée dans {activité} proposant {produit/service} avec {spécificités} à"
-- "Expert en {activité} et {service}, installant {produit} avec {spécificités} près de"
-- "Société experte en {activité} pour {produit} adaptés à {spécificités} autour de"
-- "Votre partenaire en {activité} offrant {produit/service} performants grâce à {spécificités} à"
-- "Spécialiste en {activité}, nous proposons {produit/service} avec {spécificités} sur"
-- "Solutions de {activité} et {service} : {produit} avec {spécificités}, disponibles à"
-- "Professionnels de {activité} : {produit/service} avec {spécificités} disponibles proche de"
+EXEMPLES de formats à suivre STRICTEMENT :
+- "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
+- "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
+- "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
+- "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
 
-TRÈS IMPORTANT : Le titre DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
+RÈGLES IMPÉRATIVES :
+- Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
+- JAMAIS de pronoms personnels (ils, elle, nous) - forme nominale uniquement
+- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise
+- Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
+- La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
+- Compte exactement entre 10 et 15 mots (vérifie bien)
 
-2. **extract** : Un résumé court et percutant de 30 à 50 mots maximum de l'activité réelle de l'entreprise. RÉDIGE UNIQUEMENT À LA TROISIÈME PERSONNE DU PLURIEL (ils/elles). Base-toi sur les informations disponibles (nom, adresse, site web) pour créer un contenu cohérent avec la vraie activité de l'entreprise. Français impeccable, zéro faute.
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
 
-3. **description** : Une description détaillée de 100 à 150 mots en TEXTE BRUT (pas de HTML, pas de balises, uniquement du texte). RÉDIGE UNIQUEMENT À LA TROISIÈME PERSONNE DU PLURIEL (ils/elles) pour présenter les activités de l'entreprise. Le texte doit être parfaitement rédigé en français, optimisé pour le référencement local, avec une grammaire irréprochable et aucune faute d'orthographe. Chaque phrase doit être pertinente et avoir du sens. Termine par un appel à l'action engageant qui rappelle le numéro de téléphone (${business.telephone}) et mentionne l'adresse (${business.adresse}) si c'est un établissement physique qui reçoit du public. Varie les formulations de l'appel à l'action selon l'activité (exemples : "Contactez-les au...", "Prenez rendez-vous dès maintenant au...", "N'hésitez pas à les appeler au...", "Pour plus d'informations, appelez-les au...").
+3. **description** : Description de MAXIMUM 100 MOTS en TEXTE BRUT (pas de HTML, pas de balises).
 
-RAPPEL CRITIQUE : Tout le contenu doit être en français parfait, avec une grammaire irréprochable et zéro faute d'orthographe. Chaque phrase doit avoir du sens et de la pertinence.
+STRUCTURE OBLIGATOIRE :
+- Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
+- Paragraphe 2 (20-30 mots) : Expliquer BRIÈVEMENT le lien de partenariat avec ${companyName} (pourquoi ce partenariat est pertinent, comment les deux entreprises se complètent)
+- Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
+
+CONSIGNES DE TON CRITIQUES :
+- Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
+- Utilise "leur", "ils", "cette entreprise", "${business.nom}"
+- CTA : "Contactez-les au ${business.telephone}" ou "Rendez-vous sur leur site" (JAMAIS "contactez-nous")
+- C'est ${companyName} qui recommande ce partenaire à ses clients
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 

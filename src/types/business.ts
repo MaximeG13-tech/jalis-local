@@ -25,5 +25,4 @@ export interface GooglePlace {
 export interface SearchParams {
   address: string;
   maxResults: number;
-  companyName: string;
 }
