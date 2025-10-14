@@ -315,15 +315,32 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-        const enrichPrompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente ses partenaires sur son site web.
+      const enrichPrompt = `⚠️ RÈGLE ABSOLUE N°1 - À RESPECTER IMPÉRATIVEMENT ⚠️
+NE JAMAIS ÉCRIRE dans le paragraphe 2 de la description :
+- "est fier de s'associer"
+- "est fier de collaborer" 
+- "partenariat"
+- "partenaire"
+- "collaboration"
+- "s'associer"
+- "associer"
 
-CONTEXTE IMPORTANT :
+SEULEMENT CES FORMULATIONS POUR LE PARAGRAPHE 2 :
+✅ "${companyName} est fier de vous présenter ${business.nom}"
+✅ "${companyName} est fier de mettre en avant ${business.nom}"
+✅ "${companyName} est fier de soutenir les commerces locaux en mettant en lumière ${business.nom}"
+✅ "Pour vos besoins en [domaine], ${companyName} vous présente ${business.nom}"
+✅ "${companyName} recommande ${business.nom} pour [type de services]"
+
+Tu es un expert en rédaction SEO pour ${companyName}, qui présente des entreprises sur son site web.
+
+CONTEXTE :
 - Le texte sera publié sur le site de ${companyName}
-- C'est ${companyName} qui parle de l'entreprise partenaire
+- C'est ${companyName} qui parle de l'entreprise
 - Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
-- JAMAIS "nous", "notre", "contactez-nous" car ce n'est PAS l'entreprise qui parle d'elle-même
+- JAMAIS "nous", "notre", "contactez-nous"
 
-Entreprise partenaire à présenter :
+Entreprise à présenter :
 - Nom : ${business.nom}
 - Adresse : ${business.adresse}
 - Téléphone : ${business.telephone}
@@ -353,30 +370,28 @@ RÈGLES IMPÉRATIVES :
 
 3. **description** : Description de MAXIMUM 100 MOTS en HTML avec des balises <p>.
 
-STRUCTURE OBLIGATOIRE :
-- Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : ${companyName} met en avant cette entreprise - UTILISE UNIQUEMENT CES FORMULATIONS EXACTES :
-  * "${companyName} est fier de vous présenter ${business.nom}"
-  * "${companyName} est fier de mettre en avant ${business.nom}"
-  * "${companyName} est fier de soutenir les commerces locaux en mettant en lumière ${business.nom}"
-  * "Pour vos besoins en [domaine], ${companyName} vous présente ${business.nom}"
-  * "${companyName} recommande ${business.nom} pour [type de services]"
-- Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
+STRUCTURE OBLIGATOIRE DE LA DESCRIPTION :
 
-INTERDICTIONS ABSOLUES POUR LE PARAGRAPHE 2 - EXEMPLES CONCRETS :
-❌ INTERDIT : "${companyName} est fier de s'associer avec ${business.nom}"
-❌ INTERDIT : "${companyName} est fier de collaborer avec ${business.nom}"
-❌ INTERDIT : "${companyName} est fier de s'associer à ${business.nom}"
-❌ INTERDIT : "Ce partenariat permet..."
-❌ INTERDIT : "Cette collaboration renforce..."
-❌ INTERDIT : "un partenaire de confiance"
-❌ INTERDIT : tout mot contenant "partenaire", "partenariat", "collabor", "associer", "association"
+Paragraphe 1 (30-40 mots) : 
+Présenter rapidement l'activité et l'expertise de ${business.nom}
 
-✅ AUTORISÉ : "${companyName} est fier de vous présenter ${business.nom}"
-✅ AUTORISÉ : "${companyName} est fier de mettre en avant ${business.nom}"
-✅ AUTORISÉ : "${companyName} est fier de soutenir les commerces locaux"
-✅ AUTORISÉ : "${companyName} recommande ${business.nom}"
-✅ SEULEMENT ces verbes : "présenter", "mettre en avant", "recommander", "soutenir"
+Paragraphe 2 (20-30 mots) - ⚠️ ATTENTION CRITIQUE ⚠️ : 
+TU DOIS utiliser UNE SEULE de ces 5 formulations EXACTES :
+1. "${companyName} est fier de vous présenter ${business.nom}"
+2. "${companyName} est fier de mettre en avant ${business.nom}"  
+3. "${companyName} est fier de soutenir les commerces locaux en mettant en lumière ${business.nom}"
+4. "Pour vos besoins en [domaine], ${companyName} vous présente ${business.nom}"
+5. "${companyName} recommande ${business.nom} pour [type de services]"
+
+⛔ INTERDICTIONS POUR LE PARAGRAPHE 2 ⛔
+N'ÉCRIS JAMAIS :
+- "s'associer" / "associer" / "association"
+- "collaborer" / "collaboration" / "collaborateur"
+- "partenariat" / "partenaire"
+- Toute variation de ces mots
+
+Paragraphe 3 (20-30 mots) : 
+Coordonnées et call-to-action en 3ème personne
 
 CONSIGNES DE TON CRITIQUES :
 - Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
