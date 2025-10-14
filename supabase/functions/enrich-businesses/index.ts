@@ -160,7 +160,6 @@ Entreprise locale à présenter :
 - Adresse : ${business.adresse}
 - Téléphone : ${business.telephone}
 - Site web : ${business.site_web}
-- Lien Google Maps : ${business.lien_maps}
 
 Instructions strictes pour un SEO optimal :
 

@@ -237,7 +237,8 @@ export class GooglePlacesService {
 
         // Accepter si on a AU MOINS un moyen de contact
         if (phoneNumber || website) {
-          const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
+          // Use native Google Maps URL from the API
+          const mapsLink = place.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
           
           businesses.push({
             nom: place.name,

@@ -263,7 +263,6 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
   "adresse": "Adresse complète avec code postal",
   "telephone": "Numéro ou 'Non renseigné'",
   "site_web": "URL ou 'Non renseigné'",
-  "lien_maps": "URL Google Maps si trouvé, sinon ''",
   "activite_reelle": "Description courte de l'activité réelle trouvée"
 }`;
 
