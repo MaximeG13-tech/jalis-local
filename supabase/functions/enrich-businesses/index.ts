@@ -186,7 +186,7 @@ RÈGLES IMPÉRATIVES :
 
 STRUCTURE OBLIGATOIRE :
 - Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : Expliquer BRIÈVEMENT le lien de partenariat avec ${companyName} (pourquoi ce partenariat est pertinent, comment les deux entreprises se complètent)
+- Paragraphe 2 (20-30 mots) : Expliquer BRIÈVEMENT le lien avec ${companyName} (mise en avant de l'entreprise)
 - Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
 
 CONSIGNES DE TON CRITIQUES :
