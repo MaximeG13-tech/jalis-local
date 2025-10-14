@@ -131,13 +131,12 @@ serve(async (req) => {
       const name = place.displayName?.text || "";
       const address = place.formattedAddress || "";
       
-      // Create a working Google Maps link using place_id or search query
-      let mapsUrl = "";
-      if (placeId) {
-        mapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
-      } else if (name && address) {
-        const query = encodeURIComponent(`${name} ${address}`);
-        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      // Use native Google Maps URI or create a simple search URL
+      let mapsUrl = place.googleMapsUri || "";
+      if (!mapsUrl && name && address) {
+        // Fallback: create a simple search URL that works reliably
+        const query = encodeURIComponent(`${name}, ${address}`);
+        mapsUrl = `https://www.google.com/maps/search/${query}`;
       }
       
       return {
