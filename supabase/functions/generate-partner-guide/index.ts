@@ -215,7 +215,22 @@ Format attendu : ["catégorie 1", "catégorie 2", ...]`;
     try {
       const content = categoriesData.choices[0].message.content;
       const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-      categories = JSON.parse(cleanContent);
+      const parsed = JSON.parse(cleanContent);
+      
+      // Handle both array and object responses
+      if (Array.isArray(parsed)) {
+        categories = parsed;
+      } else if (typeof parsed === 'object') {
+        // If it's an object, try to find the array inside
+        const firstKey = Object.keys(parsed)[0];
+        if (Array.isArray(parsed[firstKey])) {
+          categories = parsed[firstKey];
+        } else {
+          throw new Error("No array found in categories response");
+        }
+      } else {
+        throw new Error("Categories response is not an array or object");
+      }
     } catch (e) {
       console.error("Failed to parse categories:", categoriesData.choices[0].message.content);
       throw new Error("Invalid JSON from categories generation");
@@ -245,8 +260,10 @@ CONSIGNES STRICTES :
    - Une brève description de l'activité réelle de l'entreprise basée sur tes recherches
 
 4. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
-5. Ne pas inclure de grandes chaînes nationales ou franchises
-6. Privilégier les TPE/PME locales
+5. IMPÉRATIF : Sélectionner UNIQUEMENT des TPE, PME ou artisans locaux
+6. AUCUNE grande chaîne nationale ou franchise
+7. AUCUN concurrent de ${companyName}, même indirect
+8. Privilégier les entreprises avec lesquelles ${companyName} peut collaborer sans conflit d'intérêt
 
 Réponds avec un tableau JSON d'objets avec ces champs exacts :
 {
@@ -338,7 +355,11 @@ RÈGLES IMPÉRATIVES :
 
 STRUCTURE OBLIGATOIRE :
 - Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : Expliquer BRIÈVEMENT le lien de partenariat avec ${companyName} (pourquoi ce partenariat est pertinent, comment les deux entreprises se complètent)
+- Paragraphe 2 (20-30 mots) : ${companyName} met en avant cette entreprise. Utilise des phrases comme :
+  * "${companyName} est fier de mettre en avant cette entreprise"
+  * "Pour [type de prestations/services], ${companyName} vous présente cette entreprise"
+  * "${companyName} vous présente cette entreprise pour tous vos besoins en [domaine]"
+  NE JAMAIS utiliser "partenariat", "collaborer avec", "s'associer à"
 - Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
 
 CONSIGNES DE TON CRITIQUES :
