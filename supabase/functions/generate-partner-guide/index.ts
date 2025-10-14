@@ -315,38 +315,31 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-      const enrichPrompt = `⚠️ RÈGLE ABSOLUE N°1 - À RESPECTER IMPÉRATIVEMENT ⚠️
-NE JAMAIS ÉCRIRE dans le paragraphe 2 de la description :
-- "est fier de s'associer"
-- "est fier de collaborer" 
-- "partenariat"
-- "partenaire"
-- "collaboration"
-- "s'associer"
-- "associer"
+      const enrichPrompt = `🚫🚫🚫 INTERDICTIONS ABSOLUES - VÉRIFIER AVANT D'ENVOYER 🚫🚫🚫
 
-SEULEMENT CES FORMULATIONS POUR LE PARAGRAPHE 2 :
-✅ "${companyName} est fier de vous présenter ${business.nom}"
-✅ "${companyName} est fier de mettre en avant ${business.nom}"
-✅ "${companyName} est fier de soutenir les commerces locaux en mettant en lumière ${business.nom}"
-✅ "Pour vos besoins en [domaine], ${companyName} vous présente ${business.nom}"
-✅ "${companyName} recommande ${business.nom} pour [type de services]"
+MOTS INTERDITS DANS LE PARAGRAPHE 2 :
+- "s'associer" ❌
+- "collaborer" ❌  
+- "partenariat" ❌
+- "partenaire" ❌
+- "collaboration" ❌
+- "associer" ❌
 
-Tu es un expert en rédaction SEO pour ${companyName}, qui présente des entreprises sur son site web.
+AVANT D'ENVOYER TA RÉPONSE : Vérifie que le paragraphe 2 de ta description NE CONTIENT AUCUN de ces mots interdits.
 
-CONTEXTE :
-- Le texte sera publié sur le site de ${companyName}
-- C'est ${companyName} qui parle de l'entreprise
-- Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
-- JAMAIS "nous", "notre", "contactez-nous"
+FORMULATIONS AUTORISÉES (choisis UNE SEULE) :
+1. "${companyName} est fier de vous présenter ${business.nom}"
+2. "${companyName} est fier de mettre en avant ${business.nom}"
+3. "${companyName} recommande ${business.nom}"
+
+NE PAS INVENTER D'AUTRES FORMULATIONS.
+
+---
 
 Entreprise à présenter :
 - Nom : ${business.nom}
-- Adresse : ${business.adresse}
-- Téléphone : ${business.telephone}
-- Site web : ${business.site_web}
-- Activité réelle : ${business.activite_reelle}
 - Catégorie : ${category}
+- Activité : ${business.activite_reelle}
 
 Instructions strictes pour un SEO optimal :
 
@@ -370,28 +363,14 @@ RÈGLES IMPÉRATIVES :
 
 3. **description** : Description de MAXIMUM 100 MOTS en HTML avec des balises <p>.
 
-STRUCTURE OBLIGATOIRE DE LA DESCRIPTION :
+Format JSON attendu :
+{
+  "activity": "titre SEO 10-15 mots se terminant par 'à'",
+  "extract": "résumé 40-60 mots",
+  "description": "<p>Paragraphe 1 sur l'entreprise</p><p>PARAGRAPHE 2 OBLIGATOIRE - COPIE EXACTEMENT UNE DE CES 3 PHRASES : '${companyName} est fier de vous présenter ${business.nom}' OU '${companyName} est fier de mettre en avant ${business.nom}' OU '${companyName} recommande ${business.nom}'</p><p>Paragraphe 3 avec coordonnées</p>"
+}
 
-Paragraphe 1 (30-40 mots) : 
-Présenter rapidement l'activité et l'expertise de ${business.nom}
-
-Paragraphe 2 (20-30 mots) - ⚠️ ATTENTION CRITIQUE ⚠️ : 
-TU DOIS utiliser UNE SEULE de ces 5 formulations EXACTES :
-1. "${companyName} est fier de vous présenter ${business.nom}"
-2. "${companyName} est fier de mettre en avant ${business.nom}"  
-3. "${companyName} est fier de soutenir les commerces locaux en mettant en lumière ${business.nom}"
-4. "Pour vos besoins en [domaine], ${companyName} vous présente ${business.nom}"
-5. "${companyName} recommande ${business.nom} pour [type de services]"
-
-⛔ INTERDICTIONS POUR LE PARAGRAPHE 2 ⛔
-N'ÉCRIS JAMAIS :
-- "s'associer" / "associer" / "association"
-- "collaborer" / "collaboration" / "collaborateur"
-- "partenariat" / "partenaire"
-- Toute variation de ces mots
-
-Paragraphe 3 (20-30 mots) : 
-Coordonnées et call-to-action en 3ème personne
+RAPPEL FINAL : Dans le paragraphe 2, tu DOIS copier-coller EXACTEMENT une des 3 phrases autorisées. N'écris JAMAIS "s'associer", "collaborer", "partenariat", "partenaire".
 
 CONSIGNES DE TON CRITIQUES :
 - Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
