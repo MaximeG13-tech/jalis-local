@@ -147,15 +147,15 @@ serve(async (req) => {
     const enrichedBusinesses = [];
 
     for (const business of businesses) {
-      const prompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente ses partenaires sur son site web.
+      const prompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente des entreprises locales sur son site web.
 
 CONTEXTE IMPORTANT :
 - Le texte sera publié sur le site de ${companyName}
-- C'est ${companyName} qui parle de l'entreprise partenaire
+- C'est ${companyName} qui présente une entreprise locale (PAS un partenaire)
 - Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
 - JAMAIS "nous", "notre", "contactez-nous" car ce n'est PAS l'entreprise qui parle d'elle-même
 
-Entreprise partenaire à présenter :
+Entreprise locale à présenter :
 - Nom : ${business.nom}
 - Adresse : ${business.adresse}
 - Téléphone : ${business.telephone}
@@ -184,16 +184,24 @@ RÈGLES IMPÉRATIVES :
 
 3. **description** : Description de MAXIMUM 100 MOTS en TEXTE BRUT (pas de HTML, pas de balises).
 
+🚫 INTERDICTIONS ABSOLUES - MOTS À NE JAMAIS UTILISER 🚫
+❌ partenariat
+❌ partenaire  
+❌ collaborer
+❌ collaboration
+❌ s'associer
+❌ associer
+❌ apporteur d'affaires
+
 STRUCTURE OBLIGATOIRE :
 - Paragraphe 1 (30-40 mots) : Présenter rapidement l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : Expliquer BRIÈVEMENT le lien avec ${companyName} (mise en avant de l'entreprise)
+- Paragraphe 2 (20-30 mots) : COPIE-COLLE EXACTEMENT : "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
 - Paragraphe 3 (20-30 mots) : Coordonnées et call-to-action en 3ème personne
 
-CONSIGNES DE TON CRITIQUES :
-- Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
+CONSIGNES DE TON :
+- Parle TOUJOURS à la 3ème personne de l'entreprise
 - Utilise "leur", "ils", "cette entreprise", "${business.nom}"
 - CTA : "Contactez-les au ${business.telephone}" ou "Rendez-vous sur leur site" (JAMAIS "contactez-nous")
-- C'est ${companyName} qui recommande ce partenaire à ses clients
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 

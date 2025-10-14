@@ -146,43 +146,36 @@ serve(async (req) => {
 
     console.log("Starting partner guide generation for:", companyName, activityDescription);
 
-    // Étape 1: Génération des catégories de rapporteurs d'affaires
-    const categoriesPrompt = `Tu es un expert en développement commercial et partenariats.
+    // Étape 1: Génération des catégories d'entreprises locales
+    const categoriesPrompt = `Tu es un expert en commerces et services locaux.
 
-Entreprise cliente : ${companyName}
+Entreprise : ${companyName}
 Activité de l'entreprise : ${activityDescription}
 Localisation : ${address}
 
-Mission : Génère une liste de 8 à 12 catégories d'entreprises qui seraient des RAPPORTEURS D'AFFAIRES pertinents (PAS des concurrents).
+Mission : Génère une liste de 8 à 12 catégories d'entreprises locales variées à présenter sur le site de ${companyName}.
 
-RÈGLES STRICTES ANTI-CONCURRENCE :
+OBJECTIF SIMPLE : Présenter des commerces et services locaux dans la région, SANS notion de partenariat ou d'affaires.
+
+RÈGLES STRICTES :
 - NE JAMAIS proposer d'entreprises qui font la MÊME activité que ${companyName}
 - NE JAMAIS proposer d'entreprises qui offrent des services identiques ou similaires
 - Exclure TOUS les métiers qui pourraient être perçus comme concurrents
-
-Un rapporteur d'affaires est une entreprise qui :
-- Peut recommander ou orienter des clients vers ${companyName}
-- Offre des services COMPLÉMENTAIRES (pas identiques ou similaires)
-- Cible une clientèle similaire mais avec des besoins différents
-- Pourrait bénéficier d'un partenariat gagnant-gagnant
+- Privilégier la DIVERSITÉ des catégories (commerces, services, artisans, professions libérales, etc.)
 
 Exemples pour une agence web comme Jalis :
 ✅ Comptables, experts-comptables
-✅ Avocats d'affaires
+✅ Avocats
 ✅ Agents immobiliers
-✅ Photographes professionnels
-✅ Imprimeurs
+✅ Photographes
+✅ Restaurants
+✅ Coiffeurs
+✅ Garagistes
+✅ Plombiers
+✅ Électriciens
 ❌ Autres agences web (concurrent direct)
-❌ Graphistes indépendants (concurrent partiel)
+❌ Graphistes (concurrent partiel)
 ❌ Consultants SEO (concurrent partiel)
-❌ Rédacteurs web (concurrent partiel)
-
-Exemples pour une entreprise vendant des camping-cars :
-✅ Garages spécialisés en mécanique de camping-cars
-✅ Aires de services pour camping-cars
-✅ Magasins d'accessoires pour camping-cars
-✅ Agents d'assurance véhicules de loisirs
-❌ Autres concessionnaires de camping-cars (concurrent direct)
 
 Réponds UNIQUEMENT avec un tableau JSON de catégories (chaînes de caractères courtes et précises).
 Format attendu : ["catégorie 1", "catégorie 2", ...]`;
@@ -263,7 +256,6 @@ CONSIGNES STRICTES :
 5. IMPÉRATIF : Sélectionner UNIQUEMENT des TPE, PME ou artisans locaux
 6. AUCUNE grande chaîne nationale ou franchise
 7. AUCUN concurrent de ${companyName}, même indirect
-8. Privilégier les entreprises avec lesquelles ${companyName} peut collaborer sans conflit d'intérêt
 
 Réponds avec un tableau JSON d'objets avec ces champs exacts :
 {
@@ -315,28 +307,26 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-      const enrichPrompt = `🚫🚫🚫 INTERDICTIONS ABSOLUES - VÉRIFIER AVANT D'ENVOYER 🚫🚫🚫
+      const enrichPrompt = `🚫 RÈGLE ABSOLUE - PARAGRAPHE 2 🚫
 
-MOTS INTERDITS DANS LE PARAGRAPHE 2 :
-- "s'associer" ❌
-- "collaborer" ❌  
-- "partenariat" ❌
-- "partenaire" ❌
-- "collaboration" ❌
-- "associer" ❌
+LE PARAGRAPHE 2 DOIT ÊTRE EXACTEMENT (copie-colle) :
+"${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
 
-AVANT D'ENVOYER TA RÉPONSE : Vérifie que le paragraphe 2 de ta description NE CONTIENT AUCUN de ces mots interdits.
+AUCUNE autre formulation n'est autorisée. Copie-colle cette phrase EXACTEMENT.
 
-FORMULATIONS AUTORISÉES (choisis UNE SEULE) :
-1. "${companyName} est fier de vous présenter ${business.nom}"
-2. "${companyName} est fier de mettre en avant ${business.nom}"
-3. "${companyName} recommande ${business.nom}"
-
-NE PAS INVENTER D'AUTRES FORMULATIONS.
+MOTS TOTALEMENT INTERDITS partout dans la description :
+❌ partenariat
+❌ partenaire
+❌ collaborer
+❌ collaboration
+❌ s'associer
+❌ associer
+❌ apporteur d'affaires
+❌ rapporteur
 
 ---
 
-Entreprise à présenter :
+Entreprise locale à présenter :
 - Nom : ${business.nom}
 - Catégorie : ${category}
 - Activité : ${business.activite_reelle}
@@ -367,16 +357,15 @@ Format JSON attendu :
 {
   "activity": "titre SEO 10-15 mots se terminant par 'à'",
   "extract": "résumé 40-60 mots",
-  "description": "<p>Paragraphe 1 sur l'entreprise</p><p>PARAGRAPHE 2 OBLIGATOIRE - COPIE EXACTEMENT UNE DE CES 3 PHRASES : '${companyName} est fier de vous présenter ${business.nom}' OU '${companyName} est fier de mettre en avant ${business.nom}' OU '${companyName} recommande ${business.nom}'</p><p>Paragraphe 3 avec coordonnées</p>"
+  "description": "<p>Paragraphe 1 sur l'entreprise</p><p>${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité.</p><p>Paragraphe 3 avec coordonnées</p>"
 }
 
-RAPPEL FINAL : Dans le paragraphe 2, tu DOIS copier-coller EXACTEMENT une des 3 phrases autorisées. N'écris JAMAIS "s'associer", "collaborer", "partenariat", "partenaire".
+RAPPEL : Paragraphe 2 = copie-colle exact de : "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
 
-CONSIGNES DE TON CRITIQUES :
-- Parle TOUJOURS à la 3ème personne de l'entreprise partenaire
+CONSIGNES DE TON :
+- Parle TOUJOURS à la 3ème personne de l'entreprise
 - Utilise "leur", "ils", "cette entreprise", "${business.nom}"
 - CTA : "Contactez-les au ${business.telephone}" ou "Rendez-vous sur leur site" (JAMAIS "contactez-nous")
-- C'est ${companyName} qui recommande ce partenaire à ses clients
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
