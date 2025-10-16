@@ -60,13 +60,14 @@ export const BusinessTypesSelector = ({
   };
 
   const handleClearAllTypes = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêcher l'ouverture du dropdown
+    e.stopPropagation();
     e.preventDefault();
+    // Effacer d'abord la sélection
     onTypesChange([]);
-    // Utiliser requestAnimationFrame pour s'assurer que React a mis à jour l'état
-    requestAnimationFrame(() => {
-      setTimeout(() => setOpen(true), 50);
-    });
+    // Attendre que React mette à jour le state avant de rouvrir
+    setTimeout(() => {
+      setOpen(true);
+    }, 10);
   };
 
   const handleButtonClick = (e: React.MouseEvent) => {

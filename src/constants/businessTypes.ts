@@ -154,31 +154,15 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'bank', label: 'Banque', googlePlaceType: 'bank' },
   { id: 'atm', label: 'Distributeur automatique de billets', googlePlaceType: 'atm' },
   { id: 'post_office', label: 'Bureau de poste', googlePlaceType: 'post_office' },
-  { id: 'police', label: 'Commissariat de police', googlePlaceType: 'police' },
-  { id: 'fire_station', label: 'Caserne de sapeurs-pompiers', googlePlaceType: 'fire_station' },
-  { id: 'city_hall', label: 'Hôtel de Ville', googlePlaceType: 'city_hall' },
-  { id: 'courthouse', label: 'Tribunal', googlePlaceType: 'courthouse' },
-  { id: 'library', label: 'Bibliothèque municipale', googlePlaceType: 'library' },
   { id: 'funeral_home', label: 'Entreprise de pompes funèbres', googlePlaceType: 'funeral_home' },
   { id: 'taxi_stand', label: 'Service de taxi', googlePlaceType: 'taxi_stand' },
-  { id: 'embassy', label: 'Ambassade', googlePlaceType: 'embassy' },
   
-  // Lieux de culte
+  // Lieux de culte (commerciaux uniquement - services payants)
   { id: 'church', label: 'Église', googlePlaceType: 'church' },
   { id: 'mosque', label: 'Mosquée', googlePlaceType: 'mosque' },
   { id: 'synagogue', label: 'Synagogue', googlePlaceType: 'synagogue' },
-  { id: 'cathedral', label: 'Cathédrale', googlePlaceType: 'church' },
-  { id: 'basilica', label: 'Basilique', googlePlaceType: 'church' },
-  { id: 'abbey', label: 'Abbaye', googlePlaceType: 'church' },
-  { id: 'monastery', label: 'Monastère', googlePlaceType: 'church' },
-  { id: 'convent', label: 'Couvent', googlePlaceType: 'church' },
   
-  // Éducation
-  { id: 'school', label: 'École', googlePlaceType: 'school' },
-  { id: 'primary_school', label: 'École primaire', googlePlaceType: 'primary_school' },
-  { id: 'secondary_school', label: 'Collège', googlePlaceType: 'secondary_school' },
-  { id: 'high_school', label: 'Lycée', googlePlaceType: 'secondary_school' },
-  { id: 'university', label: 'Université', googlePlaceType: 'university' },
+  // Éducation (commerciale uniquement)
   { id: 'driving_school', label: 'Auto-école', googlePlaceType: 'driving_school' },
   { id: 'language_school', label: 'École de langues', googlePlaceType: 'school' },
   { id: 'music_school', label: 'École de musique', googlePlaceType: 'school' },
@@ -212,47 +196,37 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'campground', label: 'Terrain de camping', googlePlaceType: 'campground' },
   { id: 'rv_park', label: 'Camping avec emplacement pour caravane', googlePlaceType: 'rv_park' },
   
-  // Loisirs et Culture
-  { id: 'museum', label: 'Musée', googlePlaceType: 'museum' },
-  { id: 'art_gallery', label: 'Galerie d\'art', googlePlaceType: 'art_gallery' },
+  // Loisirs et Culture (UNIQUEMENT commerciaux)
   { id: 'movie_theater', label: 'Salle de cinéma', googlePlaceType: 'movie_theater' },
   { id: 'casino', label: 'Casino', googlePlaceType: 'casino' },
   { id: 'amusement_park', label: 'Parc d\'attractions', googlePlaceType: 'amusement_park' },
   { id: 'aquarium', label: 'Aquarium', googlePlaceType: 'aquarium' },
   { id: 'zoo', label: 'Zoo', googlePlaceType: 'zoo' },
-  { id: 'park', label: 'Parc', googlePlaceType: 'park' },
   { id: 'theater', label: 'Théâtre', googlePlaceType: 'point_of_interest' },
   { id: 'opera_house', label: 'Opéra', googlePlaceType: 'point_of_interest' },
   { id: 'concert_hall', label: 'Salle de concert', googlePlaceType: 'night_club' },
   { id: 'circus', label: 'Cirque', googlePlaceType: 'point_of_interest' },
+  { id: 'bowling_alley', label: 'Bowling', googlePlaceType: 'bowling_alley' },
+  { id: 'karting_track', label: 'Circuit de karting', googlePlaceType: 'amusement_park' },
+  { id: 'paintball', label: 'Terrain de paintball', googlePlaceType: 'amusement_park' },
+  { id: 'laser_tag', label: 'Terrain de laser game', googlePlaceType: 'amusement_park' },
+  { id: 'trampoline_park', label: 'Parc d\'accrobranche', googlePlaceType: 'amusement_park' },
+  
+  // Logement
+  { id: 'lodging', label: 'Hôtel', googlePlaceType: 'lodging' },
+  { id: 'bed_breakfast', label: 'Chambre d\'hôtes', googlePlaceType: 'lodging' },
+  { id: 'hostel', label: 'Auberge de jeunesse', googlePlaceType: 'lodging' },
+  { id: 'campground', label: 'Terrain de camping', googlePlaceType: 'campground' },
+  { id: 'rv_park', label: 'Camping avec emplacement pour caravane', googlePlaceType: 'rv_park' },
   
   // Transport
-  { id: 'transit_station', label: 'Gare SNCF', googlePlaceType: 'transit_station' },
-  { id: 'subway_station', label: 'Station de métro', googlePlaceType: 'subway_station' },
-  { id: 'train_station', label: 'Gare ferroviaire', googlePlaceType: 'train_station' },
-  { id: 'bus_station', label: 'Gare routière', googlePlaceType: 'bus_station' },
-  { id: 'airport', label: 'Aéroport', googlePlaceType: 'airport' },
+  { id: 'taxi_stand', label: 'Service de taxi', googlePlaceType: 'taxi_stand' },
   { id: 'parking', label: 'Parking', googlePlaceType: 'parking' },
   { id: 'gas_station', label: 'Station service', googlePlaceType: 'gas_station' },
   
-  // Autres points d'intérêt
-  { id: 'tourist_attraction', label: 'Site touristique', googlePlaceType: 'tourist_attraction' },
-  { id: 'cemetery', label: 'Cimetière', googlePlaceType: 'cemetery' },
-  { id: 'castle', label: 'Château', googlePlaceType: 'tourist_attraction' },
-  { id: 'monument', label: 'Monument', googlePlaceType: 'point_of_interest' },
-  { id: 'lighthouse', label: 'Phare', googlePlaceType: 'point_of_interest' },
-  { id: 'bridge', label: 'Pont', googlePlaceType: 'point_of_interest' },
-  { id: 'fountain', label: 'Fontaine', googlePlaceType: 'point_of_interest' },
-  { id: 'statue', label: 'Statue', googlePlaceType: 'point_of_interest' },
-  { id: 'beach', label: 'Plage', googlePlaceType: 'natural_feature' },
-  { id: 'lake', label: 'Lac', googlePlaceType: 'natural_feature' },
-  { id: 'forest', label: 'Forêt', googlePlaceType: 'natural_feature' },
-  { id: 'island', label: 'Île', googlePlaceType: 'natural_feature' },
-  { id: 'cave', label: 'Grotte', googlePlaceType: 'natural_feature' },
-  { id: 'waterfall', label: 'Cascade', googlePlaceType: 'natural_feature' },
-  { id: 'botanical_garden', label: 'Jardin botanique', googlePlaceType: 'park' },
-  { id: 'convention_center', label: 'Palais des congrès', googlePlaceType: 'convention_center' },
+  // Autres services commerciaux
   { id: 'tourist_info', label: 'Office de tourisme', googlePlaceType: 'travel_agency' },
+  { id: 'convention_center', label: 'Palais des congrès', googlePlaceType: 'convention_center' },
 ];
 
 export const ALL_TYPES_OPTION = {
