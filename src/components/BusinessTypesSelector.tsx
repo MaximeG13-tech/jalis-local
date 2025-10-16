@@ -78,21 +78,21 @@ export const BusinessTypesSelector = ({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            disabled={disabled || isAllTypesSelected}
+            disabled={disabled}
             className="w-full justify-between h-auto min-h-[42px] py-2"
           >
             <span className="truncate">
               {selectedTypes.length === 0 
                 ? "Sélectionner des activités..." 
                 : isAllTypesSelected
-                  ? "Tout type d'activités (verrouillé)"
+                  ? "Tout type d'activités"
                   : `${selectedTypes.length} activité${selectedTypes.length > 1 ? 's' : ''} sélectionnée${selectedTypes.length > 1 ? 's' : ''}`
               }
             </span>
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
+        <PopoverContent className="w-[400px] p-0 bg-popover z-50" align="start">
           <Command>
             <CommandInput 
               placeholder="Rechercher une activité..." 
