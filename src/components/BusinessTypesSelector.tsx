@@ -39,6 +39,7 @@ export const BusinessTypesSelector = ({
         onTypesChange([]);
       } else {
         onTypesChange([ALL_TYPES_OPTION]);
+        setOpen(false); // Fermer le dropdown automatiquement
       }
       return;
     }
@@ -56,6 +57,12 @@ export const BusinessTypesSelector = ({
     } else {
       onTypesChange([...selectedTypes, type]);
     }
+  };
+
+  const handleClearAllTypes = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêcher l'ouverture du dropdown
+    onTypesChange([]);
+    setTimeout(() => setOpen(true), 100); // Rouvrir le dropdown après un court délai
   };
 
   const removeType = (typeId: string) => {
@@ -89,7 +96,14 @@ export const BusinessTypesSelector = ({
                   : `${selectedTypes.length} activité${selectedTypes.length > 1 ? 's' : ''} sélectionnée${selectedTypes.length > 1 ? 's' : ''}`
               }
             </span>
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            {isAllTypesSelected ? (
+              <X 
+                className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity" 
+                onClick={handleClearAllTypes}
+              />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0 bg-popover z-50" align="start">
