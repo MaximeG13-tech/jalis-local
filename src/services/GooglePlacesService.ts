@@ -73,6 +73,18 @@ export class GooglePlacesService {
       throw new Error('Impossible d\'obtenir les coordonnées de l\'adresse');
     }
 
+    // Récupérer les types de l'établissement de l'utilisateur pour les exclure
+    let userBusinessTypes: string[] = [];
+    try {
+      const userBusinessDetails = await this.getPlaceDetails(placeId);
+      if (userBusinessDetails && userBusinessDetails.types) {
+        userBusinessTypes = userBusinessDetails.types;
+        console.log(`🏢 Types de l'établissement de l'utilisateur: ${userBusinessTypes.join(', ')}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des types de l\'établissement:', error);
+    }
+
     const businesses: Business[] = [];
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
     const businessCountByType = new Map<string, number>(); // Track count per type for diversity
@@ -223,6 +235,15 @@ export class GooglePlacesService {
         if (hasExcludedType) {
           console.log(`⏭️ Skipping excluded type: ${place.name}`);
           continue;
+        }
+        
+        // Exclure les concurrents directs (mêmes types que l'établissement de l'utilisateur)
+        if (userBusinessTypes.length > 0 && place.types) {
+          const hasCommonType = place.types.some(type => userBusinessTypes.includes(type));
+          if (hasCommonType) {
+            console.log(`🚫 Skipping competitor (same business type): ${place.name}`);
+            continue;
+          }
         }
 
         // Use data from nearby search if available
