@@ -1,13 +1,13 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Check, X, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { BUSINESS_TYPES, ALL_TYPES_OPTION, BusinessType } from '@/constants/businessTypes';
-import { cn } from '@/lib/utils';
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Check, X, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { BUSINESS_TYPES, ALL_TYPES_OPTION, BusinessType } from "@/constants/businessTypes";
+import { cn } from "@/lib/utils";
 
 interface BusinessTypesSelectorProps {
   selectedTypes: BusinessType[];
@@ -15,16 +15,12 @@ interface BusinessTypesSelectorProps {
   disabled?: boolean;
 }
 
-export const BusinessTypesSelector = ({ 
-  selectedTypes, 
-  onTypesChange,
-  disabled 
-}: BusinessTypesSelectorProps) => {
+export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled }: BusinessTypesSelectorProps) => {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const shouldReopenRef = useRef(false);
 
-  const isAllTypesSelected = selectedTypes.some(t => t.id === 'all');
+  const isAllTypesSelected = selectedTypes.some((t) => t.id === "all");
 
   // Surveiller les changements de selectedTypes pour rouvrir le dropdown
   useEffect(() => {
@@ -36,14 +32,12 @@ export const BusinessTypesSelector = ({
 
   const filteredTypes = useMemo(() => {
     if (!searchQuery) return BUSINESS_TYPES;
-    return BUSINESS_TYPES.filter(type =>
-      type.label.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return BUSINESS_TYPES.filter((type) => type.label.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [searchQuery]);
 
   const handleSelect = (type: BusinessType) => {
     // Si on sélectionne "Tout type d'activités"
-    if (type.id === 'all') {
+    if (type.id === "all") {
       if (isAllTypesSelected) {
         onTypesChange([]);
       } else {
@@ -60,9 +54,9 @@ export const BusinessTypesSelector = ({
     }
 
     // Toggle le type
-    const isSelected = selectedTypes.some(t => t.id === type.id);
+    const isSelected = selectedTypes.some((t) => t.id === type.id);
     if (isSelected) {
-      onTypesChange(selectedTypes.filter(t => t.id !== type.id));
+      onTypesChange(selectedTypes.filter((t) => t.id !== type.id));
     } else {
       onTypesChange([...selectedTypes, type]);
     }
@@ -71,6 +65,8 @@ export const BusinessTypesSelector = ({
   const handleClearAllTypes = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    // Fermer le dropdown
+    setOpen(false);
     // Marquer qu'on veut rouvrir le dropdown après l'effacement
     shouldReopenRef.current = true;
     // Effacer la sélection
@@ -86,7 +82,7 @@ export const BusinessTypesSelector = ({
   };
 
   const removeType = (typeId: string) => {
-    onTypesChange(selectedTypes.filter(t => t.id !== typeId));
+    onTypesChange(selectedTypes.filter((t) => t.id !== typeId));
   };
 
   const clearAll = () => {
@@ -95,10 +91,8 @@ export const BusinessTypesSelector = ({
 
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
-        Types d'activités
-      </Label>
-      
+      <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Types d'activités</Label>
+
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -110,16 +104,15 @@ export const BusinessTypesSelector = ({
             className="w-full justify-between h-auto min-h-[42px] py-2"
           >
             <span className="truncate">
-              {selectedTypes.length === 0 
-                ? "Sélectionner des activités..." 
+              {selectedTypes.length === 0
+                ? "Sélectionner des activités..."
                 : isAllTypesSelected
                   ? "Tout type d'activités"
-                  : `${selectedTypes.length} activité${selectedTypes.length > 1 ? 's' : ''} sélectionnée${selectedTypes.length > 1 ? 's' : ''}`
-              }
+                  : `${selectedTypes.length} activité${selectedTypes.length > 1 ? "s" : ""} sélectionnée${selectedTypes.length > 1 ? "s" : ""}`}
             </span>
             {isAllTypesSelected ? (
-              <X 
-                className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" 
+              <X
+                className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
                 onClick={handleClearAllTypes}
               />
             ) : (
@@ -129,11 +122,7 @@ export const BusinessTypesSelector = ({
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0 bg-popover z-50" align="start">
           <Command>
-            <CommandInput 
-              placeholder="Rechercher une activité..." 
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-            />
+            <CommandInput placeholder="Rechercher une activité..." value={searchQuery} onValueChange={setSearchQuery} />
             <CommandList>
               <CommandEmpty>Aucune activité trouvée.</CommandEmpty>
               <CommandGroup>
@@ -143,17 +132,12 @@ export const BusinessTypesSelector = ({
                   onSelect={() => handleSelect(ALL_TYPES_OPTION)}
                   className="cursor-pointer"
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      isAllTypesSelected ? "opacity-100" : "opacity-0"
-                    )}
-                  />
+                  <Check className={cn("mr-2 h-4 w-4", isAllTypesSelected ? "opacity-100" : "opacity-0")} />
                   <span className="font-semibold">{ALL_TYPES_OPTION.label}</span>
                 </CommandItem>
-                
+
                 {filteredTypes.map((type) => {
-                  const isSelected = selectedTypes.some(t => t.id === type.id);
+                  const isSelected = selectedTypes.some((t) => t.id === type.id);
                   return (
                     <CommandItem
                       key={type.id}
@@ -162,10 +146,7 @@ export const BusinessTypesSelector = ({
                       className="cursor-pointer"
                     >
                       <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected && !isAllTypesSelected ? "opacity-100" : "opacity-0"
-                        )}
+                        className={cn("mr-2 h-4 w-4", isSelected && !isAllTypesSelected ? "opacity-100" : "opacity-0")}
                       />
                       {type.label}
                     </CommandItem>
@@ -181,11 +162,7 @@ export const BusinessTypesSelector = ({
       {selectedTypes.length > 0 && !isAllTypesSelected && (
         <div className="flex flex-wrap gap-2 mt-3">
           {selectedTypes.map((type) => (
-            <Badge 
-              key={type.id} 
-              variant="secondary"
-              className="px-3 py-1.5 gap-1.5"
-            >
+            <Badge key={type.id} variant="secondary" className="px-3 py-1.5 gap-1.5">
               {type.label}
               <button
                 onClick={() => removeType(type.id)}
@@ -197,13 +174,7 @@ export const BusinessTypesSelector = ({
             </Badge>
           ))}
           {selectedTypes.length > 1 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              disabled={disabled}
-              className="h-7 text-xs"
-            >
+            <Button variant="ghost" size="sm" onClick={clearAll} disabled={disabled} className="h-7 text-xs">
               Tout effacer
             </Button>
           )}
