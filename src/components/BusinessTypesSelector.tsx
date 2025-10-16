@@ -61,8 +61,15 @@ export const BusinessTypesSelector = ({
 
   const handleClearAllTypes = (e: React.MouseEvent) => {
     e.stopPropagation(); // Empêcher l'ouverture du dropdown
+    e.preventDefault();
     onTypesChange([]);
-    setTimeout(() => setOpen(true), 100); // Rouvrir le dropdown après un court délai
+    setTimeout(() => setOpen(true), 150); // Rouvrir le dropdown après un court délai
+  };
+
+  const handleButtonClick = () => {
+    if (!isAllTypesSelected) {
+      setOpen(true);
+    }
   };
 
   const removeType = (typeId: string) => {
@@ -79,13 +86,19 @@ export const BusinessTypesSelector = ({
         Types d'activités
       </Label>
       
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(newOpen) => {
+        // Ne pas ouvrir si "Tout type d'activités" est sélectionné
+        if (!isAllTypesSelected || !newOpen) {
+          setOpen(newOpen);
+        }
+      }}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
+            onClick={handleButtonClick}
             className="w-full justify-between h-auto min-h-[42px] py-2"
           >
             <span className="truncate">
@@ -98,7 +111,7 @@ export const BusinessTypesSelector = ({
             </span>
             {isAllTypesSelected ? (
               <X 
-                className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity" 
+                className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" 
                 onClick={handleClearAllTypes}
               />
             ) : (
