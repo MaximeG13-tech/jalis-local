@@ -63,7 +63,10 @@ export const BusinessTypesSelector = ({
     e.stopPropagation(); // Empêcher l'ouverture du dropdown
     e.preventDefault();
     onTypesChange([]);
-    setTimeout(() => setOpen(true), 150); // Rouvrir le dropdown après un court délai
+    // Utiliser requestAnimationFrame pour s'assurer que React a mis à jour l'état
+    requestAnimationFrame(() => {
+      setTimeout(() => setOpen(true), 50);
+    });
   };
 
   const handleButtonClick = () => {
@@ -86,12 +89,7 @@ export const BusinessTypesSelector = ({
         Types d'activités
       </Label>
       
-      <Popover open={open} onOpenChange={(newOpen) => {
-        // Ne pas ouvrir si "Tout type d'activités" est sélectionné
-        if (!isAllTypesSelected || !newOpen) {
-          setOpen(newOpen);
-        }
-      }}>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
