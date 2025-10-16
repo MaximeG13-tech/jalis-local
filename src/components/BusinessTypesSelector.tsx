@@ -171,7 +171,7 @@ export const BusinessTypesSelector = ({
       </Popover>
 
       {/* Selected types badges */}
-      {selectedTypes.length > 0 && (
+      {selectedTypes.length > 0 && !isAllTypesSelected && (
         <div className="flex flex-wrap gap-2 mt-3">
           {selectedTypes.map((type) => (
             <Badge 
