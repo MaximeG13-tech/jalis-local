@@ -78,13 +78,11 @@ export const BusinessTypesSelector = ({
   };
 
   const handleButtonClick = (e: React.MouseEvent) => {
-    // Si "Tout type" est sélectionné, ne rien faire (seule la croix est cliquable)
-    if (isAllTypesSelected) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
+    // Permettre toujours l'ouverture du dropdown
+    // La croix gère la désélection séparément
+    if (!open) {
+      setOpen(true);
     }
-    setOpen(true);
   };
 
   const removeType = (typeId: string) => {
@@ -109,10 +107,7 @@ export const BusinessTypesSelector = ({
             aria-expanded={open}
             disabled={disabled}
             onClick={handleButtonClick}
-            className={cn(
-              "w-full justify-between h-auto min-h-[42px] py-2",
-              isAllTypesSelected && "cursor-default"
-            )}
+            className="w-full justify-between h-auto min-h-[42px] py-2"
           >
             <span className="truncate">
               {selectedTypes.length === 0 
