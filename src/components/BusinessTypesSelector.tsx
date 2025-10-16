@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Check, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -22,8 +22,17 @@ export const BusinessTypesSelector = ({
 }: BusinessTypesSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const shouldReopenRef = useRef(false);
 
   const isAllTypesSelected = selectedTypes.some(t => t.id === 'all');
+
+  // Surveiller les changements de selectedTypes pour rouvrir le dropdown
+  useEffect(() => {
+    if (shouldReopenRef.current && selectedTypes.length === 0) {
+      shouldReopenRef.current = false;
+      setOpen(true);
+    }
+  }, [selectedTypes]);
 
   const filteredTypes = useMemo(() => {
     if (!searchQuery) return BUSINESS_TYPES;
@@ -62,12 +71,10 @@ export const BusinessTypesSelector = ({
   const handleClearAllTypes = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    // Effacer d'abord la sélection
+    // Marquer qu'on veut rouvrir le dropdown après l'effacement
+    shouldReopenRef.current = true;
+    // Effacer la sélection
     onTypesChange([]);
-    // Attendre que React mette à jour le state avant de rouvrir
-    setTimeout(() => {
-      setOpen(true);
-    }, 10);
   };
 
   const handleButtonClick = (e: React.MouseEvent) => {
