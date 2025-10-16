@@ -6,9 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search, Loader2 } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
+import { BusinessTypesSelector } from './BusinessTypesSelector';
+import { BusinessType } from '@/constants/businessTypes';
 
 interface SearchFormProps {
-  onSearch: (companyName: string, address: string, placeId: string, maxResults: number) => void;
+  onSearch: (companyName: string, address: string, placeId: string, maxResults: number, selectedTypes: BusinessType[]) => void;
   isLoading: boolean;
 }
 
@@ -17,11 +19,12 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
   const [maxResults, setMaxResults] = useState(10);
+  const [selectedTypes, setSelectedTypes] = useState<BusinessType[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyName.trim() || !address.trim() || !placeId) return;
-    onSearch(companyName, address, placeId, maxResults);
+    onSearch(companyName, address, placeId, maxResults, selectedTypes);
   };
 
   const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {
@@ -52,6 +55,12 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             value={address}
             onChange={setAddress}
             onSelect={handleAddressSelect}
+            disabled={isLoading}
+          />
+
+          <BusinessTypesSelector
+            selectedTypes={selectedTypes}
+            onTypesChange={setSelectedTypes}
             disabled={isLoading}
           />
 

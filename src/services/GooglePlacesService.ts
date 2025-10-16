@@ -1,5 +1,6 @@
 import { Business, GooglePlace } from '@/types/business';
 import { supabase } from '@/integrations/supabase/client';
+import { BusinessType } from '@/constants/businessTypes';
 
 export class GooglePlacesService {
   static async getLocationFromPlaceId(placeId: string): Promise<{ lat: number; lng: number } | null> {
@@ -63,6 +64,7 @@ export class GooglePlacesService {
     companyName: string,
     placeId: string,
     maxResults: number,
+    selectedTypes: BusinessType[],
     onProgress?: (current: number, total: number) => void
   ): Promise<Business[]> {
     // Get location from place ID
@@ -74,29 +76,31 @@ export class GooglePlacesService {
     const businesses: Business[] = [];
     const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
     const businessCountByType = new Map<string, number>(); // Track count per type for diversity
-    const MAX_PER_TYPE = 3; // Maximum businesses per type for diversity
     
-    // UNIQUEMENT artisans et TPE/PME démarchables
-    const priorityTypes = [
-      // Artisans du bâtiment (CIBLE PRIORITAIRE)
-      'plumber', 'electrician', 'painter', 'roofing_contractor',
-      
-      // Services professionnels TPE/PME
-      'real_estate_agency', 'insurance_agency', 'travel_agency',
-      
-      // Automobile (garages avec mécaniciens)
-      'car_repair', 'car_dealer',
-      
-      // Salons et bien-être (avec personnel)
-      'hair_care', 'beauty_salon',
-      
-      // Magasins spécialisés (avec équipe de vente)
-      'clothing_store', 'shoe_store', 'jewelry_store', 'furniture_store',
-      'electronics_store', 'hardware_store', 'bicycle_store',
-      
-      // Vétérinaires
-      'veterinary_care',
-    ];
+    // Déterminer les types à rechercher
+    let priorityTypes: string[];
+    let MAX_PER_TYPE: number;
+    
+    const isAllTypes = selectedTypes.some(t => t.id === 'all');
+    
+    if (isAllTypes || selectedTypes.length === 0) {
+      // Tout type d'activités - utiliser la liste par défaut
+      priorityTypes = [
+        'plumber', 'electrician', 'painter', 'roofing_contractor',
+        'real_estate_agency', 'insurance_agency', 'travel_agency',
+        'car_repair', 'car_dealer',
+        'hair_care', 'beauty_salon',
+        'clothing_store', 'shoe_store', 'jewelry_store', 'furniture_store',
+        'electronics_store', 'hardware_store', 'bicycle_store',
+        'veterinary_care',
+      ];
+      MAX_PER_TYPE = 3;
+    } else {
+      // Types spécifiques sélectionnés
+      priorityTypes = selectedTypes.map(t => t.googlePlaceType);
+      // Si plusieurs types, limiter par type, sinon tout vient du même type
+      MAX_PER_TYPE = selectedTypes.length > 1 ? Math.ceil(maxResults / selectedTypes.length) : maxResults;
+    }
 
     // List of large chains and multinationals to exclude
     const excludedNames = [

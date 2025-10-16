@@ -8,6 +8,7 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
+import { BusinessType } from '@/constants/businessTypes';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -18,6 +19,7 @@ const Index = () => {
     address: string; 
     placeId: string; 
     maxResults: number;
+    selectedTypes: BusinessType[];
   } | null>(null);
   const { toast } = useToast();
 
@@ -25,9 +27,10 @@ const Index = () => {
     companyName: string,
     address: string, 
     placeId: string, 
-    maxResults: number
+    maxResults: number,
+    selectedTypes: BusinessType[]
   ) => {
-    setLastSearch({ companyName, address, placeId, maxResults });
+    setLastSearch({ companyName, address, placeId, maxResults, selectedTypes });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
@@ -37,6 +40,7 @@ const Index = () => {
         companyName,
         placeId,
         maxResults,
+        selectedTypes,
         (current, total) => {
           setProgress({ current, total });
         }
@@ -68,7 +72,8 @@ const Index = () => {
         lastSearch.companyName,
         lastSearch.address, 
         lastSearch.placeId, 
-        lastSearch.maxResults
+        lastSearch.maxResults,
+        lastSearch.selectedTypes
       );
     }
   };
