@@ -78,14 +78,14 @@ export const BusinessTypesSelector = ({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            disabled={disabled}
+            disabled={disabled || isAllTypesSelected}
             className="w-full justify-between h-auto min-h-[42px] py-2"
           >
             <span className="truncate">
               {selectedTypes.length === 0 
                 ? "Sélectionner des activités..." 
                 : isAllTypesSelected
-                  ? "Tout type d'activités"
+                  ? "Tout type d'activités (verrouillé)"
                   : `${selectedTypes.length} activité${selectedTypes.length > 1 ? 's' : ''} sélectionnée${selectedTypes.length > 1 ? 's' : ''}`
               }
             </span>
