@@ -98,7 +98,7 @@ export class GooglePlacesService {
     if (isAllTypes || selectedTypes.length === 0) {
       // Tout type d'activités - utiliser la liste par défaut
       priorityTypes = [
-        'accounting', 'lawyer', 'notary', 'consultant',
+        'accounting', 'lawyer', 'consultant',
         'real_estate_agency', 'insurance_agency', 'travel_agency',
         'plumber', 'electrician', 'painter', 'roofing_contractor', 'locksmith',
         'car_repair', 'car_dealer', 'auto_parts_store',

@@ -9,7 +9,6 @@ export const BUSINESS_TYPES: BusinessType[] = [
   // Services juridiques et professionnels
   { id: 'accounting', label: 'Comptable', googlePlaceType: 'accounting' },
   { id: 'lawyer', label: 'Avocat', googlePlaceType: 'lawyer' },
-  { id: 'notary', label: 'Notaire', googlePlaceType: 'notary' },
   { id: 'consultant', label: 'Consultant', googlePlaceType: 'consultant' },
   
   // Immobilier et assurance

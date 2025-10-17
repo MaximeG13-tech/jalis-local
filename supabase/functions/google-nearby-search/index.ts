@@ -23,7 +23,7 @@ serve(async (req) => {
       ? [includedType]
       : [
           // Services juridiques et professionnels
-          'accounting', 'lawyer', 'notary', 'consultant',
+          'accounting', 'lawyer', 'consultant',
           // Immobilier et assurance
           'real_estate_agency', 'insurance_agency', 'travel_agency', 'tour_agency',
           // Artisans
@@ -78,7 +78,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error("Google API error:", data);
-      throw new Error(data.error?.message || "Failed to fetch nearby places");
+      // Return empty results instead of throwing to prevent breaking the search
+      return new Response(JSON.stringify({ results: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Transform and include all available data to minimize additional API calls
