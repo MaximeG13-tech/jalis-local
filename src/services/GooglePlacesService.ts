@@ -98,13 +98,16 @@ export class GooglePlacesService {
     if (isAllTypes || selectedTypes.length === 0) {
       // Tout type d'activités - utiliser la liste par défaut
       priorityTypes = [
-        'plumber', 'electrician', 'painter', 'roofing_contractor',
+        'accounting', 'lawyer', 'notary', 'consultant',
         'real_estate_agency', 'insurance_agency', 'travel_agency',
-        'car_repair', 'car_dealer',
-        'hair_care', 'beauty_salon',
+        'plumber', 'electrician', 'painter', 'roofing_contractor', 'locksmith',
+        'car_repair', 'car_dealer', 'auto_parts_store',
+        'dentist', 'doctor', 'physiotherapist',
+        'hair_salon', 'hair_care', 'barber_shop', 'beauty_salon', 'spa',
         'clothing_store', 'shoe_store', 'jewelry_store', 'furniture_store',
-        'electronics_store', 'hardware_store', 'bicycle_store',
-        'veterinary_care',
+        'electronics_store', 'hardware_store', 'bicycle_store', 'sporting_goods_store',
+        'florist', 'pet_store', 'veterinary_care',
+        'gym', 'fitness_center',
       ];
       MAX_PER_TYPE = 3;
     } else {

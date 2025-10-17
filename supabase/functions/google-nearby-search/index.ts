@@ -22,32 +22,30 @@ serve(async (req) => {
     const includedTypes = includedType
       ? [includedType]
       : [
-          // Valid Google Places API types only
-          "electrician",
-          "plumber",
-          "painter",
-          "roofing_contractor",
-          "locksmith",
-          "hair_care",
-          "beauty_salon",
-          "spa",
-          "doctor",
-          "dentist",
-          "physiotherapist",
-          "veterinary_care",
-          "lawyer",
-          "accounting",
-          "real_estate_agency",
-          "insurance_agency",
-          "travel_agency",
-          "car_repair",
-          "car_dealer",
-          "car_rental",
-          "car_wash",
-          "gym",
-          "moving_company",
-          "storage",
-          "laundry",
+          // Services juridiques et professionnels
+          'accounting', 'lawyer', 'notary', 'consultant',
+          // Immobilier et assurance
+          'real_estate_agency', 'insurance_agency', 'travel_agency', 'tour_agency',
+          // Artisans
+          'electrician', 'plumber', 'painter', 'roofing_contractor', 'locksmith',
+          // Automobile
+          'car_repair', 'car_dealer', 'car_rental', 'car_wash', 'auto_parts_store',
+          // Santé
+          'dentist', 'dental_clinic', 'doctor', 'physiotherapist', 'chiropractor', 'medical_lab',
+          // Bien-être et beauté
+          'hair_salon', 'hair_care', 'barber_shop', 'beauty_salon', 'beautician',
+          'nail_salon', 'spa', 'massage', 'sauna',
+          // Commerce
+          'clothing_store', 'shoe_store', 'jewelry_store', 'furniture_store',
+          'electronics_store', 'hardware_store', 'bicycle_store', 'sporting_goods_store',
+          'book_store', 'gift_shop', 'pet_store', 'florist',
+          // Services
+          'veterinary_care', 'moving_company', 'storage', 'funeral_home', 'laundry',
+          'tailor', 'courier_service', 'catering_service',
+          // Sport et fitness
+          'gym', 'fitness_center', 'yoga_studio', 'sports_club', 'bowling_alley',
+          // Hébergement
+          'hotel', 'bed_and_breakfast', 'guest_house', 'campground', 'rv_park',
         ];
 
     // Call new Places API (New) Nearby Search
