@@ -8,8 +8,8 @@ import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
 import { BusinessTypesSelector } from './BusinessTypesSelector';
 import { BusinessType } from '@/constants/businessTypes';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { GeniusDialog } from './GeniusDialog';
 import geniusIcon from '@/assets/genius-icon.png';
 
 interface SearchFormProps {
@@ -23,7 +23,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [placeId, setPlaceId] = useState('');
   const [maxResults, setMaxResults] = useState(10);
   const [selectedTypes, setSelectedTypes] = useState<BusinessType[]>([]);
-  const [isGeniusLoading, setIsGeniusLoading] = useState(false);
+  const [geniusDialogOpen, setGeniusDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,53 +37,24 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
     setPlaceId(selectedPlaceId);
   };
 
-  const handleGeniusClick = async () => {
-    if (!companyName.trim() || !address.trim()) {
+  const handleGeniusClick = () => {
+    if (!placeId) {
       toast({
-        title: "Information manquante",
-        description: "Veuillez renseigner le nom et l'adresse de votre entreprise",
+        title: "Adresse manquante",
+        description: "Veuillez d'abord sélectionner une adresse dans la liste de suggestions",
         variant: "destructive",
       });
       return;
     }
+    setGeniusDialogOpen(true);
+  };
 
-    setIsGeniusLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('suggest-complementary-types', {
-        body: { companyName, address }
-      });
-
-      if (error) throw error;
-
-      if (data.suggestedTypes && data.suggestedTypes.length > 0) {
-        // Import BUSINESS_TYPES to map the suggested types to BusinessType objects
-        const { BUSINESS_TYPES } = await import('@/constants/businessTypes');
-        const suggestedBusinessTypes = BUSINESS_TYPES.filter(type => 
-          data.suggestedTypes.includes(type.googlePlaceType)
-        );
-        
-        setSelectedTypes(suggestedBusinessTypes);
-        toast({
-          title: "✨ Suggestions Genius",
-          description: `${suggestedBusinessTypes.length} type(s) d'activités complémentaires suggéré(s)`,
-        });
-      } else {
-        toast({
-          title: "Aucune suggestion",
-          description: "Impossible de générer des suggestions pour le moment",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Genius error:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la génération des suggestions",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeniusLoading(false);
-    }
+  const handleGeniusSuggestions = (types: BusinessType[]) => {
+    setSelectedTypes(types);
+    toast({
+      title: "✨ Suggestions Genius",
+      description: `${types.length} type(s) d'activités complémentaires suggéré(s)`,
+    });
   };
 
   return (
@@ -123,17 +94,19 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             <Button
               type="button"
               onClick={handleGeniusClick}
-              disabled={isLoading || isGeniusLoading}
+              disabled={isLoading || !placeId}
               className="min-h-[42px] h-auto px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title="Genius - Suggestions intelligentes d'activités complémentaires"
             >
-              {isGeniusLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <img src={geniusIcon} alt="Genius" className="h-5 w-5" />
-              )}
+              <img src={geniusIcon} alt="Genius" className="h-5 w-5 filter invert" />
             </Button>
           </div>
+
+          <GeniusDialog
+            open={geniusDialogOpen}
+            onOpenChange={setGeniusDialogOpen}
+            onSuggest={handleGeniusSuggestions}
+          />
 
           <div className="space-y-4">
             <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
