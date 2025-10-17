@@ -147,12 +147,15 @@ export class GooglePlacesService {
       'parc', 'jardin', 'square', 'stade', 'piscine', 'médiathèque'
     ];
     
-    // Types Google Places à exclure (installations automatiques, logements, établissements publics)
+    // Types Google Places à exclure (installations automatiques, logements, établissements publics, restauration)
     const excludedTypes = [
       'atm', 'parking', 'gas_station', 'transit_station', 
       'subway_station', 'train_station', 'bus_station',
       'lodging', 'hospital', 'pharmacy', 'school', 'university',
-      'local_government_office', 'post_office', 'library'
+      'local_government_office', 'post_office', 'library',
+      // Exclure toute la restauration et l'alimentaire
+      'bakery', 'restaurant', 'cafe', 'bar', 'meal_delivery', 'meal_takeaway',
+      'food', 'supermarket', 'grocery_store', 'convenience_store'
     ];
 
     // STRATÉGIE : élargir automatiquement si pas assez de résultats
@@ -234,6 +237,13 @@ export class GooglePlacesService {
         const hasExcludedType = place.types?.some(type => excludedTypes.includes(type));
         if (hasExcludedType) {
           console.log(`⏭️ Skipping excluded type: ${place.name}`);
+          continue;
+        }
+        
+        // CRITICAL: Vérifier que le lieu contient bien le type recherché
+        // Cela évite qu'une boulangerie qui aurait aussi d'autres types apparaisse dans les résultats
+        if (!isAllTypes && place.types && !place.types.includes(currentType)) {
+          console.log(`⏭️ Skipping ${place.name}: doesn't match searched type ${currentType} (has: ${place.types.join(', ')})`);
           continue;
         }
         
