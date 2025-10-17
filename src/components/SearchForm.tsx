@@ -112,32 +112,27 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="space-y-2">
-            <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
-              Types d'activités recherchées
-            </Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <BusinessTypesSelector
-                  selectedTypes={selectedTypes}
-                  onTypesChange={setSelectedTypes}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={handleGeniusClick}
-                disabled={isLoading || isGeniusLoading || !companyName.trim() || !address.trim()}
-                className="h-10 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg"
-                title="Obtenir des suggestions intelligentes"
-              >
-                {isGeniusLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <img src={geniusIcon} alt="Genius" className="h-5 w-5" />
-                )}
-              </Button>
+          <div className="flex gap-2 items-start">
+            <div className="flex-1">
+              <BusinessTypesSelector
+                selectedTypes={selectedTypes}
+                onTypesChange={setSelectedTypes}
+                disabled={isLoading}
+              />
             </div>
+            <Button
+              type="button"
+              onClick={handleGeniusClick}
+              disabled={isLoading || isGeniusLoading || !companyName.trim() || !address.trim()}
+              className="h-10 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+              title="Genius - Suggestions intelligentes d'activités complémentaires"
+            >
+              {isGeniusLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <img src={geniusIcon} alt="Genius" className="h-5 w-5" />
+              )}
+            </Button>
           </div>
 
           <div className="space-y-4">
