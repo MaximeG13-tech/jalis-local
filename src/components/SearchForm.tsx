@@ -14,9 +14,10 @@ import { GeniusDialog } from './GeniusDialog';
 interface SearchFormProps {
   onSearch: (companyName: string, address: string, placeId: string, maxResults: number, selectedTypes: BusinessType[]) => void;
   isLoading: boolean;
+  onReset?: () => void;
 }
 
-export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
+export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) => {
   const [companyName, setCompanyName] = useState('');
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
@@ -24,6 +25,15 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
   const [selectedTypes, setSelectedTypes] = useState<BusinessType[]>([]);
   const [geniusDialogOpen, setGeniusDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // Fonction pour réinitialiser le formulaire (sera exposée au parent)
+  const resetForm = () => {
+    setCompanyName('');
+    setAddress('');
+    setPlaceId('');
+    setMaxResults(10);
+    setSelectedTypes([]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +92,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="flex gap-2 items-start">
+          <div className="flex gap-2 items-end">
             <div className="flex-1">
               <BusinessTypesSelector
                 selectedTypes={selectedTypes}
@@ -94,7 +104,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
               type="button"
               onClick={handleGeniusClick}
               disabled={isLoading || !placeId}
-              className="min-h-[42px] h-[42px] px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 mt-[28px]"
+              className="h-[42px] px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               title="Genius - Suggestions intelligentes d'activités complémentaires"
             >
               <Sparkles className="h-5 w-5" />

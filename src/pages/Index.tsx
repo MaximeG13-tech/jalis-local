@@ -81,10 +81,8 @@ const Index = () => {
   const handleNewSearch = () => {
     setBusinesses([]);
     setLastSearch(null);
-    toast({
-      title: "Recherche réinitialisée",
-      description: "Vous pouvez effectuer une nouvelle recherche",
-    });
+    // Force page reload to reset the form completely including selected types
+    window.location.reload();
   };
 
   const handleRemoveBusiness = (index: number) => {
