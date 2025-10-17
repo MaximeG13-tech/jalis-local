@@ -18,78 +18,36 @@ serve(async (req) => {
 
     console.log("Nearby search params:", { latitude, longitude, radius, includedType });
 
-    // Build included types array - TPE/PME uniquement (pas de professions libérales ni restaurants)
+    // Build included types array - only valid Google Places API types
     const includedTypes = includedType
       ? [includedType]
       : [
-          // Artisans et services
+          // Valid Google Places API types only
           "electrician",
           "plumber",
-          "general_contractor",
-          "mason",
-          "carpenter",
-          "roofer",
           "painter",
-          "landscaper",
-          "isolation_specialist",
+          "roofing_contractor",
           "locksmith",
-          "glazier",
-          "air_conditioning_specialist",
-          "veranda_installer",
-          "security_specialist",
-
-          // Santé & paramédical
-          "doctor",
-          "dentist",
-          "orthodontist",
-          "physiotherapist",
-          "osteopath",
-          "nurse",
-          "psychologist",
-          "nutritionist",
-          "veterinary_care",
-
-          // Professions juridiques et conseil
-          "lawyer",
-          "notary",
-          "accountant",
-          "financial_advisor",
-          "insurance_agent",
-          "management_consultant",
-
-          // Immobilier et habitat
-          "real_estate_agency",
-          "property_manager",
-          "property_developer",
-          "architect",
-          "interior_designer",
-
-          // Services à la personne
           "hair_care",
           "beauty_salon",
           "spa",
-          "photographer",
-          "home_cleaning_service",
-
-          // Éducation & formation
-          "training_center",
-          "private_school",
-          "tutoring_service",
-          "independent_trainer",
-
-          // Automobile
+          "doctor",
+          "dentist",
+          "physiotherapist",
+          "veterinary_care",
+          "lawyer",
+          "accounting",
+          "real_estate_agency",
+          "insurance_agency",
+          "travel_agency",
           "car_repair",
-          "car_body_shop",
           "car_dealer",
-          "driving_school",
-
-          // Restauration haut de gamme
-          "restaurant",
-          "caterer",
-
-          // Sport et bien-être
+          "car_rental",
+          "car_wash",
           "gym",
-          "personal_trainer",
+          "moving_company",
+          "storage",
+          "laundry",
         ];
 
     // Call new Places API (New) Nearby Search
