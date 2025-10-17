@@ -3,14 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Sparkles } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
 import { BusinessTypesSelector } from './BusinessTypesSelector';
 import { BusinessType } from '@/constants/businessTypes';
 import { useToast } from '@/hooks/use-toast';
 import { GeniusDialog } from './GeniusDialog';
-import geniusIcon from '@/assets/genius-icon.png';
 
 interface SearchFormProps {
   onSearch: (companyName: string, address: string, placeId: string, maxResults: number, selectedTypes: BusinessType[]) => void;
@@ -83,7 +82,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="flex gap-2 items-end">
+          <div className="flex gap-2 items-start">
             <div className="flex-1">
               <BusinessTypesSelector
                 selectedTypes={selectedTypes}
@@ -95,10 +94,10 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
               type="button"
               onClick={handleGeniusClick}
               disabled={isLoading || !placeId}
-              className="min-h-[42px] h-auto px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-[42px] h-[42px] px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 mt-[28px]"
               title="Genius - Suggestions intelligentes d'activités complémentaires"
             >
-              <img src={geniusIcon} alt="Genius" className="h-5 w-5 filter invert" />
+              <Sparkles className="h-5 w-5" />
             </Button>
           </div>
 
