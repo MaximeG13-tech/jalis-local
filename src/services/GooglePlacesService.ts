@@ -160,7 +160,7 @@ export class GooglePlacesService {
 
     // STRATÉGIE : élargir automatiquement si pas assez de résultats
     let typeIndex = 0;
-    const radiusLevels = [50000, 65000, 80000, 100000]; // Commence à 50km, monte jusqu'à 100km
+    const radiusLevels = [30000, 40000, 50000]; // Limite max de l'API Google Places: 50km
     let currentRadiusIndex = 0;
     
     // Mélanger les types pour éviter la concentration par activité
@@ -194,7 +194,7 @@ export class GooglePlacesService {
       
       const radius = radiusLevels[currentRadiusIndex];
       
-      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}" (${currentCount}/${MAX_PER_TYPE}), radius=${radius}m (level ${currentRadiusIndex + 1}/4), found=${businesses.length}/${maxResults}`);
+      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}" (${currentCount}/${MAX_PER_TYPE}), radius=${radius}m (level ${currentRadiusIndex + 1}/3), found=${businesses.length}/${maxResults}`);
       
       // Chercher spécifiquement ce type d'entreprise
       const searchResult = await this.nearbySearch(location, radius, currentType);
