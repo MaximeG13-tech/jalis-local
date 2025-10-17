@@ -6,40 +6,6 @@ export interface BusinessType {
 }
 
 export const BUSINESS_TYPES: BusinessType[] = [
-  // Santé
-  { id: 'pharmacy', label: 'Pharmacie', googlePlaceType: 'pharmacy' },
-  { id: 'hospital', label: 'Centre Hospitalier Universitaire', googlePlaceType: 'hospital' },
-  { id: 'dentist', label: 'Dentiste', googlePlaceType: 'dentist' },
-  { id: 'doctor', label: 'Médecin généraliste', googlePlaceType: 'doctor' },
-  { id: 'physiotherapist', label: 'Kinésithérapeute', googlePlaceType: 'physiotherapist' },
-  { id: 'veterinary_care', label: 'Vétérinaire', googlePlaceType: 'veterinary_care' },
-  { id: 'cardiologist', label: 'Cardiologue', googlePlaceType: 'doctor' },
-  { id: 'dermatologist', label: 'Dermatologue', googlePlaceType: 'doctor' },
-  { id: 'ophthalmologist', label: 'Ophtalmologiste', googlePlaceType: 'doctor' },
-  { id: 'pediatrician', label: 'Pédiatre', googlePlaceType: 'doctor' },
-  { id: 'psychiatrist', label: 'Psychiatre', googlePlaceType: 'doctor' },
-  { id: 'psychologist', label: 'Psychologue', googlePlaceType: 'doctor' },
-  { id: 'nutritionist', label: 'Nutritionniste', googlePlaceType: 'doctor' },
-  { id: 'allergist', label: 'Allergologue', googlePlaceType: 'doctor' },
-  { id: 'acupuncturist', label: 'Acupuncteur', googlePlaceType: 'doctor' },
-  { id: 'gastroenterologist', label: 'Gastro-entérologue', googlePlaceType: 'doctor' },
-  { id: 'endocrinologist', label: 'Endocrinologue', googlePlaceType: 'doctor' },
-  { id: 'neurologist', label: 'Neurologue', googlePlaceType: 'doctor' },
-  { id: 'pulmonologist', label: 'Pneumologue', googlePlaceType: 'doctor' },
-  { id: 'radiologist', label: 'Radiologue', googlePlaceType: 'doctor' },
-  { id: 'urologist', label: 'Urologue', googlePlaceType: 'doctor' },
-  { id: 'gynecologist', label: 'Gynécologue', googlePlaceType: 'doctor' },
-  { id: 'rheumatologist', label: 'Rhumatologue', googlePlaceType: 'doctor' },
-  { id: 'podiatrist', label: 'Podologue', googlePlaceType: 'doctor' },
-  { id: 'osteopath', label: 'Ostéopathe', googlePlaceType: 'physiotherapist' },
-  { id: 'orthodontist', label: 'Orthodontiste', googlePlaceType: 'dentist' },
-  { id: 'orthopedist', label: 'Chirurgien orthopédique', googlePlaceType: 'doctor' },
-  { id: 'speech_therapist', label: 'Orthophoniste', googlePlaceType: 'doctor' },
-  { id: 'midwife', label: 'Sage-femme', googlePlaceType: 'doctor' },
-  { id: 'homeopath', label: 'Homéopathe', googlePlaceType: 'doctor' },
-  { id: 'sophrologist', label: 'Sophrologue', googlePlaceType: 'doctor' },
-  { id: 'dietitian', label: 'Diététicien', googlePlaceType: 'doctor' },
-  
   // Services professionnels
   { id: 'accounting', label: 'Comptable', googlePlaceType: 'accounting' },
   { id: 'lawyer', label: 'Avocat', googlePlaceType: 'lawyer' },
@@ -72,7 +38,6 @@ export const BUSINESS_TYPES: BusinessType[] = [
   // Automobile
   { id: 'car_repair', label: 'Garage de réparation automobile', googlePlaceType: 'car_repair' },
   { id: 'car_dealer', label: 'Concessionnaire auto', googlePlaceType: 'car_dealer' },
-  { id: 'car_wash', label: 'Station de lavage automobile', googlePlaceType: 'car_wash' },
   { id: 'car_rental', label: 'Agence de location de voitures', googlePlaceType: 'car_rental' },
   { id: 'auto_body_shop', label: 'Carrosserie et peinture automobile', googlePlaceType: 'car_repair' },
   { id: 'tire_shop', label: 'Magasin de pneus', googlePlaceType: 'car_repair' },
@@ -103,10 +68,6 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'bicycle_store', label: 'Magasin de vélos', googlePlaceType: 'bicycle_store' },
   { id: 'florist', label: 'Fleuriste', googlePlaceType: 'florist' },
   { id: 'book_store', label: 'Librairie', googlePlaceType: 'book_store' },
-  { id: 'convenience_store', label: 'Supérette', googlePlaceType: 'convenience_store' },
-  { id: 'supermarket', label: 'Supermarché et hypermarché', googlePlaceType: 'supermarket' },
-  { id: 'department_store', label: 'Grand magasin', googlePlaceType: 'department_store' },
-  { id: 'shopping_mall', label: 'Centre commercial', googlePlaceType: 'shopping_mall' },
   { id: 'antique_store', label: 'Magasin d\'antiquités', googlePlaceType: 'store' },
   { id: 'pet_store', label: 'Animalerie', googlePlaceType: 'pet_store' },
   { id: 'toy_store', label: 'Magasin de jeux et jouets', googlePlaceType: 'store' },
@@ -115,54 +76,14 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'home_goods_store', label: 'Magasin de meubles et d\'accessoires pour la maison', googlePlaceType: 'home_goods_store' },
   { id: 'liquor_store', label: 'Caviste', googlePlaceType: 'liquor_store' },
   
-  // Restauration
-  { id: 'restaurant', label: 'Restaurant', googlePlaceType: 'restaurant' },
-  { id: 'cafe', label: 'Café', googlePlaceType: 'cafe' },
-  { id: 'bakery', label: 'Boulangerie-pâtisserie', googlePlaceType: 'bakery' },
-  { id: 'bar', label: 'Bar', googlePlaceType: 'bar' },
-  { id: 'meal_takeaway', label: 'Restauration rapide', googlePlaceType: 'meal_takeaway' },
-  { id: 'pizzeria', label: 'Pizzéria', googlePlaceType: 'meal_takeaway' },
-  { id: 'chinese_restaurant', label: 'Restaurant chinois', googlePlaceType: 'restaurant' },
-  { id: 'japanese_restaurant', label: 'Restaurant japonais', googlePlaceType: 'restaurant' },
-  { id: 'italian_restaurant', label: 'Restaurant italien', googlePlaceType: 'restaurant' },
-  { id: 'french_restaurant', label: 'Restaurant français', googlePlaceType: 'restaurant' },
-  { id: 'mexican_restaurant', label: 'Restaurant mexicain', googlePlaceType: 'restaurant' },
-  { id: 'indian_restaurant', label: 'Restaurant indien', googlePlaceType: 'restaurant' },
-  { id: 'thai_restaurant', label: 'Restaurant thaïlandais', googlePlaceType: 'restaurant' },
-  { id: 'vietnamese_restaurant', label: 'Restaurant vietnamien', googlePlaceType: 'restaurant' },
-  { id: 'korean_restaurant', label: 'Restaurant coréen', googlePlaceType: 'restaurant' },
-  { id: 'spanish_restaurant', label: 'Restaurant espagnol', googlePlaceType: 'restaurant' },
-  { id: 'lebanese_restaurant', label: 'Restaurant libanais', googlePlaceType: 'restaurant' },
-  { id: 'moroccan_restaurant', label: 'Restaurant marocain', googlePlaceType: 'restaurant' },
-  { id: 'algerian_restaurant', label: 'Restaurant algérien', googlePlaceType: 'restaurant' },
-  { id: 'tunisian_restaurant', label: 'Restaurant tunisien', googlePlaceType: 'restaurant' },
-  { id: 'ethiopian_restaurant', label: 'Restaurant éthiopien', googlePlaceType: 'restaurant' },
-  { id: 'russian_restaurant', label: 'Restaurant russe', googlePlaceType: 'restaurant' },
-  { id: 'tibetan_restaurant', label: 'Restaurant tibétain', googlePlaceType: 'restaurant' },
-  { id: 'ice_cream_shop', label: 'Glacier', googlePlaceType: 'store' },
-  { id: 'creperie', label: 'Crêperie', googlePlaceType: 'restaurant' },
-  { id: 'tea_house', label: 'Salon de thé', googlePlaceType: 'cafe' },
-  { id: 'night_club', label: 'Boîte de nuit', googlePlaceType: 'night_club' },
-  { id: 'bistro', label: 'Bistrot', googlePlaceType: 'restaurant' },
-  { id: 'brasserie', label: 'Brasserie à bière', googlePlaceType: 'restaurant' },
-  { id: 'cabaret', label: 'Cabaret', googlePlaceType: 'night_club' },
-  
-  // Services
-  { id: 'laundry', label: 'Pressing / Blanchisserie', googlePlaceType: 'laundry' },
+  // Services professionnels spécialisés
+  { id: 'veterinary_care', label: 'Vétérinaire', googlePlaceType: 'veterinary_care' },
   { id: 'moving_company', label: 'Entreprise de déménagement', googlePlaceType: 'moving_company' },
   { id: 'storage', label: 'Garde-meuble', googlePlaceType: 'storage' },
-  { id: 'bank', label: 'Banque', googlePlaceType: 'bank' },
-  { id: 'atm', label: 'Distributeur automatique de billets', googlePlaceType: 'atm' },
-  { id: 'post_office', label: 'Bureau de poste', googlePlaceType: 'post_office' },
   { id: 'funeral_home', label: 'Entreprise de pompes funèbres', googlePlaceType: 'funeral_home' },
-  { id: 'taxi_stand', label: 'Service de taxi', googlePlaceType: 'taxi_stand' },
+  { id: 'photographer', label: 'Photographe', googlePlaceType: 'store' },
   
-  // Lieux de culte (commerciaux uniquement - services payants)
-  { id: 'church', label: 'Église', googlePlaceType: 'church' },
-  { id: 'mosque', label: 'Mosquée', googlePlaceType: 'mosque' },
-  { id: 'synagogue', label: 'Synagogue', googlePlaceType: 'synagogue' },
-  
-  // Éducation (commerciale uniquement)
+  // Éducation commerciale
   { id: 'driving_school', label: 'Auto-école', googlePlaceType: 'driving_school' },
   { id: 'language_school', label: 'École de langues', googlePlaceType: 'school' },
   { id: 'music_school', label: 'École de musique', googlePlaceType: 'school' },
@@ -170,16 +91,10 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'art_school', label: 'École d\'arts', googlePlaceType: 'school' },
   { id: 'cooking_school', label: 'Cours de cuisine', googlePlaceType: 'school' },
   
-  // Sports et loisirs
+  // Sports et loisirs commerciaux
   { id: 'gym', label: 'Salle de sport', googlePlaceType: 'gym' },
-  { id: 'stadium', label: 'Stade', googlePlaceType: 'stadium' },
   { id: 'golf_course', label: 'Terrain de golf', googlePlaceType: 'golf_course' },
-  { id: 'swimming_pool', label: 'Piscine municipale', googlePlaceType: 'gym' },
   { id: 'bowling_alley', label: 'Bowling', googlePlaceType: 'bowling_alley' },
-  { id: 'tennis_court', label: 'Court de tennis', googlePlaceType: 'stadium' },
-  { id: 'soccer_field', label: 'Terrain de football', googlePlaceType: 'stadium' },
-  { id: 'rugby_field', label: 'Terrain de rugby', googlePlaceType: 'stadium' },
-  { id: 'basketball_court', label: 'Terrain de basket', googlePlaceType: 'stadium' },
   { id: 'yoga_studio', label: 'Centre de yoga', googlePlaceType: 'gym' },
   { id: 'martial_arts_dojo', label: 'Club d\'arts martiaux', googlePlaceType: 'gym' },
   { id: 'climbing_wall', label: 'Mur d\'escalade', googlePlaceType: 'gym' },
@@ -189,14 +104,14 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'laser_tag', label: 'Terrain de laser game', googlePlaceType: 'amusement_park' },
   { id: 'trampoline_park', label: 'Parc d\'accrobranche', googlePlaceType: 'amusement_park' },
   
-  // Logement
+  // Logement commercial
   { id: 'lodging', label: 'Hôtel', googlePlaceType: 'lodging' },
   { id: 'bed_breakfast', label: 'Chambre d\'hôtes', googlePlaceType: 'lodging' },
   { id: 'hostel', label: 'Auberge de jeunesse', googlePlaceType: 'lodging' },
   { id: 'campground', label: 'Terrain de camping', googlePlaceType: 'campground' },
   { id: 'rv_park', label: 'Camping avec emplacement pour caravane', googlePlaceType: 'rv_park' },
   
-  // Loisirs et Culture (UNIQUEMENT commerciaux)
+  // Loisirs et culture commerciaux
   { id: 'movie_theater', label: 'Salle de cinéma', googlePlaceType: 'movie_theater' },
   { id: 'casino', label: 'Casino', googlePlaceType: 'casino' },
   { id: 'amusement_park', label: 'Parc d\'attractions', googlePlaceType: 'amusement_park' },
@@ -206,27 +121,6 @@ export const BUSINESS_TYPES: BusinessType[] = [
   { id: 'opera_house', label: 'Opéra', googlePlaceType: 'point_of_interest' },
   { id: 'concert_hall', label: 'Salle de concert', googlePlaceType: 'night_club' },
   { id: 'circus', label: 'Cirque', googlePlaceType: 'point_of_interest' },
-  { id: 'bowling_alley', label: 'Bowling', googlePlaceType: 'bowling_alley' },
-  { id: 'karting_track', label: 'Circuit de karting', googlePlaceType: 'amusement_park' },
-  { id: 'paintball', label: 'Terrain de paintball', googlePlaceType: 'amusement_park' },
-  { id: 'laser_tag', label: 'Terrain de laser game', googlePlaceType: 'amusement_park' },
-  { id: 'trampoline_park', label: 'Parc d\'accrobranche', googlePlaceType: 'amusement_park' },
-  
-  // Logement
-  { id: 'lodging', label: 'Hôtel', googlePlaceType: 'lodging' },
-  { id: 'bed_breakfast', label: 'Chambre d\'hôtes', googlePlaceType: 'lodging' },
-  { id: 'hostel', label: 'Auberge de jeunesse', googlePlaceType: 'lodging' },
-  { id: 'campground', label: 'Terrain de camping', googlePlaceType: 'campground' },
-  { id: 'rv_park', label: 'Camping avec emplacement pour caravane', googlePlaceType: 'rv_park' },
-  
-  // Transport
-  { id: 'taxi_stand', label: 'Service de taxi', googlePlaceType: 'taxi_stand' },
-  { id: 'parking', label: 'Parking', googlePlaceType: 'parking' },
-  { id: 'gas_station', label: 'Station service', googlePlaceType: 'gas_station' },
-  
-  // Autres services commerciaux
-  { id: 'tourist_info', label: 'Office de tourisme', googlePlaceType: 'travel_agency' },
-  { id: 'convention_center', label: 'Palais des congrès', googlePlaceType: 'convention_center' },
 ];
 
 export const ALL_TYPES_OPTION = {

@@ -157,7 +157,7 @@ export class GooglePlacesService {
 
     // STRATÉGIE : élargir automatiquement si pas assez de résultats
     let typeIndex = 0;
-    const radiusLevels = [20000, 35000, 50000, 75000]; // Commence à 20km, monte jusqu'à 75km
+    const radiusLevels = [50000, 65000, 80000, 100000]; // Commence à 50km, monte jusqu'à 100km
     let currentRadiusIndex = 0;
     
     // Mélanger les types pour éviter la concentration par activité
