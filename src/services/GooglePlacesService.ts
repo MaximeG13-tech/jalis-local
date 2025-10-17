@@ -1,6 +1,6 @@
 import { Business, GooglePlace } from '@/types/business';
 import { supabase } from '@/integrations/supabase/client';
-import { BusinessType } from '@/constants/businessTypes';
+import { BusinessType, BUSINESS_TYPES } from '@/constants/businessTypes';
 
 export class GooglePlacesService {
   static async getLocationFromPlaceId(placeId: string): Promise<{ lat: number; lng: number } | null> {
@@ -275,8 +275,13 @@ export class GooglePlacesService {
           // Use native Google Maps URL from the API
           const mapsLink = place.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
           
+          // Trouver le label en français du type d'activité
+          const businessType = BUSINESS_TYPES.find(t => t.googlePlaceType === currentType);
+          const typeLabel = businessType?.label || currentType;
+          
           businesses.push({
             nom: place.name,
+            type_activite: typeLabel,
             adresse: place.formatted_address || '',
             telephone: phoneNumber || 'Non disponible',
             site_web: website || 'Non disponible',

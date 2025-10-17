@@ -21,11 +21,14 @@ export const ResultsTable = ({ businesses, onRemove }: ResultsTableProps) => {
           
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
                   <CardTitle className="text-xl">{business.nom}</CardTitle>
                 </div>
+                <Badge variant="secondary" className="w-fit text-xs font-medium">
+                  {business.type_activite}
+                </Badge>
                 <div className="flex items-start gap-2 text-muted-foreground">
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <CardDescription className="text-sm leading-relaxed">

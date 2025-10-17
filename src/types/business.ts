@@ -1,5 +1,6 @@
 export interface Business {
   nom: string;
+  type_activite: string;
   adresse: string;
   telephone: string;
   site_web: string;
