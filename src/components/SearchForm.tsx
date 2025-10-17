@@ -112,7 +112,7 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             disabled={isLoading}
           />
 
-          <div className="flex gap-2 items-start">
+          <div className="flex gap-2 items-end">
             <div className="flex-1">
               <BusinessTypesSelector
                 selectedTypes={selectedTypes}
@@ -123,8 +123,8 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
             <Button
               type="button"
               onClick={handleGeniusClick}
-              disabled={isLoading || isGeniusLoading || !companyName.trim() || !address.trim()}
-              className="h-10 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+              disabled={isLoading || isGeniusLoading}
+              className="min-h-[42px] h-auto px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title="Genius - Suggestions intelligentes d'activités complémentaires"
             >
               {isGeniusLoading ? (
