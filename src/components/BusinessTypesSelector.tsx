@@ -13,9 +13,10 @@ interface BusinessTypesSelectorProps {
   selectedTypes: BusinessType[];
   onTypesChange: (types: BusinessType[]) => void;
   disabled?: boolean;
+  hideLabel?: boolean;
 }
 
-export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled }: BusinessTypesSelectorProps) => {
+export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, hideLabel }: BusinessTypesSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const shouldReopenRef = useRef(false);
@@ -91,7 +92,9 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled }
 
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Types d'activités</Label>
+      {!hideLabel && (
+        <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Types d'activités</Label>
+      )}
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>

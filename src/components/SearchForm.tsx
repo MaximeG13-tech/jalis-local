@@ -92,23 +92,29 @@ export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) =>
             disabled={isLoading}
           />
 
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <BusinessTypesSelector
-                selectedTypes={selectedTypes}
-                onTypesChange={setSelectedTypes}
-                disabled={isLoading}
-              />
+          <div className="space-y-2">
+            <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
+              Types d'activités
+            </Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <BusinessTypesSelector
+                  selectedTypes={selectedTypes}
+                  onTypesChange={setSelectedTypes}
+                  disabled={isLoading}
+                  hideLabel={true}
+                />
+              </div>
+              <Button
+                type="button"
+                onClick={handleGeniusClick}
+                disabled={isLoading || !placeId}
+                className="h-[42px] px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                title="Genius - Suggestions intelligentes d'activités complémentaires"
+              >
+                <Sparkles className="h-5 w-5" />
+              </Button>
             </div>
-            <Button
-              type="button"
-              onClick={handleGeniusClick}
-              disabled={isLoading || !placeId}
-              className="h-[42px] px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-              title="Genius - Suggestions intelligentes d'activités complémentaires"
-            >
-              <Sparkles className="h-5 w-5" />
-            </Button>
           </div>
 
           <GeniusDialog
