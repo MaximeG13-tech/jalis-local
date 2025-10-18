@@ -1,34 +1,48 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Search } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
-import { Slider } from '@/components/ui/slider';
 import { CategoryAutocomplete, GBPCategory } from './CategoryAutocomplete';
-import { useToast } from '@/hooks/use-toast';
-import { GeniusSuggestionsDialog } from './GeniusSuggestionsDialog';
+import { GeniusDialog } from './GeniusDialog';
+import { Slider } from '@/components/ui/slider';
 
 interface SearchFormProps {
-  onSearch: (companyName: string, address: string, placeId: string, maxResults: number, category: GBPCategory | null) => void;
+  onSearch: (params: {
+    businessName: string;
+    address: string;
+    placeId: string;
+    category: GBPCategory | null;
+    maxResults: number;
+  }) => void;
+  onSearchReferrals: (categories: GBPCategory[]) => void;
   isLoading: boolean;
-  onReset?: () => void;
 }
 
-export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) => {
-  const [companyName, setCompanyName] = useState('');
+export const SearchForm = ({ onSearch, onSearchReferrals, isLoading }: SearchFormProps) => {
+  const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');
   const [placeId, setPlaceId] = useState('');
-  const [maxResults, setMaxResults] = useState(10);
   const [selectedCategory, setSelectedCategory] = useState<GBPCategory | null>(null);
-  const [geniusDialogOpen, setGeniusDialogOpen] = useState(false);
-  const { toast } = useToast();
+  const [maxResults, setMaxResults] = useState(10);
+  const [geniusOpen, setGeniusOpen] = useState(false);
+
+  const handleGeniusSelect = (categories: GBPCategory[]) => {
+    onSearchReferrals(categories);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyName.trim() || !address.trim() || !placeId || !selectedCategory) return;
-    onSearch(companyName, address, placeId, maxResults, selectedCategory);
+    if (!businessName.trim() || !address.trim() || !placeId || !selectedCategory) return;
+    onSearch({
+      businessName,
+      address,
+      placeId,
+      category: selectedCategory,
+      maxResults
+    });
   };
 
   const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {
@@ -36,79 +50,42 @@ export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) =>
     setPlaceId(selectedPlaceId);
   };
 
-  const handleGeniusClick = () => {
-    if (!selectedCategory) {
-      toast({
-        title: "Catégorie manquante",
-        description: "Veuillez d'abord sélectionner une catégorie d'activité",
-        variant: "destructive",
-      });
-      return;
-    }
-    setGeniusDialogOpen(true);
-  };
-
-  const handleSelectSuggestion = (category: GBPCategory) => {
-    setSelectedCategory(category);
-    toast({
-      title: "✨ Catégorie suggérée",
-      description: `Recherche pour: ${category.displayName}`,
-    });
-  };
-
   return (
     <Card className="border border-border shadow-card bg-card">
       <CardContent className="pt-8 pb-8 px-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="companyName" className="text-sm font-bold text-foreground uppercase tracking-wide">
-              Nom de votre entreprise
+            <Label htmlFor="businessName" className="text-sm font-bold text-foreground uppercase tracking-wide">
+              📍 Mon entreprise - Nom
             </Label>
             <Input
-              id="companyName"
-              type="text"
-              placeholder="Ex: Jalis"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              disabled={isLoading}
+              id="businessName"
+              placeholder="Ex: Dupont & Associés"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
               required
             />
           </div>
 
-          <AddressAutocomplete
-            value={address}
-            onChange={setAddress}
-            onSelect={handleAddressSelect}
-            disabled={isLoading}
-          />
-
           <div className="space-y-2">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <CategoryAutocomplete
-                  value={selectedCategory}
-                  onChange={setSelectedCategory}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={handleGeniusClick}
-                disabled={isLoading || !selectedCategory}
-                className="h-[42px] px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 mt-[28px]"
-                title="Genius - Suggestions intelligentes de rapporteurs d'affaires"
-              >
-                <Sparkles className="h-5 w-5" />
-              </Button>
-            </div>
+            <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
+              📍 Mon entreprise - Adresse
+            </Label>
+            <AddressAutocomplete
+              value={address}
+              onChange={setAddress}
+              onSelect={handleAddressSelect}
+              disabled={isLoading}
+            />
           </div>
 
-          <GeniusSuggestionsDialog
-            open={geniusDialogOpen}
-            onOpenChange={setGeniusDialogOpen}
-            category={selectedCategory}
-            onSelectCategory={handleSelectSuggestion}
-          />
+          <div className="space-y-2">
+            <CategoryAutocomplete
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              disabled={isLoading}
+            />
+          </div>
 
           <div className="space-y-4">
             <Label htmlFor="maxResults" className="text-sm font-bold text-foreground uppercase tracking-wide">
@@ -133,23 +110,42 @@ export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) =>
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 transition-all shadow-sm" 
-            disabled={isLoading || !placeId || !companyName.trim() || !selectedCategory}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Recherche en cours...
-              </>
-            ) : (
-              <>
-                <Search className="mr-2 h-4 w-4" />
-                Générer la liste de liens utiles
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              disabled={isLoading || !businessName || !address || !selectedCategory}
+              className="flex-1"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Recherche...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Rechercher
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setGeniusOpen(true)}
+              disabled={!selectedCategory || isLoading}
+              className="px-6 border-purple-600 text-purple-600 hover:bg-purple-50"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Genius
+            </Button>
+          </div>
+
+          <GeniusDialog
+            open={geniusOpen}
+            onOpenChange={setGeniusOpen}
+            category={selectedCategory}
+            onSelectCategories={handleGeniusSelect}
+          />
         </form>
       </CardContent>
     </Card>

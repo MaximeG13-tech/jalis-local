@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 export interface GBPCategory {
   id: string;
   displayName: string;
+  displayNameFr?: string;
 }
 
 interface CategoryAutocompleteProps {
@@ -24,17 +25,24 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Load from raw text file and convert
-    fetch('/gcid_raw.txt')
-      .then(res => res.text())
-      .then(text => {
-        const categoriesArray = JSON.parse(text);
-        const converted = categoriesArray.map((category: string) => ({
-          id: `gcid:${category.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
-          displayName: category
-        }));
+    // Load categories and French translations
+    Promise.all([
+      fetch('/gcid_raw.txt').then(res => res.text()),
+      fetch('/categories_fr.json').then(res => res.json())
+    ])
+      .then(([rawText, translations]) => {
+        const categoriesArray = JSON.parse(rawText);
+        const converted = categoriesArray.map((category: string) => {
+          const id = `gcid:${category.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+          const translation = translations[id];
+          return {
+            id,
+            displayName: category,
+            displayNameFr: translation?.fr || category
+          };
+        });
         setCategories(converted);
-        console.log(`Chargé ${converted.length} catégories GBP`);
+        console.log(`Chargé ${converted.length} catégories GBP (avec traductions FR)`);
       })
       .catch(err => console.error('Erreur chargement catégories GBP:', err));
   }, []);
@@ -43,7 +51,10 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
     if (!searchQuery) return categories.slice(0, 50);
     const query = searchQuery.toLowerCase();
     return categories
-      .filter(cat => cat.displayName.toLowerCase().includes(query))
+      .filter(cat => 
+        (cat.displayNameFr?.toLowerCase().includes(query) || 
+         cat.displayName.toLowerCase().includes(query))
+      )
       .slice(0, 50);
   }, [categories, searchQuery]);
 
@@ -62,7 +73,7 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
             className="w-full justify-between h-[42px]"
           >
             <span className="truncate">
-              {value ? value.displayName : "Rechercher une catégorie..."}
+              {value ? (value.displayNameFr || value.displayName) : "Rechercher une catégorie..."}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -83,7 +94,7 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
                 {filteredCategories.map((category) => (
                   <CommandItem
                     key={category.id}
-                    value={category.displayName}
+                    value={category.displayNameFr || category.displayName}
                     onSelect={() => {
                       onChange(category);
                       setOpen(false);
@@ -96,7 +107,12 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
                         value?.id === category.id ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {category.displayName}
+                    <div className="flex flex-col">
+                      <span>{category.displayNameFr || category.displayName}</span>
+                      {category.displayNameFr && category.displayNameFr !== category.displayName && (
+                        <span className="text-xs text-muted-foreground">{category.displayName}</span>
+                      )}
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>

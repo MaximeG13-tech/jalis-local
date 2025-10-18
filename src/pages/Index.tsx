@@ -1,42 +1,51 @@
 import { useState } from 'react';
-import { Business } from '@/types/business';
-import { supabase } from '@/integrations/supabase/client';
 import { SearchForm } from '@/components/SearchForm';
 import { ResultsTable } from '@/components/ResultsTable';
 import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
+import { Business } from '@/types/business';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { GBPCategory } from '@/components/CategoryAutocomplete';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [referralBusinesses, setReferralBusinesses] = useState<Record<string, Business[]>>({});
+  const [selectedReferralCategories, setSelectedReferralCategories] = useState<GBPCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [lastSearch, setLastSearch] = useState<{ 
-    companyName: string;
-    address: string; 
-    placeId: string; 
-    latitude: number;
-    longitude: number;
+  const [progress, setProgress] = useState(0);
+  const [lastSearch, setLastSearch] = useState<{
+    businessName: string;
+    address: string;
+    placeId: string;
+    category: GBPCategory | null;
     maxResults: number;
-    category: GBPCategory;
+    latitude?: number;
+    longitude?: number;
   } | null>(null);
   const { toast } = useToast();
 
-  const handleSearch = async (
-    companyName: string,
-    address: string, 
-    placeId: string, 
-    maxResults: number,
-    category: GBPCategory | null
-  ) => {
+  const handleSearch = async ({
+    businessName,
+    address,
+    placeId,
+    category,
+    maxResults
+  }: {
+    businessName: string;
+    address: string;
+    placeId: string;
+    category: GBPCategory | null;
+    maxResults: number;
+  }) => {
     if (!category) return;
     
     setIsLoading(true);
     setBusinesses([]);
-    setProgress({ current: 0, total: maxResults });
+    setProgress(0);
 
     try {
       // Get place details to extract lat/lng
@@ -50,10 +59,11 @@ const Index = () => {
 
       const { lat, lng } = placeData.result.geometry.location;
       
-      setLastSearch({ companyName, address, placeId, latitude: lat, longitude: lng, maxResults, category });
+      setLastSearch({ businessName, address, placeId, category, maxResults, latitude: lat, longitude: lng });
 
-      // Construct text query with category name and location
-      const textQuery = `${category.displayName} à ${address}`;
+      // Construct text query with category name (French) and location
+      const categoryName = category.displayNameFr || category.displayName;
+      const textQuery = `${categoryName} à ${address}`;
 
       const { data, error } = await supabase.functions.invoke('google-search-text', {
         body: {
@@ -67,12 +77,14 @@ const Index = () => {
       if (error) throw error;
 
       const results: Business[] = (data.results || []).map((place: any) => ({
-        name: place.name,
-        category: category.displayName,
-        address: place.formatted_address,
-        phone: place.international_phone_number,
-        website: place.website,
-        mapsUrl: place.url,
+        name: place.name || 'N/A',
+        category: categoryName,
+        address: place.formattedAddress || 'N/A',
+        phone: place.nationalPhoneNumber || 'N/A',
+        website: place.websiteUri || 'N/A',
+        mapsUrl: place.googleMapsUri || '#',
+        rating: place.rating,
+        userRatingsTotal: place.userRatingCount
       }));
 
       setBusinesses(results);
@@ -81,8 +93,6 @@ const Index = () => {
         title: "Recherche terminée",
         description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
       });
-      setIsLoading(false);
-      setProgress({ current: 0, total: 0 });
     } catch (error) {
       console.error('Search error:', error);
       toast({
@@ -90,28 +100,74 @@ const Index = () => {
         description: error instanceof Error ? error.message : "Une erreur est survenue lors de la recherche",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
-      setProgress({ current: 0, total: 0 });
+      setProgress(0);
     }
   };
 
-  const handleRegenerate = () => {
-    if (lastSearch) {
-      handleSearch(
-        lastSearch.companyName,
-        lastSearch.address, 
-        lastSearch.placeId, 
-        lastSearch.maxResults,
-        lastSearch.category
-      );
+  const handleSearchReferrals = async (categories: GBPCategory[]) => {
+    if (!lastSearch) return;
+    
+    setSelectedReferralCategories(categories);
+    const newReferralBusinesses: Record<string, Business[]> = {};
+
+    for (const category of categories) {
+      try {
+        const categoryName = category.displayNameFr || category.displayName;
+        const textQuery = `${categoryName} à ${lastSearch.address}`;
+
+        const { data: searchData, error: searchError } = await supabase.functions.invoke('google-search-text', {
+          body: {
+            textQuery,
+            latitude: lastSearch.latitude,
+            longitude: lastSearch.longitude,
+            maxResultCount: 10
+          }
+        });
+
+        if (searchError) throw searchError;
+
+        newReferralBusinesses[category.id] = (searchData.results || []).map((place: any) => ({
+          name: place.name || 'N/A',
+          category: categoryName,
+          address: place.formattedAddress || 'N/A',
+          phone: place.nationalPhoneNumber || 'N/A',
+          website: place.websiteUri || 'N/A',
+          mapsUrl: place.googleMapsUri || '#',
+          rating: place.rating,
+          userRatingsTotal: place.userRatingCount
+        }));
+
+        toast({
+          title: "Recherche terminée",
+          description: `${newReferralBusinesses[category.id].length} entreprises trouvées pour ${categoryName}`,
+        });
+      } catch (error) {
+        console.error(`Erreur recherche ${category.displayNameFr || category.displayName}:`, error);
+        toast({
+          title: "Erreur",
+          description: `Impossible de charger les entreprises pour ${category.displayNameFr || category.displayName}`,
+          variant: "destructive",
+        });
+      }
     }
+
+    setReferralBusinesses(newReferralBusinesses);
   };
 
   const handleNewSearch = () => {
     setBusinesses([]);
+    setReferralBusinesses({});
+    setSelectedReferralCategories([]);
     setLastSearch(null);
-    // Force page reload to reset the form completely including selected types
     window.location.reload();
+  };
+
+  const handleRegenerate = () => {
+    if (lastSearch) {
+      handleSearch(lastSearch);
+    }
   };
 
   const handleRemoveBusiness = (index: number) => {
@@ -144,56 +200,81 @@ const Index = () => {
         <div className="space-y-8">
           {/* Search Form */}
           <div className="max-w-3xl mx-auto">
-            <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+            <SearchForm 
+              onSearch={handleSearch}
+              onSearchReferrals={handleSearchReferrals}
+              isLoading={isLoading} 
+            />
           </div>
 
           {/* Progress Indicator */}
-          {isLoading && progress.total > 0 && (
-            <ProgressIndicator current={progress.current} total={progress.total} />
+          {isLoading && progress > 0 && (
+            <ProgressIndicator current={progress} total={lastSearch?.maxResults || 0} />
           )}
 
           {/* Results */}
           {businesses.length > 0 && (
-            <div className="space-y-8">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-6 bg-card rounded-lg border border-border shadow-card">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-1">
-                    {businesses.length} entreprise{businesses.length > 1 ? 's' : ''} trouvée{businesses.length > 1 ? 's' : ''}
-                  </h2>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Résultats prêts à être exportés
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={handleRegenerate}
-                    variant="outline"
-                    disabled={isLoading}
-                    className="gap-2 font-semibold"
-                    size="sm"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    Régénérer
-                  </Button>
-                  <Button
-                    onClick={handleNewSearch}
-                    variant="outline"
-                    disabled={isLoading}
-                    className="gap-2 font-semibold"
-                    size="sm"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Nouvelle recherche
-                  </Button>
-                  <ExportButton 
-                    businesses={businesses}
-                    companyName={lastSearch?.companyName}
-                    address={lastSearch?.address}
-                    maxResults={lastSearch?.maxResults}
-                  />
-                </div>
+            <>
+              <ResultsTable 
+                businesses={businesses} 
+                onRemove={handleRemoveBusiness}
+              />
+              <ExportButton 
+                businesses={businesses} 
+                companyName={lastSearch?.businessName}
+                address={lastSearch?.address}
+                maxResults={lastSearch?.maxResults}
+              />
+            </>
+          )}
+
+          {/* Referral businesses section */}
+          {selectedReferralCategories.length > 0 && (
+            <div className="space-y-6 mt-8">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-purple-600" />
+                <h2 className="text-2xl font-bold">Rapporteurs d'affaires</h2>
               </div>
-              <ResultsTable businesses={businesses} onRemove={handleRemoveBusiness} />
+
+              {selectedReferralCategories.map((category) => {
+                const categoryBusinesses = referralBusinesses[category.id] || [];
+                const categoryName = category.displayNameFr || category.displayName;
+
+                return (
+                  <Card key={category.id} className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold">{categoryName}</h3>
+                      <span className="text-sm text-muted-foreground">
+                        {categoryBusinesses.length} entreprises
+                      </span>
+                    </div>
+
+                    {categoryBusinesses.length > 0 ? (
+                      <ResultsTable 
+                        businesses={categoryBusinesses}
+                        onRemove={(id) => {
+                          const index = parseInt(id);
+                          setReferralBusinesses({
+                            ...referralBusinesses,
+                            [category.id]: categoryBusinesses.filter((_, i) => i !== index)
+                          });
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>Aucune entreprise trouvée pour cette catégorie</p>
+                        <Button
+                          variant="outline"
+                          className="mt-4"
+                          onClick={() => handleSearchReferrals([category])}
+                        >
+                          Rechercher à nouveau
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
