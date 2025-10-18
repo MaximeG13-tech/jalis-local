@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface GBPCategory {
@@ -47,6 +46,21 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
       .catch(err => console.error('Erreur chargement catégories GBP:', err));
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.category-autocomplete-container')) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [open]);
+
   const filteredCategories = useMemo(() => {
     if (!searchQuery) return categories.slice(0, 50);
     const query = searchQuery.toLowerCase();
@@ -59,67 +73,89 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
   }, [categories, searchQuery]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 category-autocomplete-container">
       <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
         Catégorie d'activité
       </Label>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled}
-            className="w-full justify-between h-[42px]"
-          >
-            <span className="truncate">
-              {value ? (value.displayNameFr || value.displayName) : "Rechercher une catégorie..."}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0 bg-popover z-50" align="start">
-          <Command shouldFilter={false}>
-            <div className="flex items-center border-b px-3">
-              <Input
-                placeholder="Rechercher une catégorie..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border-0 focus-visible:ring-0"
-              />
-            </div>
-            <CommandList>
-              <CommandEmpty>Aucune catégorie trouvée.</CommandEmpty>
-              <CommandGroup>
-                {filteredCategories.map((category) => (
-                  <CommandItem
-                    key={category.id}
-                    value={category.displayNameFr || category.displayName}
-                    onSelect={() => {
-                      onChange(category);
-                      setOpen(false);
-                    }}
-                    className="cursor-pointer"
-                  >
+      <div className="relative">
+        <Input
+          placeholder="Tapez votre activité (ex: Notaire, Plombier, Coiffeur...)"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            if (e.target.value.length > 0) {
+              setOpen(true);
+            } else {
+              setOpen(false);
+            }
+          }}
+          onFocus={() => {
+            if (searchQuery.length > 0) {
+              setOpen(true);
+            }
+          }}
+          disabled={disabled}
+          className="h-[42px]"
+        />
+        {value && (
+          <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
+            <span className="text-sm font-medium">{value.displayNameFr || value.displayName}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                onChange(null);
+                setSearchQuery('');
+              }}
+              className="h-6 px-2"
+            >
+              ✕
+            </Button>
+          </div>
+        )}
+        {open && filteredCategories.length > 0 && (
+          <Card className="absolute z-50 w-full mt-1 max-h-[300px] overflow-y-auto shadow-lg">
+            <div className="p-2">
+              {filteredCategories.map((category) => (
+                <div
+                  key={category.id}
+                  onClick={() => {
+                    onChange(category);
+                    setSearchQuery('');
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "px-3 py-2 cursor-pointer rounded-md hover:bg-accent transition-colors",
+                    value?.id === category.id && "bg-accent"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        "h-4 w-4 shrink-0",
                         value?.id === category.id ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">
-                      <span>{category.displayNameFr || category.displayName}</span>
+                      <span className="font-medium">{category.displayNameFr || category.displayName}</span>
                       {category.displayNameFr && category.displayNameFr !== category.displayName && (
                         <span className="text-xs text-muted-foreground">{category.displayName}</span>
                       )}
                     </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+        {open && searchQuery.length > 0 && filteredCategories.length === 0 && (
+          <Card className="absolute z-50 w-full mt-1 shadow-lg">
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              Aucune catégorie trouvée pour "{searchQuery}"
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
