@@ -87,24 +87,17 @@ export const GeniusDialog = ({
   const [manualMode, setManualMode] = useState(false);
 
   useEffect(() => {
-    // Load categories with French translations
-    Promise.all([
-      fetch('/gcid_raw.txt').then(res => res.text()),
-      fetch('/categories_fr.json').then(res => res.json())
-    ])
-      .then(([rawText, translations]) => {
-        const categoriesArray = JSON.parse(rawText);
-        const converted = categoriesArray.map((category: string) => {
-          const id = `gcid:${category.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
-          const translation = translations[id];
-          return {
-            id,
-            displayName: category,
-            displayNameFr: translation?.fr || category
-          };
-        });
+    // Load categories with French translations (filtered for France)
+    fetch('/categories_fr_full.json')
+      .then(res => res.json())
+      .then(translations => {
+        const converted = Object.entries(translations).map(([id, data]: [string, any]) => ({
+          id,
+          displayName: data.en,
+          displayNameFr: data.fr
+        }));
         setCategories(converted);
-        console.log(`Genius: chargé ${converted.length} catégories GBP avec traductions FR`);
+        console.log(`Genius: chargé ${converted.length} catégories GBP en français`);
       })
       .catch(err => console.error('Erreur chargement catégories:', err));
   }, []);
@@ -121,14 +114,12 @@ export const GeniusDialog = ({
     setLoading(true);
     
     // Recherche des mots-clés dans le nom français de la catégorie
-    const categoryLowerFr = (category.displayNameFr || category.displayName).toLowerCase();
-    const categoryLowerEn = category.displayName.toLowerCase();
+    const categoryLowerFr = category.displayNameFr.toLowerCase();
     let keywords: string[] = [];
     
     // Recherche dans le mapping avec matching partiel
     for (const [key, values] of Object.entries(REFERRAL_MAPPING)) {
-      if (categoryLowerFr.includes(key) || categoryLowerEn.includes(key) || 
-          key.includes(categoryLowerFr.split(' ')[0]) || key.includes(categoryLowerEn.split(' ')[0])) {
+      if (categoryLowerFr.includes(key) || key.includes(categoryLowerFr.split(' ')[0])) {
         keywords = values;
         break;
       }
@@ -147,10 +138,9 @@ export const GeniusDialog = ({
       
       // Recherche avec matching partiel pour trouver des catégories pertinentes
       const matches = categories.filter(cat => {
-        const catLowerFr = (cat.displayNameFr || '').toLowerCase();
-        const catLowerEn = cat.displayName.toLowerCase();
+        const catLowerFr = cat.displayNameFr.toLowerCase();
         return (
-          (catLowerFr.includes(keyword) || catLowerEn.includes(keyword)) &&
+          catLowerFr.includes(keyword) &&
           cat.id !== category.id &&
           !foundSuggestions.some(s => s.id === cat.id)
         );
@@ -161,7 +151,7 @@ export const GeniusDialog = ({
       foundSuggestions.push(...matches.slice(0, toAdd));
     }
     
-    console.log(`Genius: ${foundSuggestions.length} suggestions trouvées pour "${category.displayNameFr || category.displayName}"`);
+    console.log(`Genius: ${foundSuggestions.length} suggestions trouvées pour "${category.displayNameFr}"`);
     const finalSuggestions = foundSuggestions.slice(0, 5);
     setSuggestions(finalSuggestions);
     setSelectedCategories(finalSuggestions);
@@ -198,7 +188,7 @@ export const GeniusDialog = ({
             Genius - Rapporteurs d'affaires
           </DialogTitle>
           <DialogDescription>
-            Suggestions de catégories complémentaires pour {category?.displayNameFr || category?.displayName}
+            Suggestions de catégories complémentaires pour {category?.displayNameFr}
           </DialogDescription>
         </DialogHeader>
 
@@ -259,12 +249,7 @@ export const GeniusDialog = ({
                   {selectedCategories.map((cat) => (
                     <Card key={cat.id} className="p-3 hover:bg-accent/50 transition-colors">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{cat.displayNameFr || cat.displayName}</p>
-                          {cat.displayNameFr && cat.displayNameFr !== cat.displayName && (
-                            <p className="text-xs text-muted-foreground">{cat.displayName}</p>
-                          )}
-                        </div>
+                        <p className="font-medium">{cat.displayNameFr}</p>
                         <Button
                           variant="ghost"
                           size="sm"

@@ -62,7 +62,7 @@ const Index = () => {
       setLastSearch({ businessName, address, placeId, category, maxResults, latitude: lat, longitude: lng });
 
       // Construct text query with category name (French) and location
-      const categoryName = category.displayNameFr || category.displayName;
+      const categoryName = category.displayNameFr;
       const textQuery = `${categoryName} à ${address}`;
 
       const { data, error } = await supabase.functions.invoke('google-search-text', {
@@ -114,7 +114,7 @@ const Index = () => {
 
     for (const category of categories) {
       try {
-        const categoryName = category.displayNameFr || category.displayName;
+        const categoryName = category.displayNameFr;
         const textQuery = `${categoryName} à ${lastSearch.address}`;
 
         const { data: searchData, error: searchError } = await supabase.functions.invoke('google-search-text', {
@@ -144,10 +144,10 @@ const Index = () => {
           description: `${newReferralBusinesses[category.id].length} entreprises trouvées pour ${categoryName}`,
         });
       } catch (error) {
-        console.error(`Erreur recherche ${category.displayNameFr || category.displayName}:`, error);
+        console.error(`Erreur recherche ${category.displayNameFr}:`, error);
         toast({
           title: "Erreur",
-          description: `Impossible de charger les entreprises pour ${category.displayNameFr || category.displayName}`,
+          description: `Impossible de charger les entreprises pour ${category.displayNameFr}`,
           variant: "destructive",
         });
       }
@@ -238,7 +238,7 @@ const Index = () => {
 
               {selectedReferralCategories.map((category) => {
                 const categoryBusinesses = referralBusinesses[category.id] || [];
-                const categoryName = category.displayNameFr || category.displayName;
+                const categoryName = category.displayNameFr;
 
                 return (
                   <Card key={category.id} className="p-6">

@@ -58,10 +58,7 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
     if (!searchQuery) return categories.slice(0, 50);
     const query = searchQuery.toLowerCase();
     return categories
-      .filter(cat => 
-        (cat.displayNameFr?.toLowerCase().includes(query) || 
-         cat.displayName.toLowerCase().includes(query))
-      )
+      .filter(cat => cat.displayNameFr?.toLowerCase().includes(query))
       .slice(0, 50);
   }, [categories, searchQuery]);
 
@@ -92,7 +89,7 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
         />
         {value && (
           <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
-            <span className="text-sm font-medium">{value.displayNameFr || value.displayName}</span>
+            <span className="text-sm font-medium">{value.displayNameFr}</span>
             <Button
               variant="ghost"
               size="sm"
@@ -129,12 +126,7 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
                         value?.id === category.id ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    <div className="flex flex-col">
-                      <span className="font-medium">{category.displayNameFr || category.displayName}</span>
-                      {category.displayNameFr && category.displayNameFr !== category.displayName && (
-                        <span className="text-xs text-muted-foreground">{category.displayName}</span>
-                      )}
-                    </div>
+                    <span className="font-medium">{category.displayNameFr}</span>
                   </div>
                 </div>
               ))}
