@@ -252,8 +252,7 @@ const Index = () => {
                     {categoryBusinesses.length > 0 ? (
                       <ResultsTable 
                         businesses={categoryBusinesses}
-                        onRemove={(id) => {
-                          const index = parseInt(id);
+                        onRemove={(index) => {
                           setReferralBusinesses({
                             ...referralBusinesses,
                             [category.id]: categoryBusinesses.filter((_, i) => i !== index)
