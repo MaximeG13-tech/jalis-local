@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Business } from '@/types/business';
-import { GooglePlacesService } from '@/services/GooglePlacesService';
+import { supabase } from '@/integrations/supabase/client';
 import { SearchForm } from '@/components/SearchForm';
 import { ResultsTable } from '@/components/ResultsTable';
 import { ExportButton } from '@/components/ExportButton';
@@ -8,7 +8,7 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
-import { BusinessType } from '@/constants/businessTypes';
+import { GBPCategory } from '@/components/CategoryAutocomplete';
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -18,8 +18,10 @@ const Index = () => {
     companyName: string;
     address: string; 
     placeId: string; 
+    latitude: number;
+    longitude: number;
     maxResults: number;
-    selectedTypes: BusinessType[];
+    category: GBPCategory;
   } | null>(null);
   const { toast } = useToast();
 
@@ -28,23 +30,50 @@ const Index = () => {
     address: string, 
     placeId: string, 
     maxResults: number,
-    selectedTypes: BusinessType[]
+    category: GBPCategory | null
   ) => {
-    setLastSearch({ companyName, address, placeId, maxResults, selectedTypes });
+    if (!category) return;
+    
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
 
     try {
-      const results = await GooglePlacesService.searchBusinesses(
-        companyName,
-        placeId,
-        maxResults,
-        selectedTypes,
-        (current, total) => {
-          setProgress({ current, total });
+      // Get place details to extract lat/lng
+      const { data: placeData, error: placeError } = await supabase.functions.invoke('google-place-details', {
+        body: { placeId }
+      });
+
+      if (placeError || !placeData?.result?.geometry?.location) {
+        throw new Error('Impossible de récupérer les coordonnées de l\'adresse');
+      }
+
+      const { lat, lng } = placeData.result.geometry.location;
+      
+      setLastSearch({ companyName, address, placeId, latitude: lat, longitude: lng, maxResults, category });
+
+      // Construct text query with category name and location
+      const textQuery = `${category.displayName} à ${address}`;
+
+      const { data, error } = await supabase.functions.invoke('google-search-text', {
+        body: {
+          textQuery,
+          latitude: lat,
+          longitude: lng,
+          maxResultCount: maxResults
         }
-      );
+      });
+
+      if (error) throw error;
+
+      const results: Business[] = (data.results || []).map((place: any) => ({
+        name: place.name,
+        category: category.displayName,
+        address: place.formatted_address,
+        phone: place.international_phone_number,
+        website: place.website,
+        mapsUrl: place.url,
+      }));
 
       setBusinesses(results);
       
@@ -73,7 +102,7 @@ const Index = () => {
         lastSearch.address, 
         lastSearch.placeId, 
         lastSearch.maxResults,
-        lastSearch.selectedTypes
+        lastSearch.category
       );
     }
   };
