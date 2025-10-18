@@ -56,7 +56,7 @@ export const SearchForm = ({ onSearch, onSearchReferrals, isLoading }: SearchFor
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="businessName" className="text-sm font-bold text-foreground uppercase tracking-wide">
-              📍 Mon entreprise - Nom
+              Entreprise - Nom
             </Label>
             <Input
               id="businessName"
@@ -67,17 +67,12 @@ export const SearchForm = ({ onSearch, onSearchReferrals, isLoading }: SearchFor
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
-              📍 Mon entreprise - Adresse
-            </Label>
-            <AddressAutocomplete
-              value={address}
-              onChange={setAddress}
-              onSelect={handleAddressSelect}
-              disabled={isLoading}
-            />
-          </div>
+          <AddressAutocomplete
+            value={address}
+            onChange={setAddress}
+            onSelect={handleAddressSelect}
+            disabled={isLoading}
+          />
 
           <div className="space-y-2">
             <CategoryAutocomplete

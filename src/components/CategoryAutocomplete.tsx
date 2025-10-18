@@ -65,7 +65,7 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
   return (
     <div className="space-y-2 category-autocomplete-container">
       <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
-        Catégorie d'activité
+        Catégorie GMB de l'entreprise
       </Label>
       <div className="relative">
         <Input
