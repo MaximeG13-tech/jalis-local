@@ -24,26 +24,19 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Load categories and French translations
-    Promise.all([
-      fetch('/gcid_raw.txt').then(res => res.text()),
-      fetch('/categories_fr.json').then(res => res.json())
-    ])
-      .then(([rawText, translations]) => {
-        const categoriesArray = JSON.parse(rawText);
-        const converted = categoriesArray.map((category: string) => {
-          const id = `gcid:${category.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
-          const translation = translations[id];
-          return {
-            id,
-            displayName: category,
-            displayNameFr: translation?.fr || category
-          };
-        });
+    // Load categories with French translations (filtered for France)
+    fetch('/categories_fr_full.json')
+      .then(res => res.json())
+      .then(translations => {
+        const converted = Object.entries(translations).map(([id, data]: [string, any]) => ({
+          id,
+          displayName: data.en,
+          displayNameFr: data.fr
+        }));
         setCategories(converted);
-        console.log(`Chargé ${converted.length} catégories GBP (avec traductions FR)`);
+        console.log(`Chargé ${converted.length} catégories GBP en français`);
       })
-      .catch(err => console.error('Erreur chargement catégories GBP:', err));
+      .catch(err => console.error('Erreur chargement catégories:', err));
   }, []);
 
   // Close dropdown when clicking outside
