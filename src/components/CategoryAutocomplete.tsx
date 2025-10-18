@@ -24,9 +24,18 @@ export const CategoryAutocomplete = ({ value, onChange, disabled }: CategoryAuto
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    fetch('/gcid_categories.json')
-      .then(res => res.json())
-      .then(data => setCategories(data))
+    // Load from raw text file and convert
+    fetch('/gcid_raw.txt')
+      .then(res => res.text())
+      .then(text => {
+        const categoriesArray = JSON.parse(text);
+        const converted = categoriesArray.map((category: string) => ({
+          id: `gcid:${category.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+          displayName: category
+        }));
+        setCategories(converted);
+        console.log(`Chargé ${converted.length} catégories GBP`);
+      })
       .catch(err => console.error('Erreur chargement catégories GBP:', err));
   }, []);
 

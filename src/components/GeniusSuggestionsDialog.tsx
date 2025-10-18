@@ -11,38 +11,73 @@ interface GeniusSuggestionsDialogProps {
   onSelectCategory: (category: GBPCategory) => void;
 }
 
-// Mapping de rapporteurs d'affaires par mots-clés
+// Mapping étendu de rapporteurs d'affaires par mots-clés
 const REFERRAL_MAPPING: Record<string, string[]> = {
-  // Immobilier
-  notaire: ['agent immobilier', 'constructeur', 'courtier crédit', 'architecte', 'diagnostiqueur'],
-  'agent immobilier': ['notaire', 'courtier crédit', 'déménageur', 'architecte', 'diagnostiqueur'],
-  architecte: ['notaire', 'constructeur', 'agent immobilier', 'décorateur', 'paysagiste'],
+  // Immobilier & Juridique
+  'notary': ['real estate', 'mortgage', 'home builder', 'architect', 'home inspector', 'lawyer', 'surveyor'],
+  'lawyer': ['notary', 'accountant', 'consultant', 'insurance', 'tax', 'financial advisor'],
+  'real estate': ['notary', 'mortgage', 'moving', 'architect', 'home inspector', 'contractor', 'surveyor'],
+  'mortgage': ['notary', 'real estate', 'bank', 'financial advisor', 'insurance', 'accountant'],
+  'architect': ['notary', 'real estate', 'contractor', 'interior design', 'landscape', 'engineer'],
   
-  // Artisans
-  plombier: ['syndic', 'agent immobilier', 'rénovation', 'architecte', 'gestionnaire biens'],
-  électricien: ['syndic', 'agent immobilier', 'rénovation', 'architecte', 'domotique'],
-  peintre: ['syndic', 'agent immobilier', 'architecte', 'décorateur', 'rénovation'],
+  // Construction & Artisans
+  'plumber': ['property management', 'real estate', 'contractor', 'architect', 'electrician', 'hvac'],
+  'electrician': ['property management', 'real estate', 'contractor', 'architect', 'plumber', 'security'],
+  'painter': ['property management', 'real estate', 'architect', 'interior design', 'contractor'],
+  'carpenter': ['architect', 'contractor', 'real estate', 'furniture', 'interior design'],
+  'contractor': ['architect', 'real estate', 'plumber', 'electrician', 'painter', 'inspector'],
+  'roofer': ['contractor', 'real estate', 'property management', 'architect', 'insurance'],
   
-  // Beauté/Bien-être
-  coiffeur: ['esthéticien', 'photographe', 'wedding planner', 'robe mariée', 'maquilleur'],
-  'institut beauté': ['coiffeur', 'photographe', 'wedding planner', 'spa', 'onglerie'],
+  // Beauté & Bien-être
+  'hair salon': ['beauty salon', 'photographer', 'wedding', 'makeup', 'nail salon', 'spa'],
+  'beauty salon': ['hair salon', 'photographer', 'wedding', 'spa', 'nail salon', 'cosmetic'],
+  'barber': ['beauty salon', 'hair salon', 'massage', 'spa', 'fashion'],
   
   // Santé
-  médecin: ['pharmacie', 'kinésithérapeute', 'infirmier', 'laboratoire', 'opticien'],
-  dentiste: ['orthodontiste', 'prothésiste', 'pharmacie', 'radiologue', 'laboratoire'],
-  kinésithérapeute: ['médecin', 'ostéopathe', 'pharmacie', 'salle sport', 'podologue'],
+  'doctor': ['pharmacy', 'physical therapist', 'nurse', 'laboratory', 'optician', 'medical'],
+  'dentist': ['orthodontist', 'pharmacy', 'radiologist', 'laboratory', 'surgeon', 'dental'],
+  'physical therapist': ['doctor', 'osteopath', 'pharmacy', 'gym', 'sports', 'rehabilitation'],
+  'pharmacy': ['doctor', 'dentist', 'laboratory', 'optician', 'medical supply', 'hospital'],
   
-  // Services
-  avocat: ['notaire', 'expert-comptable', 'huissier', 'assurance', 'conseil entreprise'],
-  'expert-comptable': ['avocat', 'conseil entreprise', 'banque', 'assurance', 'notaire'],
+  // Services professionnels
+  'accountant': ['lawyer', 'consultant', 'bank', 'insurance', 'notary', 'tax', 'financial'],
+  'insurance': ['accountant', 'lawyer', 'real estate', 'bank', 'financial advisor', 'consultant'],
+  'bank': ['accountant', 'insurance', 'financial advisor', 'mortgage', 'lawyer', 'investment'],
   
-  // Commerce
-  restaurant: ['traiteur', 'cave vin', 'pâtisserie', 'fleuriste', 'wedding planner'],
-  'boulangerie pâtisserie': ['restaurant', 'traiteur', 'épicerie', 'café', 'chocolatier'],
+  // Commerce & Restauration
+  'restaurant': ['caterer', 'wine', 'bakery', 'florist', 'wedding', 'event', 'bar'],
+  'bakery': ['restaurant', 'caterer', 'grocery', 'cafe', 'chocolate', 'pastry'],
+  'cafe': ['bakery', 'restaurant', 'bar', 'ice cream', 'book store', 'gift shop'],
   
-  // Auto
-  garagiste: ['carrossier', 'station lavage', 'assurance auto', 'dépanneur', 'station-service'],
-  carrossier: ['garagiste', 'assurance auto', 'expert auto', 'station lavage', 'vitrier auto'],
+  // Automobile
+  'auto repair': ['body shop', 'car wash', 'auto insurance', 'towing', 'gas station', 'tire'],
+  'body shop': ['auto repair', 'auto insurance', 'car dealer', 'car wash', 'paint'],
+  'car dealer': ['auto repair', 'insurance', 'bank', 'car wash', 'accessories'],
+  
+  // Éducation & Formation
+  'driving school': ['auto repair', 'insurance', 'car dealer', 'gas station'],
+  'music school': ['instrument', 'recording', 'event', 'theater', 'dance school'],
+  'dance school': ['music school', 'event', 'photographer', 'costume', 'theater'],
+  
+  // Événementiel
+  'wedding planner': ['photographer', 'caterer', 'florist', 'beauty salon', 'venue', 'decoration'],
+  'photographer': ['wedding planner', 'event', 'printing', 'frame', 'studio', 'videographer'],
+  'caterer': ['wedding planner', 'event', 'restaurant', 'florist', 'venue', 'party rental'],
+  'florist': ['wedding planner', 'event', 'funeral', 'gift shop', 'garden center'],
+  
+  // Tourisme & Hôtellerie
+  'hotel': ['travel agency', 'tour', 'restaurant', 'taxi', 'car rental', 'tourist'],
+  'travel agency': ['hotel', 'tour', 'airline', 'car rental', 'insurance', 'passport'],
+  
+  // Services à domicile
+  'cleaning service': ['property management', 'real estate', 'carpet', 'window', 'moving'],
+  'lawn care': ['landscaping', 'tree service', 'garden center', 'property management'],
+  'landscaping': ['architect', 'lawn care', 'tree service', 'property management', 'garden'],
+  
+  // Animaux
+  'veterinarian': ['pet groomer', 'pet store', 'animal hospital', 'pet sitting', 'breeder'],
+  'pet groomer': ['veterinarian', 'pet store', 'dog trainer', 'pet sitting'],
+  'pet store': ['veterinarian', 'pet groomer', 'dog trainer', 'pet food', 'aquarium'],
 };
 
 export const GeniusSuggestionsDialog = ({ 
@@ -56,9 +91,18 @@ export const GeniusSuggestionsDialog = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch('/gcid_categories.json')
-      .then(res => res.json())
-      .then(data => setCategories(data))
+    // Load from raw text file and convert
+    fetch('/gcid_raw.txt')
+      .then(res => res.text())
+      .then(text => {
+        const categoriesArray = JSON.parse(text);
+        const converted = categoriesArray.map((category: string) => ({
+          id: `gcid:${category.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+          displayName: category
+        }));
+        setCategories(converted);
+        console.log(`Genius: chargé ${converted.length} catégories GBP`);
+      })
       .catch(err => console.error('Erreur chargement catégories:', err));
   }, []);
 
@@ -73,37 +117,45 @@ export const GeniusSuggestionsDialog = ({
     
     setLoading(true);
     
-    // Recherche des mots-clés dans le nom de la catégorie
+    // Recherche des mots-clés dans le nom de la catégorie (en anglais car la base GBP est en anglais)
     const categoryLower = category.displayName.toLowerCase();
     let keywords: string[] = [];
     
+    // Recherche dans le mapping avec matching partiel
     for (const [key, values] of Object.entries(REFERRAL_MAPPING)) {
-      if (categoryLower.includes(key)) {
+      if (categoryLower.includes(key) || key.includes(categoryLower.split(' ')[0])) {
         keywords = values;
         break;
       }
     }
     
-    // Si aucun mapping trouvé, suggestions génériques
+    // Si aucun mapping trouvé, suggestions génériques pertinentes
     if (keywords.length === 0) {
-      keywords = ['marketing', 'comptable', 'assurance', 'conseil', 'juridique'];
+      keywords = ['marketing', 'advertising', 'insurance', 'consulting', 'legal', 'financial'];
     }
     
-    // Recherche des catégories correspondantes
+    // Recherche des catégories correspondantes dans la base GBP complète
     const foundSuggestions: GBPCategory[] = [];
     
     for (const keyword of keywords) {
       if (foundSuggestions.length >= 5) break;
       
-      const matches = categories.filter(cat => 
-        cat.displayName.toLowerCase().includes(keyword) &&
-        cat.id !== category.id &&
-        !foundSuggestions.some(s => s.id === cat.id)
-      );
+      // Recherche avec matching partiel pour trouver des catégories pertinentes
+      const matches = categories.filter(cat => {
+        const catLower = cat.displayName.toLowerCase();
+        return (
+          catLower.includes(keyword) &&
+          cat.id !== category.id &&
+          !foundSuggestions.some(s => s.id === cat.id)
+        );
+      });
       
-      foundSuggestions.push(...matches.slice(0, 1));
+      // Prendre plusieurs résultats par mot-clé si nécessaire
+      const toAdd = Math.min(matches.length, Math.max(1, Math.floor((5 - foundSuggestions.length) / (keywords.length - keywords.indexOf(keyword)))));
+      foundSuggestions.push(...matches.slice(0, toAdd));
     }
     
+    console.log(`Genius: ${foundSuggestions.length} suggestions trouvées pour "${category.displayName}"`);
     setSuggestions(foundSuggestions.slice(0, 5));
     setLoading(false);
   };
