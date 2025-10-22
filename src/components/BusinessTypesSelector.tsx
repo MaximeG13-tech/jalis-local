@@ -1,11 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Check, X, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo, useRef } from "react";
+import { X, Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { BUSINESS_TYPES, ALL_TYPES_OPTION, BusinessType, normalizeString } from "@/constants/businessTypes";
 import { cn } from "@/lib/utils";
 
@@ -18,117 +17,100 @@ interface BusinessTypesSelectorProps {
 
 export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, hideLabel }: BusinessTypesSelectorProps) => {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const shouldReopenRef = useRef(false);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isAllTypesSelected = selectedTypes.some((t) => t.id === "all");
+  const selectedType = selectedTypes.length > 0 ? selectedTypes[0] : null;
 
-  // Surveiller les changements de selectedTypes pour rouvrir le dropdown
-  useEffect(() => {
-    if (shouldReopenRef.current && selectedTypes.length === 0) {
-      shouldReopenRef.current = false;
-      setOpen(true);
-    }
-  }, [selectedTypes]);
+  // Trier les types alphabétiquement
+  const sortedTypes = useMemo(() => {
+    return [...BUSINESS_TYPES].sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+  }, []);
 
+  // Filtrer avec tolérance aux accents
   const filteredTypes = useMemo(() => {
-    if (!searchQuery) return BUSINESS_TYPES;
-    const normalizedQuery = normalizeString(searchQuery);
-    return BUSINESS_TYPES.filter((type) => 
+    if (!inputValue.trim()) return sortedTypes.slice(0, 50);
+    const normalizedQuery = normalizeString(inputValue);
+    const filtered = sortedTypes.filter((type) => 
       normalizeString(type.label).includes(normalizedQuery)
     );
-  }, [searchQuery]);
+    return filtered.slice(0, 50);
+  }, [inputValue, sortedTypes]);
 
   const handleSelect = (type: BusinessType) => {
-    // Si on sélectionne "Tout type d'activités"
     if (type.id === "all") {
-      if (isAllTypesSelected) {
-        onTypesChange([]);
-      } else {
-        onTypesChange([ALL_TYPES_OPTION]);
-        setOpen(false); // Fermer le dropdown automatiquement
-      }
-      return;
-    }
-
-    // Si "Tout type" est sélectionné, on le retire
-    if (isAllTypesSelected) {
-      onTypesChange([type]);
-      return;
-    }
-
-    // Toggle le type
-    const isSelected = selectedTypes.some((t) => t.id === type.id);
-    if (isSelected) {
-      onTypesChange(selectedTypes.filter((t) => t.id !== type.id));
+      onTypesChange([ALL_TYPES_OPTION]);
+      setInputValue("Tout type d'activités");
     } else {
-      onTypesChange([...selectedTypes, type]);
+      onTypesChange([type]);
+      setInputValue(type.label);
+    }
+    setOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setOpen(true);
+    
+    // Si l'utilisateur modifie l'input, désélectionner
+    if (selectedType && value !== selectedType.label) {
+      onTypesChange([]);
     }
   };
 
-  const handleClearAllTypes = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    // Fermer le dropdown
+  const handleClearInput = () => {
+    setInputValue("");
+    onTypesChange([]);
     setOpen(false);
-    // Marquer qu'on veut rouvrir le dropdown après l'effacement
-    shouldReopenRef.current = true;
-    // Effacer la sélection
+    inputRef.current?.focus();
+  };
+
+  const handleRemoveSelection = () => {
+    setInputValue("");
     onTypesChange([]);
   };
 
-  const handleButtonClick = (e: React.MouseEvent) => {
-    // Permettre toujours l'ouverture du dropdown
-    // La croix gère la désélection séparément
-    if (!open) {
+  const handleInputFocus = () => {
+    if (!selectedType || inputValue === "") {
       setOpen(true);
     }
-  };
-
-  const removeType = (typeId: string) => {
-    onTypesChange(selectedTypes.filter((t) => t.id !== typeId));
-  };
-
-  const clearAll = () => {
-    onTypesChange([]);
   };
 
   return (
     <div className="space-y-2">
       {!hideLabel && (
-        <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Types d'activités</Label>
+        <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Type d'activité</Label>
       )}
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled}
-            onClick={handleButtonClick}
-            className="w-full justify-between h-auto min-h-[42px] py-2"
-          >
-            <span className="truncate">
-              {selectedTypes.length === 0
-                ? "Sélectionner des activités..."
-                : isAllTypesSelected
-                  ? "Tout type d'activités"
-                  : `${selectedTypes.length} activité${selectedTypes.length > 1 ? "s" : ""} sélectionnée${selectedTypes.length > 1 ? "s" : ""}`}
-            </span>
-            {isAllTypesSelected ? (
-              <X
-                className="ml-2 h-4 w-4 shrink-0 opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={handleClearAllTypes}
-              />
-            ) : (
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder="Rechercher une activité..."
+              value={inputValue}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              disabled={disabled}
+              className="pl-9 pr-9"
+            />
+            {inputValue && (
+              <button
+                onClick={handleClearInput}
+                disabled={disabled}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
-          </Button>
+          </div>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0 bg-popover z-50" align="start">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-popover z-50" align="start">
           <Command>
-            <CommandInput placeholder="Rechercher une activité..." value={searchQuery} onValueChange={setSearchQuery} />
             <CommandList>
               <CommandEmpty>Aucune activité trouvée.</CommandEmpty>
               <CommandGroup>
@@ -138,53 +120,43 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
                   onSelect={() => handleSelect(ALL_TYPES_OPTION)}
                   className="cursor-pointer"
                 >
-                  <Check className={cn("mr-2 h-4 w-4", isAllTypesSelected ? "opacity-100" : "opacity-0")} />
                   <span className="font-semibold">{ALL_TYPES_OPTION.label}</span>
                 </CommandItem>
 
-                {filteredTypes.map((type) => {
-                  const isSelected = selectedTypes.some((t) => t.id === type.id);
-                  return (
-                    <CommandItem
-                      key={type.id}
-                      value={type.label}
-                      onSelect={() => handleSelect(type)}
-                      className="cursor-pointer"
-                    >
-                      <Check
-                        className={cn("mr-2 h-4 w-4", isSelected && !isAllTypesSelected ? "opacity-100" : "opacity-0")}
-                      />
-                      {type.label}
-                    </CommandItem>
-                  );
-                })}
+                {filteredTypes.map((type) => (
+                  <CommandItem
+                    key={type.id}
+                    value={type.label}
+                    onSelect={() => handleSelect(type)}
+                    className="cursor-pointer"
+                  >
+                    {type.label}
+                  </CommandItem>
+                ))}
+                
+                {inputValue.trim() && filteredTypes.length === 50 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center border-t">
+                    Affinez votre recherche pour voir plus de résultats
+                  </div>
+                )}
               </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
 
-      {/* Selected types badges */}
-      {selectedTypes.length > 0 && !isAllTypesSelected && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {selectedTypes.map((type) => (
-            <Badge key={type.id} variant="secondary" className="px-3 py-1.5 gap-1.5">
-              {type.label}
-              <button
-                onClick={() => removeType(type.id)}
-                disabled={disabled}
-                className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedTypes.length > 1 && (
-            <Button variant="ghost" size="sm" onClick={clearAll} disabled={disabled} className="h-7 text-xs">
-              Tout effacer
-            </Button>
-          )}
-        </div>
+      {/* Badge de sélection */}
+      {selectedType && (
+        <Badge variant="secondary" className="px-3 py-1.5 gap-1.5 w-fit">
+          {selectedType.label}
+          <button
+            onClick={handleRemoveSelection}
+            disabled={disabled}
+            className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 transition-colors"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
       )}
     </div>
   );
