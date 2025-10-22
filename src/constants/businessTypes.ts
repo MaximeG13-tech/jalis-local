@@ -1,154 +1,120 @@
-// Mapping des catégories Google My Business vers les types Google Places API
+// Mapping des catégories Google My Business vers des mots-clés de recherche
 export interface BusinessType {
   id: string;
   label: string;
-  googlePlaceType: string;
+  googleSearchKeyword: string;
 }
 
 export const BUSINESS_TYPES: BusinessType[] = [
-  // Services juridiques et professionnels
-  { id: 'accounting', label: 'Comptable', googlePlaceType: 'accounting' },
-  { id: 'lawyer', label: 'Avocat', googlePlaceType: 'lawyer' },
-  { id: 'consultant', label: 'Consultant', googlePlaceType: 'consultant' },
+  // Santé et bien-être
+  { id: 'physio', label: 'Kinésithérapeute', googleSearchKeyword: 'Kinésithérapeute' },
+  { id: 'orthoptist', label: 'Orthoptiste', googleSearchKeyword: 'Orthoptiste' },
+  { id: 'osteopath', label: 'Ostéopathe', googleSearchKeyword: 'Ostéopathe' },
+  { id: 'sophrologist', label: 'Sophrologue', googleSearchKeyword: 'Sophrologue' },
+  { id: 'chiropractor', label: 'Chiropracteur', googleSearchKeyword: 'Chiropracteur' },
+  { id: 'podiatrist', label: 'Pédicure-Podologue', googleSearchKeyword: 'Pédicure-Podologue' },
+  { id: 'speech_therapist', label: 'Orthophoniste', googleSearchKeyword: 'Orthophoniste' },
+  { id: 'psychologist', label: 'Psychologue', googleSearchKeyword: 'Psychologue' },
+  { id: 'naturopath', label: 'Naturopathe', googleSearchKeyword: 'Naturopathe' },
+  { id: 'acupuncturist', label: 'Acupuncteur', googleSearchKeyword: 'Acupuncteur' },
+  { id: 'dietitian', label: 'Diététicien', googleSearchKeyword: 'Diététicien' },
+  { id: 'pharmacy', label: 'Pharmacie', googleSearchKeyword: 'Pharmacie' },
+  { id: 'dentist', label: 'Dentiste', googleSearchKeyword: 'Dentiste' },
+  { id: 'doctor', label: 'Médecin généraliste', googleSearchKeyword: 'Médecin généraliste' },
+  { id: 'veterinarian', label: 'Vétérinaire', googleSearchKeyword: 'Vétérinaire' },
+  { id: 'gym', label: 'Salle de sport', googleSearchKeyword: 'Salle de sport' },
+  { id: 'yoga', label: 'Studio de yoga', googleSearchKeyword: 'Studio de yoga' },
+  { id: 'spa', label: 'Spa', googleSearchKeyword: 'Spa' },
+  { id: 'beauty_salon', label: 'Salon de beauté', googleSearchKeyword: 'Institut de beauté' },
+  { id: 'hair_salon', label: 'Salon de coiffure', googleSearchKeyword: 'Salon de coiffure' },
+  { id: 'massage', label: 'Salon de massage', googleSearchKeyword: 'Salon de massage' },
   
-  // Immobilier et assurance
-  { id: 'real_estate_agency', label: 'Agence immobilière', googlePlaceType: 'real_estate_agency' },
-  { id: 'insurance_agency', label: 'Agence d\'assurance', googlePlaceType: 'insurance_agency' },
+  // Restauration et alimentation
+  { id: 'restaurant', label: 'Restaurant', googleSearchKeyword: 'Restaurant' },
+  { id: 'cafe', label: 'Café', googleSearchKeyword: 'Café' },
+  { id: 'bakery', label: 'Boulangerie', googleSearchKeyword: 'Boulangerie' },
+  { id: 'pastry', label: 'Pâtisserie', googleSearchKeyword: 'Pâtisserie' },
+  { id: 'butcher', label: 'Boucherie', googleSearchKeyword: 'Boucherie' },
+  { id: 'cheese_shop', label: 'Fromagerie', googleSearchKeyword: 'Fromagerie' },
+  { id: 'wine_shop', label: 'Caviste', googleSearchKeyword: 'Caviste' },
+  { id: 'grocery', label: 'Épicerie fine', googleSearchKeyword: 'Épicerie fine' },
+  { id: 'caterer', label: 'Traiteur', googleSearchKeyword: 'Traiteur' },
+  { id: 'pizzeria', label: 'Pizzeria', googleSearchKeyword: 'Pizzeria' },
+  { id: 'fast_food', label: 'Fast-food', googleSearchKeyword: 'Fast-food' },
+  { id: 'ice_cream', label: 'Glacier', googleSearchKeyword: 'Glacier' },
+  { id: 'tea_room', label: 'Salon de thé', googleSearchKeyword: 'Salon de thé' },
   
-  // Voyages
-  { id: 'travel_agency', label: 'Agence de voyage', googlePlaceType: 'travel_agency' },
-  { id: 'tour_agency', label: 'Agence de tours', googlePlaceType: 'tour_agency' },
+  // Commerce de détail
+  { id: 'clothing_store', label: 'Magasin de vêtements', googleSearchKeyword: 'Boutique de vêtements' },
+  { id: 'shoe_store', label: 'Magasin de chaussures', googleSearchKeyword: 'Magasin de chaussures' },
+  { id: 'jewelry_store', label: 'Bijouterie', googleSearchKeyword: 'Bijouterie' },
+  { id: 'florist', label: 'Fleuriste', googleSearchKeyword: 'Fleuriste' },
+  { id: 'book_store', label: 'Librairie', googleSearchKeyword: 'Librairie' },
+  { id: 'toy_store', label: 'Magasin de jouets', googleSearchKeyword: 'Magasin de jouets' },
+  { id: 'electronics_store', label: 'Magasin d\'électronique', googleSearchKeyword: 'Magasin d\'électronique' },
+  { id: 'furniture_store', label: 'Magasin de meubles', googleSearchKeyword: 'Magasin de meubles' },
+  { id: 'home_decor', label: 'Décoration d\'intérieur', googleSearchKeyword: 'Magasin de décoration' },
+  { id: 'pet_store', label: 'Animalerie', googleSearchKeyword: 'Animalerie' },
+  { id: 'sports_store', label: 'Magasin de sport', googleSearchKeyword: 'Magasin de sport' },
+  { id: 'bike_shop', label: 'Magasin de vélos', googleSearchKeyword: 'Magasin de vélos' },
   
-  // Artisans du bâtiment
-  { id: 'plumber', label: 'Plombier', googlePlaceType: 'plumber' },
-  { id: 'electrician', label: 'Électricien', googlePlaceType: 'electrician' },
-  { id: 'painter', label: 'Peintre', googlePlaceType: 'painter' },
-  { id: 'roofing_contractor', label: 'Couvreur', googlePlaceType: 'roofing_contractor' },
-  { id: 'locksmith', label: 'Serrurier', googlePlaceType: 'locksmith' },
+  // Services professionnels
+  { id: 'accountant', label: 'Expert-comptable', googleSearchKeyword: 'Expert-comptable' },
+  { id: 'lawyer', label: 'Avocat', googleSearchKeyword: 'Cabinet d\'avocat' },
+  { id: 'notary', label: 'Notaire', googleSearchKeyword: 'Office notarial' },
+  { id: 'insurance', label: 'Assurance', googleSearchKeyword: 'Agence d\'assurance' },
+  { id: 'real_estate', label: 'Agence immobilière', googleSearchKeyword: 'Agence immobilière' },
+  { id: 'architect', label: 'Architecte', googleSearchKeyword: 'Cabinet d\'architecture' },
+  { id: 'graphic_designer', label: 'Graphiste', googleSearchKeyword: 'Graphiste' },
+  { id: 'photographer', label: 'Photographe', googleSearchKeyword: 'Photographe' },
+  { id: 'translator', label: 'Traducteur', googleSearchKeyword: 'Traducteur' },
+  
+  // Services à la personne
+  { id: 'dry_cleaning', label: 'Pressing', googleSearchKeyword: 'Pressing' },
+  { id: 'laundry', label: 'Laverie', googleSearchKeyword: 'Laverie' },
+  { id: 'locksmith', label: 'Serrurier', googleSearchKeyword: 'Serrurier' },
+  { id: 'plumber', label: 'Plombier', googleSearchKeyword: 'Plombier' },
+  { id: 'electrician', label: 'Électricien', googleSearchKeyword: 'Électricien' },
+  { id: 'painter', label: 'Peintre en bâtiment', googleSearchKeyword: 'Peintre en bâtiment' },
+  { id: 'carpenter', label: 'Menuisier', googleSearchKeyword: 'Menuisier' },
+  { id: 'roofer', label: 'Couvreur', googleSearchKeyword: 'Couvreur' },
+  { id: 'gardener', label: 'Jardinier paysagiste', googleSearchKeyword: 'Paysagiste' },
+  { id: 'cleaning', label: 'Entreprise de nettoyage', googleSearchKeyword: 'Entreprise de nettoyage' },
+  { id: 'moving', label: 'Déménageur', googleSearchKeyword: 'Déménageur' },
   
   // Automobile
-  { id: 'car_repair', label: 'Garage de réparation automobile', googlePlaceType: 'car_repair' },
-  { id: 'car_dealer', label: 'Concessionnaire auto', googlePlaceType: 'car_dealer' },
-  { id: 'car_rental', label: 'Agence de location de voitures', googlePlaceType: 'car_rental' },
-  { id: 'car_wash', label: 'Station de lavage automobile', googlePlaceType: 'car_wash' },
-  { id: 'auto_parts_store', label: 'Magasin de pièces auto', googlePlaceType: 'auto_parts_store' },
+  { id: 'car_repair', label: 'Garage automobile', googleSearchKeyword: 'Garage automobile' },
+  { id: 'car_wash', label: 'Station de lavage', googleSearchKeyword: 'Station de lavage auto' },
+  { id: 'car_dealer', label: 'Concessionnaire automobile', googleSearchKeyword: 'Concessionnaire automobile' },
+  { id: 'car_rental', label: 'Location de voitures', googleSearchKeyword: 'Location de voitures' },
+  { id: 'tire_shop', label: 'Centre de pneus', googleSearchKeyword: 'Centre de pneus' },
   
-  // Santé
-  { id: 'dentist', label: 'Dentiste', googlePlaceType: 'dentist' },
-  { id: 'dental_clinic', label: 'Clinique dentaire', googlePlaceType: 'dental_clinic' },
-  { id: 'doctor', label: 'Médecin', googlePlaceType: 'doctor' },
-  { id: 'physiotherapist', label: 'Kinésithérapeute', googlePlaceType: 'physiotherapist' },
-  { id: 'chiropractor', label: 'Chiropracteur', googlePlaceType: 'chiropractor' },
-  { id: 'medical_lab', label: 'Laboratoire médical', googlePlaceType: 'medical_lab' },
+  // Éducation et formation
+  { id: 'school', label: 'École privée', googleSearchKeyword: 'École privée' },
+  { id: 'music_school', label: 'École de musique', googleSearchKeyword: 'École de musique' },
+  { id: 'dance_school', label: 'École de danse', googleSearchKeyword: 'École de danse' },
+  { id: 'language_school', label: 'École de langues', googleSearchKeyword: 'École de langues' },
+  { id: 'driving_school', label: 'Auto-école', googleSearchKeyword: 'Auto-école' },
+  { id: 'tutoring', label: 'Soutien scolaire', googleSearchKeyword: 'Soutien scolaire' },
   
-  // Bien-être et beauté
-  { id: 'hair_salon', label: 'Salon de coiffure', googlePlaceType: 'hair_salon' },
-  { id: 'hair_care', label: 'Coiffeur', googlePlaceType: 'hair_care' },
-  { id: 'barber_shop', label: 'Barbier', googlePlaceType: 'barber_shop' },
-  { id: 'beauty_salon', label: 'Institut de beauté', googlePlaceType: 'beauty_salon' },
-  { id: 'beautician', label: 'Esthéticien(ne)', googlePlaceType: 'beautician' },
-  { id: 'nail_salon', label: 'Salon de manucure', googlePlaceType: 'nail_salon' },
-  { id: 'spa', label: 'Spa', googlePlaceType: 'spa' },
-  { id: 'massage', label: 'Salon de massage', googlePlaceType: 'massage' },
-  { id: 'sauna', label: 'Sauna', googlePlaceType: 'sauna' },
-  { id: 'tanning_studio', label: 'Institut de bronzage', googlePlaceType: 'tanning_studio' },
-  { id: 'skin_care_clinic', label: 'Clinique de soins de la peau', googlePlaceType: 'skin_care_clinic' },
-  { id: 'makeup_artist', label: 'Maquilleur/Maquilleuse', googlePlaceType: 'makeup_artist' },
-  { id: 'body_art_service', label: 'Tatoueur / Piercing', googlePlaceType: 'body_art_service' },
+  // Loisirs et culture
+  { id: 'art_gallery', label: 'Galerie d\'art', googleSearchKeyword: 'Galerie d\'art' },
+  { id: 'museum', label: 'Musée', googleSearchKeyword: 'Musée' },
+  { id: 'theater', label: 'Théâtre', googleSearchKeyword: 'Théâtre' },
+  { id: 'cinema', label: 'Cinéma', googleSearchKeyword: 'Cinéma' },
+  { id: 'bowling', label: 'Bowling', googleSearchKeyword: 'Bowling' },
+  { id: 'escape_game', label: 'Escape game', googleSearchKeyword: 'Escape game' },
+  { id: 'tattoo', label: 'Salon de tatouage', googleSearchKeyword: 'Salon de tatouage' },
   
-  // Commerce de détail - Mode
-  { id: 'clothing_store', label: 'Magasin de vêtements', googlePlaceType: 'clothing_store' },
-  { id: 'shoe_store', label: 'Magasin de chaussures', googlePlaceType: 'shoe_store' },
-  { id: 'jewelry_store', label: 'Bijouterie', googlePlaceType: 'jewelry_store' },
-  
-  // Commerce de détail - Maison
-  { id: 'furniture_store', label: 'Magasin de meubles', googlePlaceType: 'furniture_store' },
-  { id: 'home_goods_store', label: 'Magasin d\'articles pour la maison', googlePlaceType: 'home_goods_store' },
-  { id: 'home_improvement_store', label: 'Magasin de bricolage', googlePlaceType: 'home_improvement_store' },
-  { id: 'hardware_store', label: 'Quincaillerie', googlePlaceType: 'hardware_store' },
-  { id: 'electronics_store', label: 'Magasin d\'électronique', googlePlaceType: 'electronics_store' },
-  { id: 'lighting_store', label: 'Magasin d\'éclairage', googlePlaceType: 'lighting_store' },
-  
-  // Commerce de détail - Loisirs
-  { id: 'bicycle_store', label: 'Magasin de vélos', googlePlaceType: 'bicycle_store' },
-  { id: 'sporting_goods_store', label: 'Magasin d\'articles de sport', googlePlaceType: 'sporting_goods_store' },
-  { id: 'book_store', label: 'Librairie', googlePlaceType: 'book_store' },
-  { id: 'gift_shop', label: 'Boutique de cadeaux', googlePlaceType: 'gift_shop' },
-  { id: 'toy_store', label: 'Magasin de jouets', googlePlaceType: 'toy_store' },
-  
-  // Commerce de détail - Animaux et nature
-  { id: 'pet_store', label: 'Animalerie', googlePlaceType: 'pet_store' },
-  { id: 'florist', label: 'Fleuriste', googlePlaceType: 'florist' },
-  { id: 'garden_center', label: 'Jardinerie', googlePlaceType: 'garden_center' },
-  
-  // Commerce de détail - Alimentaire
-  { id: 'liquor_store', label: 'Caviste', googlePlaceType: 'liquor_store' },
-  { id: 'butcher_shop', label: 'Boucherie', googlePlaceType: 'butcher_shop' },
-  
-  // Services professionnels spécialisés
-  { id: 'veterinary_care', label: 'Vétérinaire', googlePlaceType: 'veterinary_care' },
-  { id: 'moving_company', label: 'Entreprise de déménagement', googlePlaceType: 'moving_company' },
-  { id: 'storage', label: 'Garde-meuble', googlePlaceType: 'storage' },
-  { id: 'funeral_home', label: 'Entreprise de pompes funèbres', googlePlaceType: 'funeral_home' },
-  { id: 'laundry', label: 'Pressing / Blanchisserie', googlePlaceType: 'laundry' },
-  { id: 'tailor', label: 'Tailleur / Couturier', googlePlaceType: 'tailor' },
-  { id: 'courier_service', label: 'Service de coursier', googlePlaceType: 'courier_service' },
-  { id: 'catering_service', label: 'Service de traiteur', googlePlaceType: 'catering_service' },
-  { id: 'telecommunications_service_provider', label: 'Fournisseur de télécommunications', googlePlaceType: 'telecommunications_service_provider' },
-  { id: 'child_care_agency', label: 'Garderie / Crèche', googlePlaceType: 'child_care_agency' },
-  
-  // Éducation
-  { id: 'driving_school', label: 'Auto-école', googlePlaceType: 'driving_school' },
-  { id: 'preschool', label: 'École maternelle privée', googlePlaceType: 'preschool' },
-  { id: 'primary_school', label: 'École primaire privée', googlePlaceType: 'primary_school' },
-  { id: 'secondary_school', label: 'Collège / Lycée privé', googlePlaceType: 'secondary_school' },
-  { id: 'tutoring', label: 'Cours particuliers', googlePlaceType: 'tutoring' },
-  
-  // Sports et fitness
-  { id: 'gym', label: 'Salle de sport', googlePlaceType: 'gym' },
-  { id: 'fitness_center', label: 'Centre de fitness', googlePlaceType: 'fitness_center' },
-  { id: 'yoga_studio', label: 'Studio de yoga', googlePlaceType: 'yoga_studio' },
-  { id: 'sports_club', label: 'Club de sport', googlePlaceType: 'sports_club' },
-  { id: 'sports_coaching', label: 'Coach sportif', googlePlaceType: 'sports_coaching' },
-  { id: 'martial_arts_dojo', label: 'Dojo d\'arts martiaux', googlePlaceType: 'martial_arts_dojo' },
-  { id: 'dance_studio', label: 'École de danse', googlePlaceType: 'dance_studio' },
-  { id: 'golf_course', label: 'Terrain de golf', googlePlaceType: 'golf_course' },
-  { id: 'ice_skating_rink', label: 'Patinoire', googlePlaceType: 'ice_skating_rink' },
-  { id: 'bowling_alley', label: 'Bowling', googlePlaceType: 'bowling_alley' },
-  
-  // Hébergement
-  { id: 'hotel', label: 'Hôtel', googlePlaceType: 'hotel' },
-  { id: 'bed_and_breakfast', label: 'Chambre d\'hôtes', googlePlaceType: 'bed_and_breakfast' },
-  { id: 'guest_house', label: 'Maison d\'hôtes', googlePlaceType: 'guest_house' },
-  { id: 'hostel', label: 'Auberge de jeunesse', googlePlaceType: 'hostel' },
-  { id: 'campground', label: 'Terrain de camping', googlePlaceType: 'campground' },
-  { id: 'rv_park', label: 'Camping avec caravane', googlePlaceType: 'rv_park' },
-  { id: 'resort_hotel', label: 'Hôtel resort', googlePlaceType: 'resort_hotel' },
-  
-  // Loisirs et divertissement
-  { id: 'movie_theater', label: 'Cinéma', googlePlaceType: 'movie_theater' },
-  { id: 'casino', label: 'Casino', googlePlaceType: 'casino' },
-  { id: 'amusement_park', label: 'Parc d\'attractions', googlePlaceType: 'amusement_park' },
-  { id: 'amusement_center', label: 'Centre de loisirs', googlePlaceType: 'amusement_center' },
-  { id: 'aquarium', label: 'Aquarium', googlePlaceType: 'aquarium' },
-  { id: 'zoo', label: 'Zoo', googlePlaceType: 'zoo' },
-  { id: 'night_club', label: 'Boîte de nuit', googlePlaceType: 'night_club' },
-  { id: 'karaoke', label: 'Karaoké', googlePlaceType: 'karaoke' },
-  { id: 'video_arcade', label: 'Salle d\'arcade', googlePlaceType: 'video_arcade' },
-  { id: 'event_venue', label: 'Lieu événementiel', googlePlaceType: 'event_venue' },
-  { id: 'banquet_hall', label: 'Salle de réception', googlePlaceType: 'banquet_hall' },
-  { id: 'wedding_venue', label: 'Lieu de mariage', googlePlaceType: 'wedding_venue' },
-  { id: 'museum', label: 'Musée', googlePlaceType: 'museum' },
-  { id: 'art_gallery', label: 'Galerie d\'art', googlePlaceType: 'art_gallery' },
-  { id: 'performing_arts_theater', label: 'Théâtre', googlePlaceType: 'performing_arts_theater' },
-  
-  // Services ésotériques
-  { id: 'astrologer', label: 'Astrologue', googlePlaceType: 'astrologer' },
-  { id: 'psychic', label: 'Voyant(e)', googlePlaceType: 'psychic' },
+  // Hôtellerie et tourisme
+  { id: 'hotel', label: 'Hôtel', googleSearchKeyword: 'Hôtel' },
+  { id: 'guesthouse', label: 'Chambre d\'hôtes', googleSearchKeyword: 'Chambre d\'hôtes' },
+  { id: 'travel_agency', label: 'Agence de voyage', googleSearchKeyword: 'Agence de voyage' },
+  { id: 'tourist_info', label: 'Office de tourisme', googleSearchKeyword: 'Office de tourisme' },
 ];
 
-export const ALL_TYPES_OPTION = {
+export const ALL_TYPES_OPTION: BusinessType = {
   id: 'all',
   label: 'Tout type d\'activités',
-  googlePlaceType: 'all'
+  googleSearchKeyword: 'entreprise'
 };

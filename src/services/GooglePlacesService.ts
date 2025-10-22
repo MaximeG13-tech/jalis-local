@@ -4,60 +4,159 @@ import { BusinessType, BUSINESS_TYPES } from '@/constants/businessTypes';
 
 export class GooglePlacesService {
   static async getLocationFromPlaceId(placeId: string): Promise<{ lat: number; lng: number } | null> {
-    try {
-      const details = await this.getPlaceDetails(placeId);
-      if (details && details.geometry?.location) {
-        return {
-          lat: details.geometry.location.lat,
-          lng: details.geometry.location.lng
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Get location error:', error);
-      return null;
+    console.log('Getting location from place ID:', placeId);
+    
+    const details = await this.getPlaceDetails(placeId);
+    if (details && details.geometry?.location) {
+      return {
+        lat: details.geometry.location.lat,
+        lng: details.geometry.location.lng
+      };
     }
+    return null;
   }
 
-  static async nearbySearch(
+  static async textSearch(
+    textQuery: string,
     location: { lat: number; lng: number },
     radius: number,
-    includedType?: string
+    maxResults: number = 20
   ): Promise<{ results: GooglePlace[] }> {
-    try {
-      const { data, error } = await supabase.functions.invoke('google-nearby-search', {
-        body: {
-          latitude: location.lat,
-          longitude: location.lng,
-          radius,
-          includedType
-        }
-      });
+    console.log('Calling google-text-search with:', { textQuery, location, radius, maxResults });
+    
+    const { data, error } = await supabase.functions.invoke('google-text-search', {
+      body: { 
+        textQuery,
+        latitude: location.lat, 
+        longitude: location.lng, 
+        radius,
+        maxResults
+      }
+    });
 
-      if (error) throw error;
-
-      return {
-        results: data?.results || []
-      };
-    } catch (error) {
-      console.error('Nearby search error:', error);
+    if (error) {
+      console.error('Error calling google-text-search:', error);
       throw error;
     }
+
+    console.log('google-text-search returned:', data?.results?.length || 0, 'results');
+    return data;
   }
 
   static async getPlaceDetails(placeId: string): Promise<GooglePlace | null> {
-    try {
-      const { data, error } = await supabase.functions.invoke('google-place-details', {
-        body: { placeId: `places/${placeId}` }
-      });
+    console.log('Getting place details for:', placeId);
+    
+    const { data, error } = await supabase.functions.invoke('google-place-details', {
+      body: { placeId: `places/${placeId}` }
+    });
 
-      if (error) throw error;
-
-      return data?.result || null;
-    } catch (error) {
-      console.error('Place details error:', error);
-      return null;
+    if (error) {
+      console.error('Error calling google-place-details:', error);
+      throw error;
     }
+
+    return data?.result || null;
+  }
+
+  private static filterPlaces(
+    places: GooglePlace[], 
+    companyName: string,
+    excludedPlaceIds: Set<string> = new Set(),
+    selectedTypes?: BusinessType[]
+  ): GooglePlace[] {
+    const excludedNames = [
+      'mcdonalds', 'burger king', 'kfc', 'starbucks', 'subway', 'dominos',
+      'carrefour', 'auchan', 'leclerc', 'intermarché', 'lidl', 'aldi',
+      'décathlon', 'fnac', 'ikea', 'leroy merlin', 'castorama',
+    ];
+    
+    const excludedKeywords = [
+      'photomaton', 'distributeur', 'atm', 'relais', 'consigne', 'automate', 
+      'borne', 'parking', 'station-service', 'péage', 'laverie automatique',
+    ];
+
+    // Mapping pour les mots-clés de métier à vérifier dans le nom
+    const jobKeywords: Record<string, string[]> = {
+      'Kinésithérapeute': ['kiné', 'kinési', 'masseur', 'ostéo', 'rééducation'],
+      'Orthoptiste': ['orthoptiste', 'orthoptie', 'vision', 'rééducation visuelle'],
+      'Ostéopathe': ['ostéo', 'ostéopathie'],
+      'Sophrologue': ['sophro', 'sophrologie'],
+      'Dentiste': ['dentiste', 'dentaire', 'orthodon', 'chirurgien dentiste'],
+      'Médecin généraliste': ['médecin', 'docteur', 'cabinet médical', 'généraliste'],
+      'Avocat': ['avocat', 'cabinet d\'avocat', 'conseil juridique'],
+      'Salon de coiffure': ['coiffeur', 'coiffure', 'salon'],
+      'Électricien': ['électricien', 'électricité', 'électrique'],
+      'Plombier': ['plombier', 'plomberie', 'sanitaire', 'chauffage'],
+    };
+
+    // Mots-clés d'exclusion pour détecter les mauvaises catégorisations
+    const excludeKeywords: Record<string, string[]> = {
+      'Kinésithérapeute': ['plombier', 'plomberie', 'chauffage', 'sanitaire', 'électrici', 'boulang'],
+      'Orthoptiste': ['plombier', 'plomberie', 'boulang', 'restaurant'],
+      'Ostéopathe': ['plombier', 'plomberie', 'boulang', 'restaurant'],
+      'Sophrologue': ['plombier', 'plomberie', 'boulang', 'restaurant'],
+      'Dentiste': ['plombier', 'plomberie', 'boulang'],
+      'Médecin généraliste': ['plombier', 'plomberie', 'boulang'],
+    };
+
+    return places.filter(place => {
+      // Exclure le business de l'utilisateur
+      if (place.name.toLowerCase().includes(companyName.toLowerCase())) {
+        return false;
+      }
+
+      // Exclure les places déjà trouvées
+      if (excludedPlaceIds.has(place.place_id)) {
+        return false;
+      }
+
+      const nameLower = place.name.toLowerCase();
+
+      // Exclure les grandes chaînes
+      if (excludedNames.some(excluded => nameLower.includes(excluded))) {
+        return false;
+      }
+
+      // Exclure les installations automatiques
+      if (excludedKeywords.some(keyword => nameLower.includes(keyword))) {
+        return false;
+      }
+
+      // Si on a des types sélectionnés, vérifier la pertinence par rapport au nom
+      if (selectedTypes && selectedTypes.length > 0) {
+        const keyword = selectedTypes[0].googleSearchKeyword;
+        
+        // Vérifier les mots-clés d'exclusion pour ce type
+        if (excludeKeywords[keyword]) {
+          const hasExcludeKeyword = excludeKeywords[keyword].some(kw => 
+            nameLower.includes(kw.toLowerCase())
+          );
+          if (hasExcludeKeyword) {
+            console.log(`⏭️ Skipping ${place.name}: wrong categorization detected`);
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }
+
+  private static getActivityType(types: string[]): string {
+    if (types.length === 0) return 'Autre';
+    
+    // Map common types to French labels
+    const typeMap: Record<string, string> = {
+      'restaurant': 'Restaurant',
+      'cafe': 'Café',
+      'bakery': 'Boulangerie',
+      'store': 'Magasin',
+      'health': 'Santé',
+      'beauty_salon': 'Salon de beauté',
+      'gym': 'Salle de sport',
+    };
+
+    return typeMap[types[0]] || types[0];
   }
 
   static async searchBusinesses(
@@ -68,294 +167,124 @@ export class GooglePlacesService {
     onProgress?: (current: number, total: number) => void,
     excludedPlaceIds?: Set<string>
   ): Promise<Business[]> {
-    // Get location from place ID
+    console.log('Starting business search for:', companyName, 'at place:', placeId);
+    console.log('Selected types:', selectedTypes.map(t => t.label).join(', '));
+    
+    // Get the location from the place ID
     const location = await this.getLocationFromPlaceId(placeId);
     if (!location) {
-      throw new Error('Impossible d\'obtenir les coordonnées de l\'adresse');
+      throw new Error('Impossible de récupérer les coordonnées de l\'adresse');
     }
 
-    // Récupérer les types de l'établissement de l'utilisateur pour les exclure
-    let userBusinessTypes: string[] = [];
-    try {
-      const userBusinessDetails = await this.getPlaceDetails(placeId);
-      if (userBusinessDetails && userBusinessDetails.types) {
-        userBusinessTypes = userBusinessDetails.types;
-        console.log(`🏢 Types de l'établissement de l'utilisateur: ${userBusinessTypes.join(', ')}`);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération des types de l\'établissement:', error);
-    }
+    console.log('Location found:', location);
 
-    const businesses: Business[] = [];
-    const seenPlaceIds = new Set<string>(excludedPlaceIds || []); // Track place IDs to avoid duplicates, pre-populate with excluded ones
-    const businessCountByType = new Map<string, number>(); // Track count per type for diversity
-    
-    if (excludedPlaceIds && excludedPlaceIds.size > 0) {
-      console.log(`🚫 Excluding ${excludedPlaceIds.size} previously found businesses`);
-    }
-    
-    // Déterminer les types à rechercher
-    let priorityTypes: string[];
-    let MAX_PER_TYPE: number;
-    
-    const isAllTypes = selectedTypes.some(t => t.id === 'all');
-    
-    if (isAllTypes || selectedTypes.length === 0) {
-      // Tout type d'activités - utiliser la liste par défaut
-      priorityTypes = [
-        'accounting', 'lawyer', 'consultant',
-        'real_estate_agency', 'insurance_agency', 'travel_agency',
-        'plumber', 'electrician', 'painter', 'roofing_contractor', 'locksmith',
-        'car_repair', 'car_dealer', 'auto_parts_store',
-        'dentist', 'doctor', 'physiotherapist',
-        'hair_salon', 'hair_care', 'barber_shop', 'beauty_salon', 'spa',
-        'clothing_store', 'shoe_store', 'jewelry_store', 'furniture_store',
-        'electronics_store', 'hardware_store', 'bicycle_store', 'sporting_goods_store',
-        'florist', 'pet_store', 'veterinary_care',
-        'gym', 'fitness_center',
-      ];
-      MAX_PER_TYPE = 3;
-    } else {
-      // Types spécifiques sélectionnés
-      priorityTypes = selectedTypes.map(t => t.googlePlaceType);
-      // Si plusieurs types, limiter par type, sinon tout vient du même type
-      MAX_PER_TYPE = selectedTypes.length > 1 ? Math.ceil(maxResults / selectedTypes.length) : maxResults;
-    }
+    // Get address from place details to construct better search queries
+    const placeDetails = await this.getPlaceDetails(placeId);
+    const address = placeDetails?.formatted_address || '';
+    const cityMatch = address.match(/\d{5}\s+([^,]+)/);
+    const city = cityMatch ? cityMatch[1].trim() : '';
 
-    // List of large chains and multinationals to exclude
-    const excludedNames = [
-      'mcdonalds', 'burger king', 'kfc', 'starbucks', 'subway', 'dominos',
-      'carrefour', 'auchan', 'leclerc', 'intermarché', 'lidl', 'aldi',
-      'décathlon', 'fnac', 'ikea', 'leroy merlin', 'castorama',
-      'casino', 'monoprix', 'franprix', 'carrefour city', 'carrefour express',
-    ];
+    let allBusinesses: Business[] = [];
+    let currentRadius = 5000; // Start with 5km
+    const maxRadius = 20000; // Max 20km
+    const radiusIncrement = 5000; // Increase by 5km each time
     
-    // Exclusions STRICTES - tout ce qui n'est PAS artisan ou TPE/PME démarchable
-    const excludedKeywords = [
-      // Installations automatiques
-      'photomaton', 'photo booth', 'distributeur', 'atm', 'relais colis',
-      'point relais', 'consigne', 'automate', 'borne', 'parking',
-      'station-service', 'péage', 'laverie automatique',
-      // Restauration et alimentation
-      'boulangerie', 'patisserie', 'pâtisserie', 'pizzeria', 'pizza', 'kebab',
-      'sandwich', 'snack', 'restaur', 'brasserie', 'bistro', 'café', 'bar',
-      'burger', 'tacos', 'sushi',
-      // Stations de lavage
-      'wash', 'lavage', 'car wash', 'station de lavage', 'pressing',
-      // Commerces alimentaires de proximité
-      'épicerie', 'supérette', 'alimentaire', 'primeur', 'boucher', 'poissonnier',
-      'fromagerie', 'charcuterie', 'traiteur', 'marché',
-      // Logements et résidences (PAS démarchables)
-      'résidence', 'residence', 'étudiant', 'student', 'logement', 'appartement',
-      'cité', 'foyer', 'dortoir', 'colocation', 'hlm', 'housing',
-      // Établissements publics/administratifs
-      'mairie', 'école', 'collège', 'lycée', 'université', 'poste', 'bibliothèque',
-      'hôpital', 'clinique', 'centre médical', 'pharmacie',
-      // Loisirs non TPE/PME
-      'parc', 'jardin', 'square', 'stade', 'piscine', 'médiathèque'
-    ];
-    
-    // Types Google Places à exclure (installations automatiques, logements, établissements publics, restauration)
-    const excludedTypes = [
-      'atm', 'parking', 'gas_station', 'transit_station', 
-      'subway_station', 'train_station', 'bus_station',
-      'lodging', 'hospital', 'pharmacy', 'school', 'university',
-      'local_government_office', 'post_office', 'library',
-      // Exclure toute la restauration et l'alimentaire
-      'bakery', 'restaurant', 'cafe', 'bar', 'meal_delivery', 'meal_takeaway',
-      'food', 'supermarket', 'grocery_store', 'convenience_store'
-    ];
+    // Build search queries based on selected types
+    const searchQueries = selectedTypes.length === 0 || 
+                         selectedTypes.some(t => t.id === 'all')
+      ? [`entreprise ${city || address}`]
+      : selectedTypes.map(t => `${t.googleSearchKeyword} ${city || address}`);
 
-    // STRATÉGIE : élargir automatiquement si pas assez de résultats
-    let typeIndex = 0;
-    const radiusLevels = [30000, 40000, 50000]; // Limite max de l'API Google Places: 50km
-    let currentRadiusIndex = 0;
-    
-    // Mélanger les types pour éviter la concentration par activité
-    const shuffledTypes = [...priorityTypes].sort(() => Math.random() - 0.5);
-    
-    while (businesses.length < maxResults && typeIndex < shuffledTypes.length * 8) { // Augmenté à 8 cycles max
-      const currentType = shuffledTypes[typeIndex % shuffledTypes.length];
-      
-      // Re-mélanger les types à chaque nouveau cycle pour encore plus de variété
-      if (typeIndex > 0 && typeIndex % shuffledTypes.length === 0) {
-        shuffledTypes.sort(() => Math.random() - 0.5);
-      }
-      
-      // Augmenter le rayon plus rapidement si on trouve peu de résultats
-      if (typeIndex > 0 && typeIndex % shuffledTypes.length === 0) {
-        currentRadiusIndex = Math.min(currentRadiusIndex + 1, radiusLevels.length - 1);
-        console.log(`🔄 Élargissement de la zone de recherche à ${radiusLevels[currentRadiusIndex]/1000}km`);
-      }
-      
-      // Skip ce type si on a déjà atteint le maximum pour ce type
-      const currentCount = businessCountByType.get(currentType) || 0;
-      if (currentCount >= MAX_PER_TYPE) {
-        typeIndex++;
-        continue;
-      }
-      
-      // Augmenter le rayon tous les 2 cycles pour diversifier la zone géographique
-      if (typeIndex > 0 && typeIndex % (shuffledTypes.length * 2) === 0) {
-        currentRadiusIndex = Math.min(currentRadiusIndex + 1, radiusLevels.length - 1);
-      }
-      
-      const radius = radiusLevels[currentRadiusIndex];
-      
-      console.log(`🔍 Search ${typeIndex + 1}: type="${currentType}" (${currentCount}/${MAX_PER_TYPE}), radius=${radius}m (level ${currentRadiusIndex + 1}/3), found=${businesses.length}/${maxResults}`);
-      
-      // Chercher spécifiquement ce type d'entreprise
-      const searchResult = await this.nearbySearch(location, radius, currentType);
-      const places = searchResult.results;
-      
-      console.log(`📍 Found ${places.length} places of type "${currentType}"`);
-      
-      let newBusinessesInThisSearch = 0;
-      let addedForThisType = 0;
+    console.log('Search queries:', searchQueries);
 
-      for (const place of places) {
-        if (businesses.length >= maxResults) break;
+    // Try increasing radius until we have enough results
+    while (allBusinesses.length < maxResults && currentRadius <= maxRadius) {
+      console.log(`Searching with radius: ${currentRadius}m`);
+      
+      for (const query of searchQueries) {
+        if (allBusinesses.length >= maxResults) break;
         
-        // Vérifier si on a atteint le max pour ce type
-        const typeCount = businessCountByType.get(currentType) || 0;
-        if (typeCount >= MAX_PER_TYPE) break;
-
-        // Skip duplicates and previously excluded places
-        if (seenPlaceIds.has(place.place_id)) {
-          if (excludedPlaceIds && excludedPlaceIds.has(place.place_id)) {
-            console.log(`⏭️ Skipping previously found business: ${place.name}`);
-          }
-          continue;
-        }
-        seenPlaceIds.add(place.place_id);
-
-        // Filter out grandes chaînes
-        const nameLower = place.name.toLowerCase();
-        const isMajorChain = excludedNames.some(excluded => nameLower.includes(excluded));
+        console.log(`Text search query: "${query}"`);
         
-        if (isMajorChain) {
-          continue;
-        }
-        
-        // Filter out installations automatiques et structures sans personnel
-        const hasExcludedKeyword = excludedKeywords.some(keyword => nameLower.includes(keyword));
-        if (hasExcludedKeyword) {
-          console.log(`⏭️ Skipping automated/unmanned: ${place.name}`);
-          continue;
-        }
-        
-        // Filter out types non démarchables
-        const hasExcludedType = place.types?.some(type => excludedTypes.includes(type));
-        if (hasExcludedType) {
-          console.log(`⏭️ Skipping excluded type: ${place.name}`);
-          continue;
-        }
-        
-        // CRITICAL: Vérifier que le lieu contient bien le type recherché
-        // Cela évite qu'une boulangerie qui aurait aussi d'autres types apparaisse dans les résultats
-        if (!isAllTypes && place.types && !place.types.includes(currentType)) {
-          console.log(`⏭️ Skipping ${place.name}: doesn't match searched type ${currentType} (has: ${place.types.join(', ')})`);
-          continue;
-        }
-        
-        // Filtrage supplémentaire : vérifier que le nom correspond bien au métier recherché
-        // (pour éviter les erreurs de catégorisation de Google)
-        const jobKeywords: Record<string, string[]> = {
-          'physiotherapist': ['kinésithérapeute', 'kiné', 'masseur', 'ostéo', 'rééducation'],
-          'dentist': ['dentiste', 'dentaire', 'orthodon'],
-          'doctor': ['médecin', 'docteur', 'cabinet médical'],
-          'lawyer': ['avocat', 'cabinet d\'avocat', 'conseil juridique'],
-          'hair_salon': ['coiffeur', 'coiffure', 'salon de coiffure'],
-          'electrician': ['électricien', 'électricité'],
-          'plumber': ['plombier', 'plomberie', 'sanitaire'],
-        };
-        
-        // Mots-clés à EXCLURE pour certains types (détecte les erreurs de catégorisation)
-        const excludeKeywords: Record<string, string[]> = {
-          'physiotherapist': ['plombier', 'plomberie', 'chauffage', 'sanitaire', 'électrici'],
-          'dentist': ['plombier', 'plomberie'],
-          'doctor': ['plombier', 'plomberie'],
-        };
-        
-        // Si on a des keywords d'exclusion pour ce type, vérifier
-        if (!isAllTypes && excludeKeywords[currentType]) {
-          const hasExcludeKeyword = excludeKeywords[currentType].some(kw => 
-            nameLower.includes(kw)
+        try {
+          const searchResults = await this.textSearch(
+            query,
+            location, 
+            currentRadius,
+            Math.min(20, maxResults - allBusinesses.length + 10) // Request a few extra for filtering
           );
-          if (hasExcludeKeyword) {
-            console.log(`⏭️ Skipping ${place.name}: detected wrong categorization (found excluded keyword)`);
-            continue;
-          }
-        }
-        
-        // Exclure les concurrents directs (mêmes types que l'établissement de l'utilisateur)
-        if (userBusinessTypes.length > 0 && place.types) {
-          const hasCommonType = place.types.some(type => userBusinessTypes.includes(type));
-          if (hasCommonType) {
-            console.log(`🚫 Skipping competitor (same business type): ${place.name}`);
-            continue;
-          }
-        }
-
-        // Use data from nearby search if available
-        let phoneNumber = place.formatted_phone_number;
-        let website = place.website;
-
-        // Fetch details if needed
-        if (!phoneNumber || !website) {
-          const details = await this.getPlaceDetails(place.place_id);
-          if (details) {
-            phoneNumber = phoneNumber || details.formatted_phone_number;
-            website = website || details.website;
-          }
-          await new Promise(resolve => setTimeout(resolve, 30));
-        }
-
-        // Accepter si on a AU MOINS un moyen de contact
-        if (phoneNumber || website) {
-          // Use native Google Maps URL from the API
-          const mapsLink = place.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.place_id}`;
+          const places = searchResults.results || [];
           
-          // Trouver le label en français du type d'activité
-          const businessType = BUSINESS_TYPES.find(t => t.googlePlaceType === currentType);
-          const typeLabel = businessType?.label || currentType;
+          console.log(`Found ${places.length} places for query "${query}"`);
           
-          businesses.push({
-            nom: place.name,
-            type_activite: typeLabel,
-            adresse: place.formatted_address || '',
-            telephone: phoneNumber || 'Non disponible',
-            site_web: website || 'Non disponible',
-            lien_maps: mapsLink,
-          });
-
-          newBusinessesInThisSearch++;
-          addedForThisType++;
+          // Filter places
+          const filteredPlaces = this.filterPlaces(
+            places, 
+            companyName, 
+            excludedPlaceIds || new Set(),
+            selectedTypes.length > 0 ? selectedTypes : undefined
+          );
           
-          // Mettre à jour le compteur pour ce type
-          businessCountByType.set(currentType, typeCount + 1);
+          console.log(`After filtering: ${filteredPlaces.length} places`);
           
-          console.log(`✅ ${businesses.length}/${maxResults}: ${place.name} (${currentType})`);
-
-          if (onProgress) {
-            onProgress(businesses.length, maxResults);
+          // Get details for each place
+          for (const place of filteredPlaces) {
+            if (allBusinesses.length >= maxResults) break;
+            
+            // Skip if we already have this place
+            if (allBusinesses.some(b => b.lien_maps === place.url)) {
+              continue;
+            }
+            
+            const details = await this.getPlaceDetails(place.place_id);
+            if (!details) continue;
+            
+            // Final filter on detailed info
+            const finalFiltered = this.filterPlaces(
+              [details], 
+              companyName, 
+              excludedPlaceIds || new Set(),
+              selectedTypes.length > 0 ? selectedTypes : undefined
+            );
+            
+            if (finalFiltered.length === 0) continue;
+            
+            // Determine activity type from selected types or use the first type
+            const activityType = selectedTypes.length > 0 && selectedTypes[0].id !== 'all'
+              ? selectedTypes[0].label
+              : this.getActivityType(details.types || []);
+            
+            const business: Business = {
+              nom: details.name,
+              type_activite: activityType,
+              adresse: details.formatted_address || '',
+              telephone: details.formatted_phone_number || 'Non disponible',
+              site_web: details.website || 'Non disponible',
+              lien_maps: details.url || ''
+            };
+            
+            allBusinesses.push(business);
+            
+            if (onProgress) {
+              onProgress(allBusinesses.length, maxResults);
+            }
+            
+            console.log(`✅ Added: ${business.nom} (${activityType})`);
           }
+        } catch (error) {
+          console.error(`Error searching for query "${query}":`, error);
         }
       }
       
-      if (newBusinessesInThisSearch > 0) {
-        console.log(`✅ Added ${newBusinessesInThisSearch} businesses from type "${currentType}" (total for type: ${businessCountByType.get(currentType)}/${MAX_PER_TYPE})`);
+      // If we don't have enough results, increase radius
+      if (allBusinesses.length < maxResults) {
+        currentRadius += radiusIncrement;
+        console.log(`Not enough results, increasing radius to ${currentRadius}m`);
       }
-      
-      typeIndex++;
-      
-      // Petit délai entre les recherches
-      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    console.log(`🎯 Search completed: ${businesses.length}/${maxResults} businesses found`);
-
-    return businesses.slice(0, maxResults);
+    console.log(`Search completed: ${allBusinesses.length}/${maxResults} businesses found`);
+    return allBusinesses.slice(0, maxResults);
   }
 
   static exportToJson(businesses: Business[]): string {
