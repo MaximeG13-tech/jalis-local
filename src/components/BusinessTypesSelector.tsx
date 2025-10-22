@@ -84,10 +84,10 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
         <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Type d'activité</Label>
       )}
 
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <div className="relative">
+        <Popover open={open} onOpenChange={setOpen}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
             <Input
               ref={inputRef}
               type="text"
@@ -102,18 +102,17 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
               <button
                 onClick={handleClearInput}
                 disabled={disabled}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-10"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
-        </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-popover z-50" align="start">
-          <Command>
-            <CommandList>
-              <CommandEmpty>Aucune activité trouvée.</CommandEmpty>
-              <CommandGroup>
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-popover z-50" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+            <Command>
+              <CommandList>
+                <CommandEmpty>Aucune activité trouvée.</CommandEmpty>
+                <CommandGroup>
                 {/* Option "Tout type d'activités" */}
                 <CommandItem
                   value={ALL_TYPES_OPTION.label}
@@ -143,7 +142,8 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
             </CommandList>
           </Command>
         </PopoverContent>
-      </Popover>
+        </Popover>
+      </div>
 
       {/* Badge de sélection */}
       {selectedType && (
