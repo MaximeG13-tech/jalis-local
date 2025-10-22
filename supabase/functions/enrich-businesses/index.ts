@@ -159,104 +159,103 @@ serve(async (req) => {
     const enrichedBusinesses = [];
 
     for (const business of businesses) {
-      const prompt = `Tu es un expert en rédaction de fiches locales SEO courtes pour ${companyName}, qui présente des entreprises locales sur son site web.
+      const prompt = `Tu es un expert en rédaction de fiches locales engageantes pour ${companyName}, qui présente des entreprises locales sur son site web.
 
-CONTEXTE IMPORTANT :
+CONTEXTE :
+- Le texte sera publié sur le site de ${companyName}
+- Ton DIRECT et CONVERSATIONNEL avec tutoiement ou vouvoiement selon le contexte
+- Interpelle le lecteur avec des questions ou formulations engageantes
+- Mention naturelle de ${companyName} comme repère géographique ou référence locale
 
-Le texte sera publié sur le site de ${companyName}.
-
-${companyName} présente une entreprise locale, sans en faire la promotion commerciale.
-
-Le ton est informatif et neutre, à la 3ᵉ personne : "ils", "leur entreprise", "contactez-les".
-
-JAMAIS de "nous", "notre", "je" ou "contactez-nous".
-
-🎯 Objectif
-
-Produire une fiche locale courte, claire et utile, qui :
-
-Informe l'internaute sur l'activité, la localisation et les coordonnées.
-
-Donne une impression de proximité et de sérieux.
-
-Est simple, lisible et naturelle (pas journalistique).
-
-Est optimisée pour le SEO local (activité + ville + département).
-
-ENTREPRISE À PRÉSENTER
-
+ENTREPRISE À PRÉSENTER :
 Nom : ${business.nom}
-
 Adresse : ${business.adresse}
-
 Téléphone : ${business.telephone}
-
 Site web : ${business.site_web}
 
-RÈGLES DE RÉDACTION
+📝 FORMAT DE RÉDACTION
 
-activity → phrase longue traîne (10 à 15 mots) se terminant par "à".
-
-Toujours commencer par le nom du métier ou de l'activité principale.
-
-Terminer par "à" (sans ville), la ville sera ajoutée ensuite.
-
+1. **activity** (10-15 mots, se termine par "à")
+Commence par le nom du métier ou de l'activité.
 Exemples :
+- "Magasin de tissus d'ameublement et de couture proposant un large choix à"
+- "Entreprise de plomberie réalisant l'installation et la réparation de canalisations à"
 
-"Magasin de tissus d'ameublement et de couture proposant un large choix à"
+2. **extract** (40-60 mots)
+Résumé informatif et engageant. Décris l'offre, la localisation, ce qui différencie l'entreprise.
+Évite le jargon commercial creux.
 
-"Entreprise de plomberie réalisant l'installation et la réparation de canalisations à"
+3. **description** (110-130 mots) - STYLE DIRECT ET ENGAGEANT
 
-extract → résumé court (40 à 60 mots) orienté information locale.
+📍 PARAGRAPHE 1 (35-45 mots) : Accroche + Mention ${companyName}
 
-Décris ce que propose l'entreprise, où elle se trouve et pour qui.
+Commence par UNE QUESTION DIRECTE ou une INTERPELLATION qui capte l'attention :
+- "Vous êtes à la recherche de [service/produit] ? Ne cherchez pas plus loin..."
+- "Besoin d'un [métier] de confiance ? Rendez-vous chez..."
+- "Vous cherchez [produit/service] ? ${business.nom} est là pour vous..."
 
-Évite les phrases creuses ("une expertise avérée", "un savoir-faire reconnu").
+Intègre NATURELLEMENT ${companyName} comme REPÈRE LOCAL :
+- "...tout proche de ${companyName}"
+- "...à deux pas de ${companyName}"
+- "...près de ${companyName}"
+- "...dans le même secteur que ${companyName}"
+
+Exemple de structure :
+"Vous êtes à la recherche de tissus de qualité pour la confection maison de vêtement ou d'ameublement ? Ne cherchez pas plus loin et rendez-vous chez ${business.nom} à [ville] tout proche de ${companyName}."
+
+🎯 PARAGRAPHE 2 (35-45 mots) : Détails concrets de l'offre
+
+Décris CE QUE PROPOSE CONCRÈTEMENT ${business.nom} :
+- Produits/services spécifiques
+- Points forts réels (nouveautés régulières, prix attractifs, gamme large, etc.)
+- Éléments qui donnent envie
+
+Utilise un ton VIVANT et PRÉCIS. Mentionne des détails CONCRETS.
 
 Exemple :
+"Vous y retrouverez de jolis tissus de qualité. ${business.nom} situé à [ville] vous propose de nouvelles collections régulièrement. Mais aussi une multitude de pelotes à tricoter et le tout à prix tout doux !"
 
-Situé à Aix-en-Provence, ${business.nom} propose un large choix de tissus pour l'habillement et l'ameublement. Les clients y trouvent des articles de qualité à prix doux, avec des nouveautés ajoutées régulièrement.
+📞 PARAGRAPHE 3 (35-45 mots) : Coordonnées + CTA
 
-description → fiche locale complète (100 à 130 mots max).
+Formule UN APPEL CLAIR avec les coordonnées complètes :
+- Commence par un CTA adapté à l'activité
+- Donne l'adresse complète de manière fluide
+- Termine par le téléphone avec un CTA complémentaire
 
-Paragraphe 1 (≈50 mots) : présente simplement l'activité, les produits ou services, et la localisation.
+Exemples de structure :
+"Pour vous rendre chez ${business.nom} à [ville], rendez-vous à l'adresse suivante : ${business.adresse}. N'hésitez pas à contacter votre [métier] au ${business.telephone}."
 
-Paragraphe 2 (≈25 mots) : mention ${companyName} avec une des formules ci-dessous :
+OU :
 
-"${companyName} met en avant ${business.nom} pour la qualité de ses services."
+"Rendez-vous chez ${business.nom}, ${business.adresse}. Vous pouvez également les contacter au ${business.telephone} pour [action adaptée : prendre rendez-vous / obtenir un devis / commander]."
 
-"${companyName} vous recommande ${business.nom} pour son professionnalisme."
+⚙️ RÈGLES LINGUISTIQUES
 
-"${companyName} présente ${business.nom}, une entreprise locale de confiance."
+Corrige automatiquement les prépositions :
+- "à Le" → "au"
+- "à Les" → "aux"
+- "à La" → "à la"
+- "à L'" → "à l'"
 
-Paragraphe 3 (≈30 mots) : adresse + téléphone + CTA local.
+🚫 INTERDICTIONS ABSOLUES
 
-Exemple : "Retrouvez ${business.nom} au ${business.adresse}. Contactez-les au ${business.telephone} pour plus d'informations ou pour vos besoins en [activité]."
+❌ "partenariat", "collaboration", "partenaire", "s'associer"
+❌ Phrases creuses : "expertise reconnue", "savoir-faire avéré", "approche personnalisée"
+❌ Mention du site web ou URL
+❌ Ton institutionnel ou trop formel
+❌ Énumérations plates
 
-⚙️ RÈGLE LINGUISTIQUE IMPORTANTE
+✅ CE QUI EST ATTENDU
 
-Corrige toujours la préposition devant la ville selon les règles du français :
+✓ Ton direct et engageant (questions, interpellations)
+✓ Mention naturelle de ${companyName} comme repère géographique
+✓ Détails concrets sur les produits/services
+✓ CTAs clairs et naturels
+✓ Fluidité et lisibilité
 
-"à Le" → "au"
-
-"à Les" → "aux"
-
-"à La" → "à la"
-
-"à L'" → "à l'"
-
-(Ne jamais écrire "à Le [ville]").
-
-INTERDICTIONS
-
-🚫 Pas de "partenariat", "collaboration", "association", "site web"
-🚫 Pas de phrases creuses ou commerciales ("expertise reconnue", "approche personnalisée")
-🚫 Pas d'adresse mail ni d'URL
-🚫 Pas d'énumérations à rallonge
-
-Réponds uniquement avec un objet JSON valide contenant les trois champs suivants :
+Réponds UNIQUEMENT avec un objet JSON valide :
 { "activity": "...", "extract": "...", "description": "..." }
-Aucun texte avant ou après la réponse.`;
+Aucun texte avant ou après.`;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
