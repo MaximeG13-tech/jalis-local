@@ -244,7 +244,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-5-nano",
+          model: "gpt-4o",
           messages: [
             {
               role: "system",
@@ -253,7 +253,8 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
             },
             { role: "user", content: prompt },
           ],
-          max_completion_tokens: 8000,
+          max_tokens: 4000,
+          temperature: 0.7,
         }),
       });
 
