@@ -258,6 +258,36 @@ export class GooglePlacesService {
           continue;
         }
         
+        // Filtrage supplémentaire : vérifier que le nom correspond bien au métier recherché
+        // (pour éviter les erreurs de catégorisation de Google)
+        const jobKeywords: Record<string, string[]> = {
+          'physiotherapist': ['kinésithérapeute', 'kiné', 'masseur', 'ostéo', 'rééducation'],
+          'dentist': ['dentiste', 'dentaire', 'orthodon'],
+          'doctor': ['médecin', 'docteur', 'cabinet médical'],
+          'lawyer': ['avocat', 'cabinet d\'avocat', 'conseil juridique'],
+          'hair_salon': ['coiffeur', 'coiffure', 'salon de coiffure'],
+          'electrician': ['électricien', 'électricité'],
+          'plumber': ['plombier', 'plomberie', 'sanitaire'],
+        };
+        
+        // Mots-clés à EXCLURE pour certains types (détecte les erreurs de catégorisation)
+        const excludeKeywords: Record<string, string[]> = {
+          'physiotherapist': ['plombier', 'plomberie', 'chauffage', 'sanitaire', 'électrici'],
+          'dentist': ['plombier', 'plomberie'],
+          'doctor': ['plombier', 'plomberie'],
+        };
+        
+        // Si on a des keywords d'exclusion pour ce type, vérifier
+        if (!isAllTypes && excludeKeywords[currentType]) {
+          const hasExcludeKeyword = excludeKeywords[currentType].some(kw => 
+            nameLower.includes(kw)
+          );
+          if (hasExcludeKeyword) {
+            console.log(`⏭️ Skipping ${place.name}: detected wrong categorization (found excluded keyword)`);
+            continue;
+          }
+        }
+        
         // Exclure les concurrents directs (mêmes types que l'établissement de l'utilisateur)
         if (userBusinessTypes.length > 0 && place.types) {
           const hasCommonType = place.types.some(type => userBusinessTypes.includes(type));

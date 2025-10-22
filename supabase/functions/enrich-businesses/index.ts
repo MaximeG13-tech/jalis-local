@@ -164,129 +164,126 @@ serve(async (req) => {
     const enrichedBusinesses = [];
 
     for (const business of businesses) {
-      const prompt = `Tu es un expert en rédaction de fiches locales engageantes pour ${companyName}, qui présente des entreprises locales sur son site web.
+      // Générer un numéro aléatoire pour varier les styles de rédaction
+      const styleVariant = Math.floor(Math.random() * 5) + 1;
+      
+      const prompt = `Tu es un rédacteur web talentueux qui écrit des contenus naturels et engageants pour ${companyName}.
 
-CONTEXTE :
-- Le texte sera publié sur le site de ${companyName}
-- Ton DIRECT et CONVERSATIONNEL avec tutoiement ou vouvoiement selon le contexte
-- Interpelle le lecteur avec des questions ou formulations engageantes
-- Mention naturelle de ${companyName} comme repère géographique ou référence locale
+🎯 MISSION : Rédiger une fiche professionnelle UNIQUE et NATURELLE
 
-ENTREPRISE À PRÉSENTER :
-Nom : ${business.nom}
+ENTREPRISE : ${business.nom}
 Adresse : ${business.adresse}
-Téléphone : ${business.telephone}
-Site web : ${business.site_web}
+Contact : ${business.telephone}
+${business.site_web !== 'Non disponible' ? `Site : ${business.site_web}` : ''}
 
-📝 FORMAT DE RÉDACTION
+STYLE DE RÉDACTION N°${styleVariant} - VARIE TON APPROCHE
 
-1. **activity** (10-15 mots)
+${styleVariant === 1 ? `
+STYLE 1 - DIRECT ET DYNAMIQUE
+- Commence par une question percutante ou une affirmation forte
+- Utilise des phrases courtes et rythmées
+- Ton enjoué et moderne
+- Exemple : "Un problème de [service] ? Pas de panique ! Chez ${business.nom}..."
+` : ''}
 
-IMPORTANT - Analyse d'abord la ville dans l'adresse pour adapter la préposition finale :
-- Si la ville commence par "Le " (ex: Le Pradet) → termine par "au"
-- Si la ville commence par "La " (ex: La Ciotat) → termine par "à la"
-- Si la ville commence par "Les " (ex: Les Pennes-Mirabeau) → termine par "aux"
-- Si la ville commence par "L'" (ex: L'Isle-sur-la-Sorgue) → termine par "à l'"
-- Sinon (ex: Marseille, Aix-en-Provence) → termine par "à"
+${styleVariant === 2 ? `
+STYLE 2 - STORYTELLING LOCAL
+- Raconte une mini-histoire ou situation
+- Ancre dans le quotidien local
+- Ton chaleureux et proche
+- Exemple : "Dans le quartier, tout le monde connaît ${business.nom}. Et pour cause..."
+` : ''}
 
-Exemples corrects :
-- "Magasin de tissus d'ameublement et de couture proposant un large choix au" (pour Le Pradet)
-- "Entreprise de plomberie réalisant l'installation et la réparation de canalisations à" (pour Marseille)
-- "Concessionnaire automobile spécialisé dans les véhicules sans permis aux" (pour Les Pennes-Mirabeau)
-- "Salon de coiffure proposant des prestations sur mesure à la" (pour La Ciotat)
+${styleVariant === 3 ? `
+STYLE 3 - PRAGMATIQUE ET INFORMATIF
+- Va droit au but
+- Liste des avantages concrets
+- Ton professionnel mais accessible
+- Exemple : "${business.nom} vous propose trois choses essentielles : [1], [2], [3]."
+` : ''}
 
-Règles :
-✓ Commence par le nom du métier ou de l'activité principale
-✓ Utilise des mots-clés SEO (métier + spécialité)
-✓ Pas de nom d'entreprise
-✓ Pas de pronom personnel
-✓ Phrase descriptive et naturelle
+${styleVariant === 4 ? `
+STYLE 4 - CONVERSATIONNEL ET COMPLICE
+- Tutoiement possible
+- Ton de conseil entre amis
+- Exemples concrets du quotidien
+- Exemple : "Tu cherches un [métier] pas loin de ${companyName} ? On a ce qu'il te faut..."
+` : ''}
+
+${styleVariant === 5 ? `
+STYLE 5 - DESCRIPTIF ET ÉVOCATEUR
+- Peint un tableau de l'ambiance/service
+- Utilise des détails sensoriels
+- Ton poétique mais terre-à-terre
+- Exemple : "Dès que vous poussez la porte de ${business.nom}, vous sentez..."
+` : ''}
+
+📝 FORMAT JSON ATTENDU
+
+1. **activity** (10-15 mots MAX)
+Description du métier + préposition adaptée à la ville (au/à la/aux/à l')
+- Commence par le métier : "Kinésithérapeute spécialisé en rééducation sportive à"
+- Analyse la ville dans l'adresse pour la préposition finale
+- SANS le nom de l'entreprise
 
 2. **extract** (40-60 mots)
-Résumé informatif et engageant. Décris l'offre, la localisation, ce qui différencie l'entreprise.
-Évite le jargon commercial creux.
-Utilise la bonne préposition contractée selon la ville (au/à la/aux/à l').
+Mini-pitch unique qui donne envie. Varie les angles :
+- L'expertise particulière
+- L'ambiance du lieu
+- Les avantages clients
+- L'histoire locale
+- Les spécialités
+IMPORTANT : Mentionne ${companyName} de façon NATURELLE (pas forcément "à deux pas de")
+Utilise les prépositions correctes (au/à la/aux/à l')
 
-3. **description** (110-130 mots) - STYLE DIRECT ET ENGAGEANT
+3. **description** (110-130 mots en 3 paragraphes)
 
-📍 PARAGRAPHE 1 (35-45 mots) : Accroche + Mention ${companyName}
+PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
+Selon le style choisi, commence différemment :
+- Question : "Besoin de..." / "Vous cherchez..." / "Un souci avec..."
+- Affirmation : "Chez ${business.nom}..." / "Depuis X ans..." / "Dans le quartier..."
+- Situation : "Quand on habite près de ${companyName}..."
+Intègre ${companyName} NATURELLEMENT (varie : "non loin de", "dans le secteur de", "près de", "à côté de", "tout proche de")
 
-Commence par UNE QUESTION DIRECTE ou une INTERPELLATION qui capte l'attention :
-- "Vous êtes à la recherche de [service/produit] ? Ne cherchez pas plus loin..."
-- "Besoin d'un [métier] de confiance ? Rendez-vous chez..."
-- "Vous cherchez [produit/service] ? ${business.nom} est là pour vous..."
+PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
+Décris VRAIMENT ce que propose l'entreprise. Varie les approches :
+- Liste des services/produits phares
+- Points forts uniques
+- Ce qui fait la différence
+- Exemples concrets d'intervention
+- Gamme de prix / Horaires pratiques
+IMPORTANT : Reste FACTUEL et CONCRET, évite les formules creuses
 
-Intègre NATURELLEMENT ${companyName} comme REPÈRE LOCAL :
-- "...tout proche de ${companyName}"
-- "...à deux pas de ${companyName}"
-- "...près de ${companyName}"
-- "...dans le même secteur que ${companyName}"
+PARAGRAPHE 3 (30-40 mots) - COORDONNÉES
+Varie la formulation :
+- "Retrouvez ${business.nom} au..."
+- "Pour les joindre, c'est simple : ..."
+- "${business.nom} vous accueille au..."
+- "Rendez-vous chez eux : ..."
+Donne l'adresse ET le téléphone de façon fluide
 
-Utilise la bonne préposition contractée pour la ville (au/à la/aux/à l').
+🚨 RÈGLES CRITIQUES
 
-Exemple de structure :
-"Vous êtes à la recherche de tissus de qualité pour la confection maison de vêtement ou d'ameublement ? Ne cherchez pas plus loin et rendez-vous chez ${business.nom} au Pradet tout proche de ${companyName}."
+VARIATION OBLIGATOIRE :
+✓ Chaque texte doit être UNIQUE dans son approche
+✓ Varie les verbes, les structures, les accroches
+✓ Évite ABSOLUMENT les répétitions entre entreprises
+✓ Humanise : écris comme tu parlerais à un ami
 
-🎯 PARAGRAPHE 2 (35-45 mots) : Détails concrets de l'offre
+INTERDICTIONS :
+❌ "solutions adaptées à vos besoins"
+❌ "tout près de ${companyName}" (varie !)
+❌ "Vous cherchez un X de confiance" (trop vu)
+❌ "accompagnement personnalisé"
+❌ "expertise reconnue"
+❌ Structures répétitives
 
-Décris CE QUE PROPOSE CONCRÈTEMENT ${business.nom} :
-- Produits/services spécifiques
-- Points forts réels (nouveautés régulières, prix attractifs, gamme large, etc.)
-- Éléments qui donnent envie
+PRÉPOSITIONS :
+✓ Analyse la ville (Le/La/Les/L') pour choisir (au/à la/aux/à l')
+✓ Applique partout : activity, extract, description
 
-Utilise un ton VIVANT et PRÉCIS. Mentionne des détails CONCRETS.
-Utilise la bonne préposition contractée pour la ville.
-
-Exemple :
-"Vous y retrouverez de jolis tissus de qualité. ${business.nom} situé au Pradet vous propose de nouvelles collections régulièrement. Mais aussi une multitude de pelotes à tricoter et le tout à prix tout doux !"
-
-📞 PARAGRAPHE 3 (35-45 mots) : Coordonnées + CTA
-
-Formule UN APPEL CLAIR avec les coordonnées complètes :
-- Commence par un CTA adapté à l'activité
-- Donne l'adresse complète de manière fluide
-- Termine par le téléphone avec un CTA complémentaire
-
-Exemples de structure :
-"Pour vous rendre chez ${business.nom} au Pradet, rendez-vous à l'adresse suivante : ${business.adresse}. N'hésitez pas à contacter votre [métier] au ${business.telephone}."
-
-OU :
-
-"Rendez-vous chez ${business.nom}, ${business.adresse}. Vous pouvez également les contacter au ${business.telephone} pour [action adaptée : prendre rendez-vous / obtenir un devis / commander]."
-
-⚙️ RÈGLES LINGUISTIQUES OBLIGATOIRES
-
-Dans les champs extract et description, applique systématiquement les contractions :
-- "à Le" → "au"
-- "à Les" → "aux"
-- "à La" → "à la"
-- "à L'" → "à l'"
-
-Exemples :
-✅ "situé au Pradet" (pas "situé à Le Pradet")
-✅ "aux Pennes-Mirabeau" (pas "à Les Pennes-Mirabeau")
-✅ "à la Ciotat" (pas "à La Ciotat")
-
-🚫 INTERDICTIONS ABSOLUES
-
-❌ "partenariat", "collaboration", "partenaire", "s'associer"
-❌ Phrases creuses : "expertise reconnue", "savoir-faire avéré", "approche personnalisée"
-❌ Mention du site web ou URL
-❌ Ton institutionnel ou trop formel
-❌ Énumérations plates
-
-✅ CE QUI EST ATTENDU
-
-✓ Ton direct et engageant (questions, interpellations)
-✓ Mention naturelle de ${companyName} comme repère géographique
-✓ Détails concrets sur les produits/services
-✓ CTAs clairs et naturels
-✓ Fluidité et lisibilité
-✓ Prépositions contractées correctes partout (au/à la/aux/à l')
-
-Réponds UNIQUEMENT avec un objet JSON valide :
-{ "activity": "...", "extract": "...", "description": "..." }
-Aucun texte avant ou après.`;
+Réponds UNIQUEMENT en JSON :
+{ "activity": "...", "extract": "...", "description": "..." }`;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
