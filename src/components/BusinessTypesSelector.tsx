@@ -126,7 +126,7 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
         )}
 
         {/* Dropdown personnalisé */}
-        {open && filteredTypes.length > 0 && (
+        {open && (
           <div
             ref={dropdownRef}
             className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md max-h-[300px] overflow-y-auto z-50"
@@ -141,22 +141,30 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
                 {ALL_TYPES_OPTION.label}
               </button>
 
-              {filteredTypes.map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  onClick={() => handleSelect(type)}
-                  className="w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm"
-                >
-                  {type.label}
-                </button>
-              ))}
+              {filteredTypes.length > 0 ? (
+                <>
+                  {filteredTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => handleSelect(type)}
+                      className="w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm"
+                    >
+                      {type.label}
+                    </button>
+                  ))}
 
-              {inputValue.trim() && filteredTypes.length === 50 && (
-                <div className="px-3 py-2 text-xs text-muted-foreground text-center border-t">
-                  Affinez votre recherche pour voir plus de résultats
+                  {inputValue.trim() && filteredTypes.length === 50 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground text-center border-t">
+                      Affinez votre recherche pour voir plus de résultats
+                    </div>
+                  )}
+                </>
+              ) : inputValue.trim() ? (
+                <div className="px-3 py-2 text-sm text-muted-foreground text-center">
+                  Aucune activité trouvée pour "{inputValue}"
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         )}
