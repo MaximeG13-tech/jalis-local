@@ -138,10 +138,10 @@ serve(async (req) => {
 
   try {
     const { businesses, companyName } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const OPEN_AI = Deno.env.get("OPEN_AI");
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!OPEN_AI) {
+      throw new Error("OPEN_AI is not configured");
     }
 
     const enrichedBusinesses = [];
@@ -211,14 +211,14 @@ CONSIGNES DE TON :
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${OPEN_AI}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gpt-5-mini-2025-08-07",
           messages: [
             {
               role: "system",
@@ -227,6 +227,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
             },
             { role: "user", content: prompt },
           ],
+          max_completion_tokens: 2000,
         }),
       });
 
