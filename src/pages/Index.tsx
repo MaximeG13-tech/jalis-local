@@ -14,6 +14,7 @@ const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [excludedPlaceIds, setExcludedPlaceIds] = useState<Set<string>>(new Set());
   const [lastSearch, setLastSearch] = useState<{ 
     companyName: string;
     address: string; 
@@ -28,7 +29,8 @@ const Index = () => {
     address: string, 
     placeId: string, 
     maxResults: number,
-    selectedTypes: BusinessType[]
+    selectedTypes: BusinessType[],
+    isRegeneration: boolean = false
   ) => {
     setLastSearch({ companyName, address, placeId, maxResults, selectedTypes });
     setIsLoading(true);
@@ -43,13 +45,25 @@ const Index = () => {
         selectedTypes,
         (current, total) => {
           setProgress({ current, total });
-        }
+        },
+        isRegeneration ? excludedPlaceIds : undefined
       );
+
+      // Ajouter les nouveaux place_ids à la liste d'exclusion
+      const newExcludedIds = new Set(excludedPlaceIds);
+      results.forEach(business => {
+        // Extraire le place_id du lien maps
+        const placeIdMatch = business.lien_maps.match(/query_place_id=([^&]+)/);
+        if (placeIdMatch) {
+          newExcludedIds.add(placeIdMatch[1]);
+        }
+      });
+      setExcludedPlaceIds(newExcludedIds);
 
       setBusinesses(results);
       
       toast({
-        title: "Recherche terminée",
+        title: isRegeneration ? "Nouvelles entreprises générées" : "Recherche terminée",
         description: `${results.length} entreprise${results.length > 1 ? 's' : ''} trouvée${results.length > 1 ? 's' : ''}`,
       });
       setIsLoading(false);
@@ -73,7 +87,8 @@ const Index = () => {
         lastSearch.address, 
         lastSearch.placeId, 
         lastSearch.maxResults,
-        lastSearch.selectedTypes
+        lastSearch.selectedTypes,
+        true // isRegeneration = true
       );
     }
   };
@@ -81,6 +96,7 @@ const Index = () => {
   const handleNewSearch = () => {
     setBusinesses([]);
     setLastSearch(null);
+    setExcludedPlaceIds(new Set()); // Reset exclusions
     // Force page reload to reset the form completely including selected types
     window.location.reload();
   };

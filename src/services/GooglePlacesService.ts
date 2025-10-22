@@ -65,7 +65,8 @@ export class GooglePlacesService {
     placeId: string,
     maxResults: number,
     selectedTypes: BusinessType[],
-    onProgress?: (current: number, total: number) => void
+    onProgress?: (current: number, total: number) => void,
+    excludedPlaceIds?: Set<string>
   ): Promise<Business[]> {
     // Get location from place ID
     const location = await this.getLocationFromPlaceId(placeId);
@@ -86,8 +87,12 @@ export class GooglePlacesService {
     }
 
     const businesses: Business[] = [];
-    const seenPlaceIds = new Set<string>(); // Track place IDs to avoid duplicates
+    const seenPlaceIds = new Set<string>(excludedPlaceIds || []); // Track place IDs to avoid duplicates, pre-populate with excluded ones
     const businessCountByType = new Map<string, number>(); // Track count per type for diversity
+    
+    if (excludedPlaceIds && excludedPlaceIds.size > 0) {
+      console.log(`🚫 Excluding ${excludedPlaceIds.size} previously found businesses`);
+    }
     
     // Déterminer les types à rechercher
     let priorityTypes: string[];
@@ -215,8 +220,11 @@ export class GooglePlacesService {
         const typeCount = businessCountByType.get(currentType) || 0;
         if (typeCount >= MAX_PER_TYPE) break;
 
-        // Skip duplicates
+        // Skip duplicates and previously excluded places
         if (seenPlaceIds.has(place.place_id)) {
+          if (excludedPlaceIds && excludedPlaceIds.has(place.place_id)) {
+            console.log(`⏭️ Skipping previously found business: ${place.name}`);
+          }
           continue;
         }
         seenPlaceIds.add(place.place_id);
