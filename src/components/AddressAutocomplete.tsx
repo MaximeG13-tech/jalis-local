@@ -100,7 +100,7 @@ export const AddressAutocomplete = ({ value, onChange, onSelect, disabled }: Add
                 onChange={(e) => handleInputChange(e.target.value)}
                 onFocus={() => value.length >= 3 && predictions.length > 0 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="Ex: 1 Place du Capitole, Toulouse"
+                placeholder="160 Rue Albert Einstein, 13013 Marseille"
                 disabled={disabled}
                 required
                 className="h-12 text-base pl-11"
