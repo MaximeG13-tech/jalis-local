@@ -253,7 +253,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
             },
             { role: "user", content: prompt },
           ],
-          max_tokens: 4000,
+          max_tokens: 800,
           temperature: 0.7,
         }),
       });
