@@ -244,7 +244,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-5-mini",
+          model: "gpt-5-nano",
           messages: [
             {
               role: "system",
