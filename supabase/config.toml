@@ -9,9 +9,6 @@ verify_jwt = false
 [functions.google-place-details]
 verify_jwt = false
 
-[functions.google-search-text]
-verify_jwt = false
-
 [functions.enrich-businesses]
 verify_jwt = false
 
