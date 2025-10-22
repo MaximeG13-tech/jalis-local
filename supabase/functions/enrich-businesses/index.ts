@@ -227,7 +227,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
             },
             { role: "user", content: prompt },
           ],
-          max_completion_tokens: 2000,
+          max_completion_tokens: 4000,
         }),
       });
 
