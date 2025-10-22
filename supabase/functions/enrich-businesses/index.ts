@@ -161,7 +161,7 @@ serve(async (req) => {
     for (const business of businesses) {
       const prompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente des entreprises locales sur son site web.
 
-CONTEXTE IMPORTANT :
+CONTEXTE CRITIQUE - LIS ATTENTIVEMENT :
 - Le texte sera publié sur le site de ${companyName}
 - C'est ${companyName} qui présente une entreprise locale (PAS un partenaire)
 - Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
@@ -172,6 +172,15 @@ Entreprise locale à présenter :
 - Adresse : ${business.adresse}
 - Téléphone : ${business.telephone}
 - Site web : ${business.site_web}
+
+⚠️ IMPÉRATIF : ANALYSE D'ABORD L'ACTIVITÉ RÉELLE DE ${business.nom}
+Avant de rédiger, identifie précisément :
+- Quel est le SECTEUR d'activité exact ? (tissus, plomberie, coaching, restaurant, etc.)
+- Quels sont les SERVICES CONCRETS offerts ?
+- Qui sont les CLIENTS CIBLES ? (particuliers, professionnels, entreprises)
+- Quels PROBLÈMES cette entreprise résout-elle ?
+
+Adapte TOUT le contenu en fonction de ces éléments. Chaque description doit être UNIQUE et PERTINENTE.
 
 Instructions strictes pour un SEO optimal :
 
@@ -203,49 +212,58 @@ RÈGLES IMPÉRATIVES :
 ❌ relation commerciale / accord commercial
 ❌ JAMAIS mentionner le site web (${business.site_web}) dans la description
 
-PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplicate content) :
-1. "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
-2. "${companyName} met en avant ${business.nom} pour la qualité de ses services."
-3. "${companyName} vous recommande ${business.nom} pour leur expertise reconnue."
-4. "${companyName} souhaite mettre en lumière ${business.nom}, acteur local de confiance."
-5. "Découvrez ${business.nom}, une entreprise que ${companyName} vous présente aujourd'hui."
-6. "${companyName} valorise les entreprises locales comme ${business.nom}."
-7. "${companyName} vous invite à découvrir ${business.nom} et leurs services de qualité."
-8. "Faites confiance à ${business.nom}, présenté par ${companyName}."
-9. "${companyName} met à l'honneur ${business.nom} pour son professionnalisme."
-10. "Rencontrez ${business.nom}, une adresse que ${companyName} vous recommande."
-11. "${companyName} vous fait découvrir ${business.nom}, référence dans son domaine."
-12. "${business.nom} fait partie des entreprises que ${companyName} souhaite vous présenter."
-13. "${companyName} vous présente ${business.nom}, pour des services de proximité."
-14. "Découvrez le savoir-faire de ${business.nom}, mis en lumière par ${companyName}."
-15. "${companyName} attire votre attention sur ${business.nom} et leur expertise."
-16. "${business.nom} est une entreprise locale que ${companyName} tient à vous présenter."
-17. "${companyName} vous oriente vers ${business.nom} pour leurs compétences reconnues."
-18. "Prenez contact avec ${business.nom}, entreprise présentée par ${companyName}."
-19. "${companyName} souhaite vous faire connaître ${business.nom} et leurs prestations."
-20. "${business.nom}, une adresse de confiance mise en avant par ${companyName}."
-21. "${companyName} vous recommande de contacter ${business.nom} pour vos besoins."
-22. "Faites appel à ${business.nom}, entreprise valorisée par ${companyName}."
-23. "${companyName} présente ${business.nom}, acteur local engagé et professionnel."
-24. "Laissez-vous convaincre par ${business.nom}, présenté sur ${companyName}."
-25. "${companyName} vous informe sur ${business.nom}, prestataire qualifié dans votre région."
-
-Choisis LA FORMULATION LA PLUS PERTINENTE en fonction de l'activité et du positionnement de ${business.nom}.
-
 STRUCTURE OBLIGATOIRE (100-150 mots total) :
-- Paragraphe 1 (40-60 mots) : Présenter l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : UNE des 25 formulations ci-dessus (varie)
-- Paragraphe 3 (30-40 mots) : Coordonnées UNIQUEMENT (nom, adresse, téléphone) et call-to-action en 3ème personne
+
+📝 PARAGRAPHE 1 (40-60 mots) - INTELLIGENCE CONTEXTUELLE REQUISE
+Présente l'activité de ${business.nom} de manière ULTRA-SPÉCIFIQUE :
+- Identifie le secteur exact (tissus, plomberie, coaching, etc.)
+- Mentionne les services/produits CONCRETS adaptés à ce secteur
+- Utilise le vocabulaire TECHNIQUE du métier
+- Mets en avant ce qui DIFFÉRENCIE cette entreprise
+- Parle des BESOINS CLIENTS que l'entreprise résout
+
+EXEMPLES CONTEXTUELS :
+• Pour un magasin de tissus : parle de tissus d'ameublement, confection maison, collections, créations textiles
+• Pour un plombier : parle d'installation sanitaire, dépannage, mise aux normes, travaux de rénovation
+• Pour un restaurant : parle de cuisine, spécialités, cadre, expérience gastronomique
+
+🎯 PARAGRAPHE 2 (20-30 mots) - LIEN NATUREL AVEC ${companyName}
+Crée UNE PHRASE FLUIDE qui explique POURQUOI ${companyName} présente ${business.nom}.
+La formulation doit être LOGIQUE et NATURELLE selon le contexte :
+
+Si c'est une entreprise de service/artisan :
+"${companyName} met en avant ${business.nom} pour leur expertise reconnue et leur qualité de service."
+
+Si c'est un commerce/magasin :
+"${companyName} vous fait découvrir ${business.nom}, une adresse de confiance pour vos achats."
+
+Si c'est une activité créative/artistique :
+"${companyName} valorise le savoir-faire de ${business.nom} et leur engagement local."
+
+⚠️ ADAPTE cette phrase au CONTEXTE RÉEL de l'entreprise. Ne force pas une formulation générique.
+
+📍 PARAGRAPHE 3 (30-40 mots) - Coordonnées + Call-to-Action
+- Présente les coordonnées de ${business.nom} : adresse complète et téléphone
+- Formule un appel à l'action naturel adapté à l'activité (se rendre en magasin, appeler pour un devis, prendre rendez-vous, etc.)
+- Ton à la 3ème personne : "Rendez-vous chez ${business.nom}", "Contactez-les au..."
 
 🚫 PARAGRAPHE 3 - INTERDICTIONS ABSOLUES :
 - NE JAMAIS mentionner le site web ou l'URL
 - N'utiliser QUE : nom, adresse, téléphone
 - Formulation naturelle en phrases
+- Adapte le CTA au type d'activité (se rendre en magasin, prendre rendez-vous, demander un devis, etc.)
 
-CONSIGNES DE TON :
+CONSIGNES DE TON GÉNÉRALES :
 - Parle TOUJOURS à la 3ème personne de l'entreprise
 - Utilise "leur", "ils", "cette entreprise", "${business.nom}"
-- CTA : "Contactez-les au ${business.telephone}" (JAMAIS "contactez-nous" ou "rendez-vous sur leur site")
+- CTA adapté au contexte : "Rendez-vous chez ${business.nom} au..." ou "Contactez-les au ${business.telephone}"
+- JAMAIS "contactez-nous" ou "rendez-vous sur leur site"
+
+🎯 RÉSUMÉ FINAL : SOIS INTELLIGENT ET CONTEXTUEL
+- Chaque description doit être UNIQUE et adaptée à l'activité RÉELLE de l'entreprise
+- Utilise le VOCABULAIRE MÉTIER approprié
+- Crée un lien NATUREL avec ${companyName}
+- Rédige comme si tu connaissais vraiment le secteur d'activité
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
