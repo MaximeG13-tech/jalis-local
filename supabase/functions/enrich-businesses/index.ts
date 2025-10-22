@@ -218,7 +218,7 @@ PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplica
 24. "Laissez-vous convaincre par ${business.nom}, présenté sur ${companyName}."
 25. "${companyName} vous informe sur ${business.nom}, prestataire qualifié dans votre région."
 
-Choisis-en une AU HASARD pour varier le contenu.
+Choisis LA FORMULATION LA PLUS PERTINENTE en fonction de l'activité et du positionnement de ${business.nom}.
 
 STRUCTURE OBLIGATOIRE (100-150 mots total) :
 - Paragraphe 1 (40-60 mots) : Présenter l'activité et l'expertise de ${business.nom}
