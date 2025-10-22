@@ -232,22 +232,45 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
       });
 
       if (!response.ok) {
-        console.error("AI API error:", response.status);
-        throw new Error(`AI API returned status ${response.status}`);
+        const errorText = await response.text();
+        console.error("AI API error:", response.status, errorText);
+        throw new Error(`AI API returned status ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log("OpenAI response:", JSON.stringify(data, null, 2));
+
+      // Vérifier que la réponse contient les données attendues
+      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        console.error("Invalid OpenAI response structure:", JSON.stringify(data));
+        throw new Error("OpenAI response missing expected data structure");
+      }
+
       const content = data.choices[0].message.content;
+
+      // Vérifier que le contenu n'est pas vide
+      if (!content || content.trim() === "") {
+        console.error("Empty content from OpenAI");
+        throw new Error("OpenAI returned empty content");
+      }
 
       // Parse the JSON response
       let aiData;
       try {
         // Remove markdown code blocks if present
         const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        console.log("Cleaned content for parsing:", cleanContent);
         aiData = JSON.parse(cleanContent);
+        
+        // Vérifier que les champs requis sont présents
+        if (!aiData.activity || !aiData.extract || !aiData.description) {
+          console.error("Missing required fields in AI response:", aiData);
+          throw new Error("AI response missing required fields (activity, extract, or description)");
+        }
       } catch (e) {
         console.error("Failed to parse AI response:", content);
-        throw new Error("Invalid JSON from AI");
+        console.error("Parse error:", e);
+        throw new Error(`Invalid JSON from AI: ${e instanceof Error ? e.message : 'Unknown error'}`);
       }
 
       enrichedBusinesses.push({
