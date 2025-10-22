@@ -218,7 +218,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-5-mini-2025-08-07",
+          model: "gpt-5-mini",
           messages: [
             {
               role: "system",
