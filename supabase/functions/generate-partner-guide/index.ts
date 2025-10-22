@@ -306,23 +306,36 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-      const enrichPrompt = `🚫 MOTS TOTALEMENT INTERDITS 🚫
-❌ partenariat / partenaire
-❌ collaborer / collaboration
-❌ s'associer / associer
-❌ apporteur d'affaires / rapporteur
+      const enrichPrompt = `🚫 INTERDICTIONS ABSOLUES 🚫
+❌ Ne JAMAIS mentionner l'URL du site web de ${business.nom} dans la description
+❌ Ne JAMAIS écrire le nom de domaine (ex: "wellmob.fr", "tvspro.com", etc.)
+❌ Mots interdits : partenariat, partenaire, collaborer, collaboration, s'associer, apporteur d'affaires
 
 ---
 
-PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplicate content) :
-1. "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
-2. "${companyName} met en avant ${business.nom} pour la qualité de ses services."
-3. "${companyName} vous recommande ${business.nom} pour leur expertise reconnue."
-4. "${companyName} souhaite mettre en lumière ${business.nom}, acteur local de confiance."
-5. "Découvrez ${business.nom}, une entreprise que ${companyName} vous présente aujourd'hui."
-6. "${companyName} valorise les entreprises locales comme ${business.nom}."
+PARAGRAPHE 2 - PHRASES D'ACCROCHE VARIÉES (choisis-en UNE au hasard) :
 
-Choisis-en une AU HASARD pour varier le contenu.
+STYLE 1 - Présentation locale :
+• "Situé à proximité, ${business.nom} accompagne les particuliers et professionnels dans leurs projets."
+• "Acteur de proximité reconnu, ${business.nom} met son expertise au service de ses clients."
+• "Établi localement, ${business.nom} offre un service personnalisé adapté à chaque besoin."
+
+STYLE 2 - Valorisation expertise :
+• "Forte d'une solide expérience, l'entreprise ${business.nom} se distingue par son savoir-faire."
+• "Spécialiste reconnu dans son domaine, ${business.nom} garantit des prestations de qualité."
+• "Grâce à son expertise avérée, ${business.nom} répond aux attentes les plus exigeantes."
+
+STYLE 3 - Approche client :
+• "À l'écoute de ses clients, ${business.nom} propose des solutions sur-mesure et durables."
+• "Privilégiant une approche personnalisée, ${business.nom} s'adapte à chaque situation."
+• "Soucieux de la satisfaction client, ${business.nom} assure un suivi rigoureux de chaque projet."
+
+STYLE 4 - Ancrage territorial :
+• "Implanté dans la région, ${business.nom} contribue au dynamisme économique local."
+• "Entreprise locale de confiance, ${business.nom} s'engage auprès de sa communauté."
+• "Fier de ses racines locales, ${business.nom} cultive la proximité avec sa clientèle."
+
+⚠️ IMPÉRATIF : Choisis UNE phrase AU HASARD parmi ces 12 options pour VARIER le contenu.
 
 ---
 
@@ -330,6 +343,7 @@ Entreprise locale à présenter :
 - Nom : ${business.nom}
 - Catégorie : ${category}
 - Activité : ${business.activite_reelle}
+- ⛔ NE PAS mentionner leur URL
 
 Instructions strictes pour un SEO optimal :
 
@@ -353,19 +367,28 @@ RÈGLES IMPÉRATIVES :
 
 3. **description** : Description de 100 à 150 MOTS en HTML avec des balises <p>.
 
+⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
+• Paragraphe 1 (40-60 mots) : Présentation détaillée de l'activité et des services
+• Paragraphe 2 (20-30 mots) : UNE des 12 phrases d'accroche listées ci-dessus (varie !)
+• Paragraphe 3 (30-40 mots) : Coordonnées et appel à l'action
+
+⛔ INTERDICTIONS dans la description :
+- NE JAMAIS mentionner l'URL ou le nom de domaine du site web de ${business.nom}
+- NE JAMAIS écrire "wellmob.fr", "tvspro.com" ou tout autre domaine
+- Si site web disponible : "Rendez-vous sur leur site web" ou "Consultez leur site pour plus d'informations"
+- Si téléphone disponible : "Contactez-les au ${business.telephone}"
+
 Format JSON attendu :
 {
   "activity": "titre SEO 10-15 mots se terminant par 'à'",
   "extract": "résumé 40-60 mots",
-  "description": "<p>Paragraphe 1 (40-60 mots) sur l'entreprise</p><p>Paragraphe 2 : UNE des 6 formulations au-dessus (varie à chaque entreprise)</p><p>Paragraphe 3 (30-40 mots) avec coordonnées</p>"
+  "description": "<p>Paragraphe 1</p><p>Paragraphe 2 : phrase d'accroche</p><p>Paragraphe 3 avec coordonnées SANS URL</p>"
 }
-
-RAPPEL : Total 100-150 mots. Paragraphe 2 = choisis UNE des 6 formulations listées (varie).
 
 CONSIGNES DE TON :
 - Parle TOUJOURS à la 3ème personne de l'entreprise
 - Utilise "leur", "ils", "cette entreprise", "${business.nom}"
-- CTA : "Contactez-les au ${business.telephone}" ou "Rendez-vous sur leur site" (JAMAIS "contactez-nous")
+- ⛔ JAMAIS d'URL dans le texte - remplace par "leur site web" ou "leur site"
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
