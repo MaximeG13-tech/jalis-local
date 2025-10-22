@@ -115,6 +115,15 @@ function extractPostalCode(address: string): string | null {
   return match ? match[1] : null;
 }
 
+function correctPrepositionContractions(text: string): string {
+  // Règles de contraction obligatoires en français
+  return text
+    .replace(/\bà Le\b/g, "au")
+    .replace(/\bà Les\b/g, "aux")
+    .replace(/\bà La\b/g, "à la")
+    .replace(/\bà L'/g, "à l'");
+}
+
 function formatCity(address: string): string {
   // Extract postal code from the address
   const postalCode = extractPostalCode(address);
@@ -128,7 +137,10 @@ function formatCity(address: string): string {
   const deptCode = postalCode.substring(0, 2);
   const deptPhrase = DEPARTMENT_MAP[deptCode] || DEPARTMENT_MAP[postalCode.substring(0, 3)] || "";
 
-  return `${cityName} (${postalCode}) ${deptPhrase}`.trim();
+  const formattedCity = `${cityName} (${postalCode}) ${deptPhrase}`.trim();
+  
+  // Appliquer les corrections de contractions
+  return correctPrepositionContractions(formattedCity);
 }
 
 serve(async (req) => {
