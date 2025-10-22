@@ -159,113 +159,104 @@ serve(async (req) => {
     const enrichedBusinesses = [];
 
     for (const business of businesses) {
-      const prompt = `Tu es un expert en rédaction SEO pour ${companyName}, qui présente des entreprises locales sur son site web.
+      const prompt = `Tu es un expert en rédaction de fiches locales SEO courtes pour ${companyName}, qui présente des entreprises locales sur son site web.
 
-CONTEXTE CRITIQUE - LIS ATTENTIVEMENT :
-- Le texte sera publié sur le site de ${companyName}
-- C'est ${companyName} qui présente une entreprise locale (PAS un partenaire)
-- Le ton est à la 3ème personne : "contactez-les", "leur entreprise", etc.
-- JAMAIS "nous", "notre", "contactez-nous" car ce n'est PAS l'entreprise qui parle d'elle-même
+CONTEXTE IMPORTANT :
 
-Entreprise locale à présenter :
-- Nom : ${business.nom}
-- Adresse : ${business.adresse}
-- Téléphone : ${business.telephone}
-- Site web : ${business.site_web}
+Le texte sera publié sur le site de ${companyName}.
 
-⚠️ IMPÉRATIF : ANALYSE D'ABORD L'ACTIVITÉ RÉELLE DE ${business.nom}
-Avant de rédiger, identifie précisément :
-- Quel est le SECTEUR d'activité exact ? (tissus, plomberie, coaching, restaurant, etc.)
-- Quels sont les SERVICES CONCRETS offerts ?
-- Qui sont les CLIENTS CIBLES ? (particuliers, professionnels, entreprises)
-- Quels PROBLÈMES cette entreprise résout-elle ?
+${companyName} présente une entreprise locale, sans en faire la promotion commerciale.
 
-Adapte TOUT le contenu en fonction de ces éléments. Chaque description doit être UNIQUE et PERTINENTE.
+Le ton est informatif et neutre, à la 3ᵉ personne : "ils", "leur entreprise", "contactez-les".
 
-Instructions strictes pour un SEO optimal :
+JAMAIS de "nous", "notre", "je" ou "contactez-nous".
 
-1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL.
+🎯 Objectif
 
-EXEMPLES de formats à suivre STRICTEMENT :
-- "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
-- "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
-- "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
-- "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
+Produire une fiche locale courte, claire et utile, qui :
 
-RÈGLES IMPÉRATIVES :
-- Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
-- JAMAIS de pronoms personnels (ils, elle, nous) - forme nominale uniquement
-- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise
-- Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
-- La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
-- Compte exactement entre 10 et 15 mots (vérifie bien)
+Informe l'internaute sur l'activité, la localisation et les coordonnées.
 
-2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. Doit donner envie de contacter l'entreprise en mettant en avant ses points forts, son expertise et sa valeur ajoutée. Utilise des termes recherchés par les clients potentiels.
+Donne une impression de proximité et de sérieux.
 
-3. **description** : Description de 100 à 150 MOTS en TEXTE BRUT (pas de HTML, pas de balises).
+Est simple, lisible et naturelle (pas journalistique).
 
-🚫 MOTS ET CONCEPTS TOTALEMENT INTERDITS 🚫
-❌ partenariat / partenaire
-❌ collaborer / collaboration
-❌ s'associer / associer
-❌ apporteur d'affaires / rapporteur
-❌ relation commerciale / accord commercial
-❌ JAMAIS mentionner le site web (${business.site_web}) dans la description
+Est optimisée pour le SEO local (activité + ville + département).
 
-STRUCTURE OBLIGATOIRE (100-150 mots total) :
+ENTREPRISE À PRÉSENTER
 
-📝 PARAGRAPHE 1 (40-60 mots) - INTELLIGENCE CONTEXTUELLE REQUISE
-Présente l'activité de ${business.nom} de manière ULTRA-SPÉCIFIQUE :
-- Identifie le secteur exact (tissus, plomberie, coaching, etc.)
-- Mentionne les services/produits CONCRETS adaptés à ce secteur
-- Utilise le vocabulaire TECHNIQUE du métier
-- Mets en avant ce qui DIFFÉRENCIE cette entreprise
-- Parle des BESOINS CLIENTS que l'entreprise résout
+Nom : ${business.nom}
 
-EXEMPLES CONTEXTUELS :
-• Pour un magasin de tissus : parle de tissus d'ameublement, confection maison, collections, créations textiles
-• Pour un plombier : parle d'installation sanitaire, dépannage, mise aux normes, travaux de rénovation
-• Pour un restaurant : parle de cuisine, spécialités, cadre, expérience gastronomique
+Adresse : ${business.adresse}
 
-🎯 PARAGRAPHE 2 (20-30 mots) - LIEN NATUREL AVEC ${companyName}
-Crée UNE PHRASE FLUIDE qui explique POURQUOI ${companyName} présente ${business.nom}.
-La formulation doit être LOGIQUE et NATURELLE selon le contexte :
+Téléphone : ${business.telephone}
 
-Si c'est une entreprise de service/artisan :
-"${companyName} met en avant ${business.nom} pour leur expertise reconnue et leur qualité de service."
+Site web : ${business.site_web}
 
-Si c'est un commerce/magasin :
-"${companyName} vous fait découvrir ${business.nom}, une adresse de confiance pour vos achats."
+RÈGLES DE RÉDACTION
 
-Si c'est une activité créative/artistique :
-"${companyName} valorise le savoir-faire de ${business.nom} et leur engagement local."
+activity → phrase longue traîne (10 à 15 mots) se terminant par "à".
 
-⚠️ ADAPTE cette phrase au CONTEXTE RÉEL de l'entreprise. Ne force pas une formulation générique.
+Toujours commencer par le nom du métier ou de l'activité principale.
 
-📍 PARAGRAPHE 3 (30-40 mots) - Coordonnées + Call-to-Action
-- Présente les coordonnées de ${business.nom} : adresse complète et téléphone
-- Formule un appel à l'action naturel adapté à l'activité (se rendre en magasin, appeler pour un devis, prendre rendez-vous, etc.)
-- Ton à la 3ème personne : "Rendez-vous chez ${business.nom}", "Contactez-les au..."
+Terminer par "à" (sans ville), la ville sera ajoutée ensuite.
 
-🚫 PARAGRAPHE 3 - INTERDICTIONS ABSOLUES :
-- NE JAMAIS mentionner le site web ou l'URL
-- N'utiliser QUE : nom, adresse, téléphone
-- Formulation naturelle en phrases
-- Adapte le CTA au type d'activité (se rendre en magasin, prendre rendez-vous, demander un devis, etc.)
+Exemples :
 
-CONSIGNES DE TON GÉNÉRALES :
-- Parle TOUJOURS à la 3ème personne de l'entreprise
-- Utilise "leur", "ils", "cette entreprise", "${business.nom}"
-- CTA adapté au contexte : "Rendez-vous chez ${business.nom} au..." ou "Contactez-les au ${business.telephone}"
-- JAMAIS "contactez-nous" ou "rendez-vous sur leur site"
+"Magasin de tissus d'ameublement et de couture proposant un large choix à"
 
-🎯 RÉSUMÉ FINAL : SOIS INTELLIGENT ET CONTEXTUEL
-- Chaque description doit être UNIQUE et adaptée à l'activité RÉELLE de l'entreprise
-- Utilise le VOCABULAIRE MÉTIER approprié
-- Crée un lien NATUREL avec ${companyName}
-- Rédige comme si tu connaissais vraiment le secteur d'activité
+"Entreprise de plomberie réalisant l'installation et la réparation de canalisations à"
 
-Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
+extract → résumé court (40 à 60 mots) orienté information locale.
+
+Décris ce que propose l'entreprise, où elle se trouve et pour qui.
+
+Évite les phrases creuses ("une expertise avérée", "un savoir-faire reconnu").
+
+Exemple :
+
+Situé à Aix-en-Provence, ${business.nom} propose un large choix de tissus pour l'habillement et l'ameublement. Les clients y trouvent des articles de qualité à prix doux, avec des nouveautés ajoutées régulièrement.
+
+description → fiche locale complète (100 à 130 mots max).
+
+Paragraphe 1 (≈50 mots) : présente simplement l'activité, les produits ou services, et la localisation.
+
+Paragraphe 2 (≈25 mots) : mention ${companyName} avec une des formules ci-dessous :
+
+"${companyName} met en avant ${business.nom} pour la qualité de ses services."
+
+"${companyName} vous recommande ${business.nom} pour son professionnalisme."
+
+"${companyName} présente ${business.nom}, une entreprise locale de confiance."
+
+Paragraphe 3 (≈30 mots) : adresse + téléphone + CTA local.
+
+Exemple : "Retrouvez ${business.nom} au ${business.adresse}. Contactez-les au ${business.telephone} pour plus d'informations ou pour vos besoins en [activité]."
+
+⚙️ RÈGLE LINGUISTIQUE IMPORTANTE
+
+Corrige toujours la préposition devant la ville selon les règles du français :
+
+"à Le" → "au"
+
+"à Les" → "aux"
+
+"à La" → "à la"
+
+"à L'" → "à l'"
+
+(Ne jamais écrire "à Le [ville]").
+
+INTERDICTIONS
+
+🚫 Pas de "partenariat", "collaboration", "association", "site web"
+🚫 Pas de phrases creuses ou commerciales ("expertise reconnue", "approche personnalisée")
+🚫 Pas d'adresse mail ni d'URL
+🚫 Pas d'énumérations à rallonge
+
+Réponds uniquement avec un objet JSON valide contenant les trois champs suivants :
+{ "activity": "...", "extract": "...", "description": "..." }
+Aucun texte avant ou après la réponse.`;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
