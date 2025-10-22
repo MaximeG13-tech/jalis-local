@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { BUSINESS_TYPES, ALL_TYPES_OPTION, BusinessType } from "@/constants/businessTypes";
+import { BUSINESS_TYPES, ALL_TYPES_OPTION, BusinessType, normalizeString } from "@/constants/businessTypes";
 import { cn } from "@/lib/utils";
 
 interface BusinessTypesSelectorProps {
@@ -33,7 +33,10 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
 
   const filteredTypes = useMemo(() => {
     if (!searchQuery) return BUSINESS_TYPES;
-    return BUSINESS_TYPES.filter((type) => type.label.toLowerCase().includes(searchQuery.toLowerCase()));
+    const normalizedQuery = normalizeString(searchQuery);
+    return BUSINESS_TYPES.filter((type) => 
+      normalizeString(type.label).includes(normalizedQuery)
+    );
   }, [searchQuery]);
 
   const handleSelect = (type: BusinessType) => {
