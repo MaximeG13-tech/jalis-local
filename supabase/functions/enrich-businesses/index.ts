@@ -131,16 +131,21 @@ function formatCity(address: string): string {
 
   // Extract city name (after postal code)
   const cityMatch = address.match(/\d{5}\s+([^,]+)/);
-  const cityName = cityMatch ? cityMatch[1].trim() : address;
+  let cityName = cityMatch ? cityMatch[1].trim() : address;
+
+  // Remove the article from the beginning of the city name
+  // because the preposition will be in the activity field
+  cityName = cityName
+    .replace(/^Le\s+/i, '')
+    .replace(/^La\s+/i, '')
+    .replace(/^Les\s+/i, '')
+    .replace(/^L'/i, '');
 
   // Use postal code from the address (not from a different location)
   const deptCode = postalCode.substring(0, 2);
   const deptPhrase = DEPARTMENT_MAP[deptCode] || DEPARTMENT_MAP[postalCode.substring(0, 3)] || "";
 
-  const formattedCity = `${cityName} (${postalCode}) ${deptPhrase}`.trim();
-  
-  // Appliquer les corrections de contractions
-  return correctPrepositionContractions(formattedCity);
+  return `${cityName} (${postalCode}) ${deptPhrase}`.trim();
 }
 
 serve(async (req) => {
@@ -175,15 +180,32 @@ Site web : ${business.site_web}
 
 📝 FORMAT DE RÉDACTION
 
-1. **activity** (10-15 mots, se termine par "à")
-Commence par le nom du métier ou de l'activité.
-Exemples :
-- "Magasin de tissus d'ameublement et de couture proposant un large choix à"
-- "Entreprise de plomberie réalisant l'installation et la réparation de canalisations à"
+1. **activity** (10-15 mots)
+
+IMPORTANT - Analyse d'abord la ville dans l'adresse pour adapter la préposition finale :
+- Si la ville commence par "Le " (ex: Le Pradet) → termine par "au"
+- Si la ville commence par "La " (ex: La Ciotat) → termine par "à la"
+- Si la ville commence par "Les " (ex: Les Pennes-Mirabeau) → termine par "aux"
+- Si la ville commence par "L'" (ex: L'Isle-sur-la-Sorgue) → termine par "à l'"
+- Sinon (ex: Marseille, Aix-en-Provence) → termine par "à"
+
+Exemples corrects :
+- "Magasin de tissus d'ameublement et de couture proposant un large choix au" (pour Le Pradet)
+- "Entreprise de plomberie réalisant l'installation et la réparation de canalisations à" (pour Marseille)
+- "Concessionnaire automobile spécialisé dans les véhicules sans permis aux" (pour Les Pennes-Mirabeau)
+- "Salon de coiffure proposant des prestations sur mesure à la" (pour La Ciotat)
+
+Règles :
+✓ Commence par le nom du métier ou de l'activité principale
+✓ Utilise des mots-clés SEO (métier + spécialité)
+✓ Pas de nom d'entreprise
+✓ Pas de pronom personnel
+✓ Phrase descriptive et naturelle
 
 2. **extract** (40-60 mots)
 Résumé informatif et engageant. Décris l'offre, la localisation, ce qui différencie l'entreprise.
 Évite le jargon commercial creux.
+Utilise la bonne préposition contractée selon la ville (au/à la/aux/à l').
 
 3. **description** (110-130 mots) - STYLE DIRECT ET ENGAGEANT
 
@@ -200,8 +222,10 @@ Intègre NATURELLEMENT ${companyName} comme REPÈRE LOCAL :
 - "...près de ${companyName}"
 - "...dans le même secteur que ${companyName}"
 
+Utilise la bonne préposition contractée pour la ville (au/à la/aux/à l').
+
 Exemple de structure :
-"Vous êtes à la recherche de tissus de qualité pour la confection maison de vêtement ou d'ameublement ? Ne cherchez pas plus loin et rendez-vous chez ${business.nom} à [ville] tout proche de ${companyName}."
+"Vous êtes à la recherche de tissus de qualité pour la confection maison de vêtement ou d'ameublement ? Ne cherchez pas plus loin et rendez-vous chez ${business.nom} au Pradet tout proche de ${companyName}."
 
 🎯 PARAGRAPHE 2 (35-45 mots) : Détails concrets de l'offre
 
@@ -211,9 +235,10 @@ Décris CE QUE PROPOSE CONCRÈTEMENT ${business.nom} :
 - Éléments qui donnent envie
 
 Utilise un ton VIVANT et PRÉCIS. Mentionne des détails CONCRETS.
+Utilise la bonne préposition contractée pour la ville.
 
 Exemple :
-"Vous y retrouverez de jolis tissus de qualité. ${business.nom} situé à [ville] vous propose de nouvelles collections régulièrement. Mais aussi une multitude de pelotes à tricoter et le tout à prix tout doux !"
+"Vous y retrouverez de jolis tissus de qualité. ${business.nom} situé au Pradet vous propose de nouvelles collections régulièrement. Mais aussi une multitude de pelotes à tricoter et le tout à prix tout doux !"
 
 📞 PARAGRAPHE 3 (35-45 mots) : Coordonnées + CTA
 
@@ -223,19 +248,24 @@ Formule UN APPEL CLAIR avec les coordonnées complètes :
 - Termine par le téléphone avec un CTA complémentaire
 
 Exemples de structure :
-"Pour vous rendre chez ${business.nom} à [ville], rendez-vous à l'adresse suivante : ${business.adresse}. N'hésitez pas à contacter votre [métier] au ${business.telephone}."
+"Pour vous rendre chez ${business.nom} au Pradet, rendez-vous à l'adresse suivante : ${business.adresse}. N'hésitez pas à contacter votre [métier] au ${business.telephone}."
 
 OU :
 
 "Rendez-vous chez ${business.nom}, ${business.adresse}. Vous pouvez également les contacter au ${business.telephone} pour [action adaptée : prendre rendez-vous / obtenir un devis / commander]."
 
-⚙️ RÈGLES LINGUISTIQUES
+⚙️ RÈGLES LINGUISTIQUES OBLIGATOIRES
 
-Corrige automatiquement les prépositions :
+Dans les champs extract et description, applique systématiquement les contractions :
 - "à Le" → "au"
 - "à Les" → "aux"
 - "à La" → "à la"
 - "à L'" → "à l'"
+
+Exemples :
+✅ "situé au Pradet" (pas "situé à Le Pradet")
+✅ "aux Pennes-Mirabeau" (pas "à Les Pennes-Mirabeau")
+✅ "à la Ciotat" (pas "à La Ciotat")
 
 🚫 INTERDICTIONS ABSOLUES
 
@@ -252,6 +282,7 @@ Corrige automatiquement les prépositions :
 ✓ Détails concrets sur les produits/services
 ✓ CTAs clairs et naturels
 ✓ Fluidité et lisibilité
+✓ Prépositions contractées correctes partout (au/à la/aux/à l')
 
 Réponds UNIQUEMENT avec un objet JSON valide :
 { "activity": "...", "extract": "...", "description": "..." }
