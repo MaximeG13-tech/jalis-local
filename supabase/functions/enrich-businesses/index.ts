@@ -183,11 +183,13 @@ RÈGLES IMPÉRATIVES :
 
 3. **description** : Description de 100 à 150 MOTS en TEXTE BRUT (pas de HTML, pas de balises).
 
-🚫 MOTS TOTALEMENT INTERDITS 🚫
+🚫 MOTS ET CONCEPTS TOTALEMENT INTERDITS 🚫
 ❌ partenariat / partenaire
 ❌ collaborer / collaboration
 ❌ s'associer / associer
 ❌ apporteur d'affaires / rapporteur
+❌ relation commerciale / accord commercial
+❌ JAMAIS mentionner le site web (${business.site_web}) dans la description
 
 PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplicate content) :
 1. "${companyName} est fier de vous présenter ${business.nom}, une entreprise locale de qualité."
@@ -196,18 +198,42 @@ PARAGRAPHE 2 - Choisis UNE SEULE de ces formulations (varie pour éviter duplica
 4. "${companyName} souhaite mettre en lumière ${business.nom}, acteur local de confiance."
 5. "Découvrez ${business.nom}, une entreprise que ${companyName} vous présente aujourd'hui."
 6. "${companyName} valorise les entreprises locales comme ${business.nom}."
+7. "${companyName} vous invite à découvrir ${business.nom} et leurs services de qualité."
+8. "Faites confiance à ${business.nom}, présenté par ${companyName}."
+9. "${companyName} met à l'honneur ${business.nom} pour son professionnalisme."
+10. "Rencontrez ${business.nom}, une adresse que ${companyName} vous recommande."
+11. "${companyName} vous fait découvrir ${business.nom}, référence dans son domaine."
+12. "${business.nom} fait partie des entreprises que ${companyName} souhaite vous présenter."
+13. "${companyName} vous présente ${business.nom}, pour des services de proximité."
+14. "Découvrez le savoir-faire de ${business.nom}, mis en lumière par ${companyName}."
+15. "${companyName} attire votre attention sur ${business.nom} et leur expertise."
+16. "${business.nom} est une entreprise locale que ${companyName} tient à vous présenter."
+17. "${companyName} vous oriente vers ${business.nom} pour leurs compétences reconnues."
+18. "Prenez contact avec ${business.nom}, entreprise présentée par ${companyName}."
+19. "${companyName} souhaite vous faire connaître ${business.nom} et leurs prestations."
+20. "${business.nom}, une adresse de confiance mise en avant par ${companyName}."
+21. "${companyName} vous recommande de contacter ${business.nom} pour vos besoins."
+22. "Faites appel à ${business.nom}, entreprise valorisée par ${companyName}."
+23. "${companyName} présente ${business.nom}, acteur local engagé et professionnel."
+24. "Laissez-vous convaincre par ${business.nom}, présenté sur ${companyName}."
+25. "${companyName} vous informe sur ${business.nom}, prestataire qualifié dans votre région."
 
 Choisis-en une AU HASARD pour varier le contenu.
 
 STRUCTURE OBLIGATOIRE (100-150 mots total) :
 - Paragraphe 1 (40-60 mots) : Présenter l'activité et l'expertise de ${business.nom}
-- Paragraphe 2 (20-30 mots) : UNE des 6 formulations ci-dessus (varie)
-- Paragraphe 3 (30-40 mots) : Coordonnées et call-to-action en 3ème personne
+- Paragraphe 2 (20-30 mots) : UNE des 25 formulations ci-dessus (varie)
+- Paragraphe 3 (30-40 mots) : Coordonnées UNIQUEMENT (nom, adresse, téléphone) et call-to-action en 3ème personne
+
+🚫 PARAGRAPHE 3 - INTERDICTIONS ABSOLUES :
+- NE JAMAIS mentionner le site web ou l'URL
+- N'utiliser QUE : nom, adresse, téléphone
+- Formulation naturelle en phrases
 
 CONSIGNES DE TON :
 - Parle TOUJOURS à la 3ème personne de l'entreprise
 - Utilise "leur", "ils", "cette entreprise", "${business.nom}"
-- CTA : "Contactez-les au ${business.telephone}" ou "Rendez-vous sur leur site" (JAMAIS "contactez-nous")
+- CTA : "Contactez-les au ${business.telephone}" (JAMAIS "contactez-nous" ou "rendez-vous sur leur site")
 
 Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
 
@@ -227,7 +253,7 @@ Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity,
             },
             { role: "user", content: prompt },
           ],
-          max_completion_tokens: 4000,
+          max_completion_tokens: 8000,
         }),
       });
 
