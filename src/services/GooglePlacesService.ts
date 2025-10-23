@@ -185,6 +185,8 @@ export class GooglePlacesService {
     const city = cityMatch ? cityMatch[1].trim() : '';
 
     let allBusinesses: Business[] = [];
+    const seenPlaceIds = new Set<string>();
+    const seenBusinessKeys = new Set<string>(); // Pour détecter doublons par nom + adresse
     let currentRadius = 5000; // Start with 5km
     const maxRadius = 20000; // Max 20km
     const radiusIncrement = 5000; // Increase by 5km each time
@@ -231,8 +233,9 @@ export class GooglePlacesService {
           for (const place of filteredPlaces) {
             if (allBusinesses.length >= maxResults) break;
             
-            // Skip if we already have this place
-            if (allBusinesses.some(b => b.lien_maps === place.url)) {
+            // Skip if we already have this place_id
+            if (seenPlaceIds.has(place.place_id)) {
+              console.log(`⏭️ Skipping duplicate place_id: ${place.place_id}`);
               continue;
             }
             
@@ -263,6 +266,18 @@ export class GooglePlacesService {
               lien_maps: details.url || ''
             };
             
+            // Créer une clé unique basée sur nom + adresse pour détecter les doublons
+            const businessKey = `${business.nom.toLowerCase().trim()}|${business.adresse.toLowerCase().trim()}`;
+            
+            if (seenBusinessKeys.has(businessKey)) {
+              console.log(`⏭️ Skipping duplicate business: ${business.nom} at ${business.adresse}`);
+              continue;
+            }
+            
+            // Ajouter à nos sets de déduplication
+            seenPlaceIds.add(place.place_id);
+            seenBusinessKeys.add(businessKey);
+            
             allBusinesses.push(business);
             
             if (onProgress) {
@@ -284,7 +299,20 @@ export class GooglePlacesService {
     }
 
     console.log(`Search completed: ${allBusinesses.length}/${maxResults} businesses found`);
-    return allBusinesses.slice(0, maxResults);
+    
+    // Déduplication finale par sécurité
+    const uniqueBusinesses = allBusinesses.filter((business, index, self) => {
+      const businessKey = `${business.nom.toLowerCase().trim()}|${business.adresse.toLowerCase().trim()}`;
+      return index === self.findIndex(b => 
+        `${b.nom.toLowerCase().trim()}|${b.adresse.toLowerCase().trim()}` === businessKey
+      );
+    });
+    
+    if (uniqueBusinesses.length < allBusinesses.length) {
+      console.log(`⚠️ Removed ${allBusinesses.length - uniqueBusinesses.length} duplicates in final deduplication`);
+    }
+    
+    return uniqueBusinesses.slice(0, maxResults);
   }
 
   static exportToJson(businesses: Business[]): string {

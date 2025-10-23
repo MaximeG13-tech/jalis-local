@@ -1183,18 +1183,17 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-purple-600" />
-            Genius - Suggestions intelligentes
+            Genius - Trouvez vos partenaires naturels
           </DialogTitle>
           <DialogDescription className="text-base">
-            Saisissez l'activité de votre client pour obtenir jusqu'à 5 suggestions d'activités complémentaires non
-            concurrentes.
+            Entrez votre activité pour découvrir 5 types d'entreprises qui recommandent naturellement vos services à leurs clients.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="activity" className="text-sm font-medium">
-              Activité principale du client
+              Votre activité
             </Label>
             <Input
               id="activity"
@@ -1213,10 +1212,10 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
                 <TrendingUp className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
-                    Apporteurs d'affaires naturels
+                    Pourquoi c'est puissant ?
                   </p>
                   <p className="text-sm text-purple-700 dark:text-purple-300">
-                    Activités dont les clients ont VRAIMENT besoin de votre client
+                    Ces entreprises ont déjà la confiance de vos futurs clients
                   </p>
                 </div>
               </div>
@@ -1224,27 +1223,28 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
               <div className="flex items-start gap-2">
                 <Link2 className="h-5 w-5 text-pink-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-pink-900 dark:text-pink-100">Cocon sémantique</p>
-                  <p className="text-sm text-pink-700 dark:text-pink-300">Même écosystème de clients et d'occasions</p>
+                  <p className="text-sm font-medium text-pink-900 dark:text-pink-100">Comment ça marche ?</p>
+                  <p className="text-sm text-pink-700 dark:text-pink-300">On identifie qui partage votre clientèle sans vous concurrencer</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-muted/50 rounded-lg p-4">
-              <p className="text-sm font-medium text-muted-foreground mb-2">💡 Exemple : Orthophoniste</p>
+              <p className="text-sm font-medium text-muted-foreground mb-2">💡 Exemple concret</p>
+              <p className="text-sm text-muted-foreground mb-2">Vous êtes <strong>Orthophoniste</strong> ? Vous serez recommandé par :</p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>✓ Pédiatre (prescriptions pour enfants)</li>
-                <li>✓ Psychologue (troubles du langage)</li>
-                <li>✓ Neurologue (troubles neurologiques)</li>
-                <li>✓ Audiologiste (problèmes auditifs)</li>
-                <li>✗ Comptable, Avocat (aucun lien)</li>
+                <li>✓ Pédiatres → prescrivent vos services aux enfants</li>
+                <li>✓ Psychologues → orientent vers vous pour troubles du langage</li>
+                <li>✓ Neurologues → recommandent en cas de troubles neurologiques</li>
+                <li>✓ Audiologistes → partenaires naturels pour problèmes auditifs</li>
+                <li className="text-destructive">✗ Évité : Comptables, Avocats (aucun lien avec vos clients)</li>
               </ul>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">🎯 Logique intelligente</p>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">🎯 Technologie intelligente</p>
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                Système basé sur 30+ écosystèmes métiers réels avec scoring de pertinence
+                Algorithme basé sur 40+ écosystèmes métiers analysés pour maximiser la pertinence de chaque suggestion
               </p>
             </div>
           </div>
