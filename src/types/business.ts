@@ -7,7 +7,6 @@ export interface Business {
   lien_maps: string;
   category_id?: string;
   primary_type_display_name?: string;
-  confidence_level?: 'verified' | 'probable' | 'unverified';
 }
 
 export interface GooglePlace {
