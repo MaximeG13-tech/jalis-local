@@ -191,7 +191,7 @@ const BUSINESS_ECOSYSTEMS: Record<
   },
 
   health_alternative: {
-    keywords: ["kiné", "kinésithérapeute", "ostéopathe", "chiropracteur", "physiothérapeute", "ostéo"],
+    keywords: ["kiné", "kinésithérapeute", "ostéopathe", "chiropracteur", "physiothérapeute", "ostéo", "physio"],
     activities: [
       { id: "doctor", score: 9, reason: "Prescriptions médicales pour séances" },
       { id: "sports_medicine", score: 8, reason: "Blessures sportives communes" },
@@ -515,7 +515,9 @@ function generateSmartSuggestions(
 
   for (const [ecosystemName, ecosystem] of Object.entries(BUSINESS_ECOSYSTEMS)) {
     for (const keyword of ecosystem.keywords) {
-      if (inputLower.includes(keyword)) {
+      // 🔧 CORRECTION : Vérifier dans les deux sens (input contient keyword OU keyword contient input)
+      // Cela permet de matcher "coiffeur" avec "hair" ou "plombier" avec "plumber"
+      if (inputLower.includes(keyword) || keyword.includes(inputLower)) {
         const keywordLength = keyword.length;
         if (keywordLength > maxKeywordMatches) {
           maxKeywordMatches = keywordLength;
