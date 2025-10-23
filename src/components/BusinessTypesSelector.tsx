@@ -20,7 +20,7 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isAllTypesSelected = selectedTypes.some((t) => t.id === "all");
-  const selectedType = selectedTypes.length > 0 ? selectedTypes[0] : null;
+  const maxSelections = 5;
 
   // Trier les types alphabétiquement
   const sortedTypes = useMemo(() => {
@@ -57,24 +57,29 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
   const handleSelect = (type: BusinessType) => {
     if (type.id === "all") {
       onTypesChange([ALL_TYPES_OPTION]);
-      setInputValue("Tout type d'activités");
+      setInputValue("");
+      setOpen(false);
     } else {
-      onTypesChange([type]);
-      setInputValue(type.label);
+      // Vérifier si déjà sélectionné
+      const alreadySelected = selectedTypes.some((t) => t.id === type.id);
+      if (alreadySelected) return;
+      
+      // Limiter à 5 sélections
+      if (selectedTypes.length >= maxSelections) {
+        return;
+      }
+      
+      // Retirer "all" si présent et ajouter le nouveau type
+      const newTypes = selectedTypes.filter((t) => t.id !== "all");
+      onTypesChange([...newTypes, type]);
+      setInputValue("");
     }
-    setOpen(false);
-    inputRef.current?.blur();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
     setOpen(true);
-    
-    // Si l'utilisateur modifie l'input, désélectionner
-    if (selectedType && value !== selectedType.label) {
-      onTypesChange([]);
-    }
   };
 
   const handleClearInput = (e: React.MouseEvent) => {
@@ -86,9 +91,8 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
     inputRef.current?.focus();
   };
 
-  const handleRemoveSelection = () => {
-    setInputValue("");
-    onTypesChange([]);
+  const handleRemoveSelection = (typeId: string) => {
+    onTypesChange(selectedTypes.filter((t) => t.id !== typeId));
   };
 
   const handleInputFocus = () => {
@@ -98,7 +102,9 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
   return (
     <div className="space-y-2">
       {!hideLabel && (
-        <Label className="text-sm font-bold text-foreground uppercase tracking-wide">Type d'activité</Label>
+        <Label className="text-sm font-bold text-foreground uppercase tracking-wide">
+          Type d'activité {!isAllTypesSelected && `(${selectedTypes.length}/${maxSelections})`}
+        </Label>
       )}
 
       <div className="relative">
@@ -106,11 +112,11 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Rechercher une activité..."
+          placeholder={isAllTypesSelected ? "Toutes les activités sélectionnées" : "Rechercher et sélectionner jusqu'à 5 activités..."}
           value={inputValue}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
-          disabled={disabled}
+          disabled={disabled || isAllTypesSelected || selectedTypes.length >= maxSelections}
           className="pl-9 pr-9"
           autoComplete="off"
         />
@@ -143,16 +149,27 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
 
               {filteredTypes.length > 0 ? (
                 <>
-                  {filteredTypes.map((type) => (
-                    <button
-                      key={type.id}
-                      type="button"
-                      onClick={() => handleSelect(type)}
-                      className="w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm"
-                    >
-                      {type.label}
-                    </button>
-                  ))}
+                  {filteredTypes.map((type) => {
+                    const isSelected = selectedTypes.some((t) => t.id === type.id);
+                    const isDisabled = selectedTypes.length >= maxSelections && !isSelected;
+                    
+                    return (
+                      <button
+                        key={type.id}
+                        type="button"
+                        onClick={() => handleSelect(type)}
+                        disabled={isDisabled}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm",
+                          isSelected && "bg-accent text-accent-foreground font-medium",
+                          !isSelected && !isDisabled && "hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                          isDisabled && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        {type.label}
+                      </button>
+                    );
+                  })}
 
                   {inputValue.trim() && filteredTypes.length === 50 && (
                     <div className="px-3 py-2 text-xs text-muted-foreground text-center border-t">
@@ -170,18 +187,22 @@ export const BusinessTypesSelector = ({ selectedTypes, onTypesChange, disabled, 
         )}
       </div>
 
-      {/* Badge de sélection */}
-      {selectedType && (
-        <Badge variant="secondary" className="px-3 py-1.5 gap-1.5 w-fit">
-          {selectedType.label}
-          <button
-            onClick={handleRemoveSelection}
-            disabled={disabled}
-            className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 transition-colors"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </Badge>
+      {/* Badges de sélection */}
+      {selectedTypes.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedTypes.map((type) => (
+            <Badge key={type.id} variant="secondary" className="px-3 py-1.5 gap-1.5 w-fit">
+              {type.label}
+              <button
+                onClick={() => handleRemoveSelection(type.id)}
+                disabled={disabled}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
       )}
     </div>
   );
