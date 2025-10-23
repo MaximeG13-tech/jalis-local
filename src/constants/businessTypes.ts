@@ -2226,6 +2226,7 @@ export const BUSINESS_TYPES: BusinessType[] = [
     label: "Service juridique de gestion des divorces",
     googleSearchKeyword: "Service juridique de gestion des divorces",
   },
+  { id: "gcid:dj", label: "Disc-jockey", googleSearchKeyword: "Disc-jockey" },
   {
     id: "gcid:dj_supply_store",
     label: "Magasin de matériel pour DJ",
