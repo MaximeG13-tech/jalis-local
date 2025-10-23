@@ -34,7 +34,7 @@ const ID_MAPPING: Record<string, string> = {
   pharmacy: "gcid:pharmacy",
   laboratory: "gcid:medical_lab",
   radiology: "gcid:radiologist",
-  physio: "gcid:physical_therapist",
+  physio: "gcid:physiotherapist",
   medical_equipment: "gcid:medical_supply_store",
   doctor: "gcid:doctor",
   orthodontist: "gcid:orthodontist",
@@ -65,13 +65,13 @@ const ID_MAPPING: Record<string, string> = {
   pet_boarding: "gcid:pet_boarding_service",
   pet_food: "gcid:pet_supply_store",
   veterinarian: "gcid:veterinarian",
-  pet_photographer: "gcid:pet_photographer",
+  pet_photographer: "gcid:photographer", // Note: pas de pet_photographer spécifique, utilise photographer général
 
   // === AUTOMOBILE ===
   insurance: "gcid:insurance_agency",
   bank: "gcid:bank",
   car_wash: "gcid:car_wash",
-  driving_school: "gcid:driving_school",
+  driving_school: "gcid:motorcycle_driving_school", // Note: pas d'auto-école générique, moto-école est le plus proche
   car_accessories: "gcid:car_accessories_store",
   car_dealer: "gcid:car_dealer",
   towing: "gcid:towing_service",
@@ -80,7 +80,7 @@ const ID_MAPPING: Record<string, string> = {
   lawyer: "gcid:lawyer",
   expert: "gcid:auto_insurance_agency",
   dmv: "gcid:drivers_license_office",
-  driving_simulator: "gcid:driving_school",
+  driving_simulator: "gcid:motorcycle_driving_school", // Note: utilise moto-école comme alternative
 
   // === IMMOBILIER & HABITAT ===
   real_estate: "gcid:real_estate_agency",
@@ -111,7 +111,7 @@ const ID_MAPPING: Record<string, string> = {
   restaurant: "gcid:restaurant",
   hotel: "gcid:hotel",
   wine_shop: "gcid:wine_store",
-  catering: "gcid:caterer",
+  catering: "gcid:catering_service",
   food_delivery: "gcid:meal_delivery",
   grocery_store: "gcid:grocery_store",
   cafe: "gcid:cafe",
@@ -124,24 +124,24 @@ const ID_MAPPING: Record<string, string> = {
   party_rental: "gcid:party_equipment_rental_service",
   wedding_planner: "gcid:wedding_planner",
   bridal_shop: "gcid:bridal_shop",
-  makeup_artist: "gcid:make_up_artist",
+  makeup_artist: "gcid:permanent_make_up_clinic", // Note: maquillage permanent, pas de makeup artist général
   printing_service: "gcid:print_shop",
 
   // === JURIDIQUE & FINANCE ===
   accountant: "gcid:accountant",
   mediator: "gcid:mediation_service",
   business_consultant: "gcid:business_management_consultant",
-  payroll_service: "gcid:payroll_service",
+  payroll_service: "gcid:bookkeeping_service", // Note: service de comptabilité (inclut paie)
 
   // === RETAIL ===
-  shoe_store: "gcid:shoe_store",
+  shoe_store: "gcid:boot_store", // Note: boot_store = magasin de chaussures
   tailor: "gcid:tailor",
   personal_stylist: "gcid:image_consultant",
   watch_repair: "gcid:watch_repair_service",
   engraver: "gcid:engraver",
 
   // === TOURISME ===
-  travel_agency: "gcid:travel_agency",
+  travel_agency: "gcid:tour_agency",
   spa: "gcid:spa",
   tour_guide: "gcid:tour_operator",
   currency_exchange: "gcid:currency_exchange_service",
@@ -150,7 +150,7 @@ const ID_MAPPING: Record<string, string> = {
   // === ÉDUCATION ===
   book_store: "gcid:book_store",
   library: "gcid:library",
-  stationery: "gcid:stationery_store",
+  stationery: "gcid:paper_store", // Note: paper_store = papeterie
 
   // === AUTRES ===
   marketing_agency: "gcid:marketing_agency",
