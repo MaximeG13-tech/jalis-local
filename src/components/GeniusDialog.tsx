@@ -1597,6 +1597,7 @@ const BUSINESS_ECOSYSTEMS: Record<
 /**
  * Fonction principale de génération de suggestions
  * CORRIGÉ : Utilise ID_MAPPING pour convertir les IDs courts en IDs Google
+ * Couverture complète de 70 écosystèmes métiers
  */
 function generateSmartSuggestions(
   activityInput: string,
