@@ -13,148 +13,16 @@ interface GeniusDialogProps {
 }
 
 /**
- * SYSTÈME INTELLIGENT DE SUGGESTIONS V2.1
+ * SYSTÈME INTELLIGENT DE SUGGESTIONS V2.0
  *
  * Logique VRAIMENT intelligente :
  * 1. Écosystèmes métiers réels (ex: santé, automobile, immobilier)
  * 2. Apporteurs d'affaires naturels avec score de pertinence
  * 3. Raisons explicites de chaque suggestion
- * 4. Mapping IDs courts → IDs Google (gcid:xxx)
  *
  * Exemple : Orthophoniste → Pédiatre (10/10), Psychologue (9/10), Neurologue (8/10)
  * PAS : Comptable, Avocat, Assurance (aucun lien)
  */
-
-/**
- * MAPPING DES IDS COURTS VERS IDS GOOGLE MAPS
- * Résout le problème : suggestionIds = ["insurance"] vs type.id = "gcid:insurance_agency"
- */
-const ID_MAPPING: Record<string, string> = {
-  // === SANTÉ ===
-  pharmacy: "gcid:pharmacy",
-  laboratory: "gcid:medical_lab",
-  radiology: "gcid:radiologist",
-  physio: "gcid:physical_therapist",
-  medical_equipment: "gcid:medical_supply_store",
-  doctor: "gcid:doctor",
-  orthodontist: "gcid:orthodontist",
-  dental_lab: "gcid:dental_lab",
-  oral_surgeon: "gcid:oral_surgeon",
-  hygienist: "gcid:dental_hygienist",
-  sports_medicine: "gcid:sports_medicine_physician",
-  gym: "gcid:gym",
-  massage: "gcid:massage_therapist",
-  orthopedic: "gcid:orthopedic_surgeon",
-  pediatrician: "gcid:pediatrician",
-  psychologist: "gcid:psychologist",
-  neurologist: "gcid:neurologist",
-  audiologist: "gcid:audiologist",
-  special_education: "gcid:special_education_school",
-  coach: "gcid:life_coach",
-  meditation_center: "gcid:meditation_center",
-  psychiatrist: "gcid:psychiatrist",
-  social_worker: "gcid:social_worker",
-  speech_therapist: "gcid:speech_pathologist",
-  dermatologist: "gcid:dermatologist",
-  nutritionist: "gcid:nutritionist",
-
-  // === VÉTÉRINAIRE ===
-  pet_store: "gcid:pet_store",
-  pet_groomer: "gcid:pet_groomer",
-  pet_training: "gcid:dog_trainer",
-  pet_boarding: "gcid:pet_boarding_service",
-  pet_food: "gcid:pet_supply_store",
-  veterinarian: "gcid:veterinarian",
-  pet_photographer: "gcid:pet_photographer",
-
-  // === AUTOMOBILE ===
-  insurance: "gcid:insurance_agency",
-  bank: "gcid:bank",
-  car_wash: "gcid:car_wash",
-  driving_school: "gcid:driving_school",
-  car_accessories: "gcid:car_accessories_store",
-  car_dealer: "gcid:car_dealer",
-  towing: "gcid:towing_service",
-  auto_parts: "gcid:auto_parts_store",
-  car_rental: "gcid:car_rental_agency",
-  lawyer: "gcid:lawyer",
-  expert: "gcid:auto_insurance_agency",
-  dmv: "gcid:drivers_license_office",
-  driving_simulator: "gcid:driving_school",
-
-  // === IMMOBILIER & HABITAT ===
-  real_estate: "gcid:real_estate_agency",
-  notary: "gcid:notary_public",
-  moving: "gcid:moving_company",
-  home_inspector: "gcid:home_inspector",
-  storage: "gcid:self_storage_facility",
-  cleaning: "gcid:house_cleaning_service",
-  furniture_store: "gcid:furniture_store",
-  locksmith: "gcid:locksmith",
-  electrician: "gcid:electrician",
-  plumber: "gcid:plumber",
-  painter: "gcid:painter",
-  hardware_store: "gcid:hardware_store",
-  architect: "gcid:architect",
-
-  // === BEAUTÉ & BIEN-ÊTRE ===
-  hair_salon: "gcid:hair_salon",
-  beauty_salon: "gcid:beauty_salon",
-  nail_salon: "gcid:nail_salon",
-  clothing_store: "gcid:clothing_store",
-  photographer: "gcid:photographer",
-  jewelry_store: "gcid:jewelry_store",
-  supplement_store: "gcid:vitamin_and_supplements_store",
-  sports_store: "gcid:sporting_goods_store",
-
-  // === RESTAURATION ===
-  restaurant: "gcid:restaurant",
-  hotel: "gcid:hotel",
-  wine_shop: "gcid:wine_store",
-  catering: "gcid:caterer",
-  food_delivery: "gcid:meal_delivery",
-  grocery_store: "gcid:grocery_store",
-  cafe: "gcid:cafe",
-  florist: "gcid:florist",
-  butcher: "gcid:butcher_shop",
-
-  // === ÉVÉNEMENTIEL ===
-  event_planner: "gcid:event_planner",
-  venue: "gcid:banquet_hall",
-  party_rental: "gcid:party_equipment_rental_service",
-  wedding_planner: "gcid:wedding_planner",
-  bridal_shop: "gcid:bridal_shop",
-  makeup_artist: "gcid:make_up_artist",
-  printing_service: "gcid:print_shop",
-
-  // === JURIDIQUE & FINANCE ===
-  accountant: "gcid:accountant",
-  mediator: "gcid:mediation_service",
-  business_consultant: "gcid:business_management_consultant",
-  payroll_service: "gcid:payroll_service",
-
-  // === RETAIL ===
-  shoe_store: "gcid:shoe_store",
-  tailor: "gcid:tailor",
-  personal_stylist: "gcid:image_consultant",
-  watch_repair: "gcid:watch_repair_service",
-  engraver: "gcid:engraver",
-
-  // === TOURISME ===
-  travel_agency: "gcid:travel_agency",
-  spa: "gcid:spa",
-  tour_guide: "gcid:tour_operator",
-  currency_exchange: "gcid:currency_exchange_service",
-  luggage_store: "gcid:luggage_store",
-
-  // === ÉDUCATION ===
-  book_store: "gcid:book_store",
-  library: "gcid:library",
-  stationery: "gcid:stationery_store",
-
-  // === AUTRES ===
-  marketing_agency: "gcid:marketing_agency",
-};
 
 /**
  * Base de connaissances : Écosystèmes d'activités
@@ -500,7 +368,6 @@ const BUSINESS_ECOSYSTEMS: Record<
 
 /**
  * Fonction principale de génération de suggestions
- * CORRIGÉ : Utilise ID_MAPPING pour convertir les IDs courts en IDs Google
  */
 function generateSmartSuggestions(
   activityInput: string,
@@ -528,12 +395,10 @@ function generateSmartSuggestions(
   // 2. Si on a trouvé un écosystème, utiliser ses suggestions
   if (bestMatch && BUSINESS_ECOSYSTEMS[bestMatch.ecosystem]) {
     const ecosystem = BUSINESS_ECOSYSTEMS[bestMatch.ecosystem];
-
-    // 🔧 CORRECTION : Convertir les IDs courts en IDs Google via le mapping
     const suggestionIds = ecosystem.activities
       .sort((a, b) => b.score - a.score)
       .slice(0, maxSuggestions)
-      .map((activity) => ID_MAPPING[activity.id] || activity.id); // ← Mapping appliqué ici
+      .map((activity) => activity.id);
 
     const suggestions = availableTypes.filter((type) => suggestionIds.includes(type.id));
 
@@ -543,11 +408,7 @@ function generateSmartSuggestions(
   }
 
   // 3. Fallback : suggestions très génériques mais pertinentes
-  // 🔧 CORRECTION : Appliquer le mapping aussi au fallback
-  const fallbackIds = ["insurance", "accountant", "lawyer", "marketing_agency", "bank"].map(
-    (id) => ID_MAPPING[id] || id,
-  ); // ← Mapping appliqué ici aussi
-
+  const fallbackIds = ["insurance", "accountant", "lawyer", "marketing_agency", "bank"];
   return availableTypes.filter((type) => fallbackIds.includes(type.id)).slice(0, maxSuggestions);
 }
 
