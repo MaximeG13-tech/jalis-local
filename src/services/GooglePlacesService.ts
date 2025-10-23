@@ -142,75 +142,214 @@ export class GooglePlacesService {
     });
   }
 
-  // Corrige le type d'activité basé sur le nom du business pour les professions mal catégorisées par Google
-  private static correctActivityType(businessName: string, _originalType: string): string {
-    const nameLower = businessName.toLowerCase();
+  // Mapping exhaustif des primaryType Google vers les noms français officiels
+  private static readonly GOOGLE_TYPE_TO_FRENCH: Record<string, string> = {
+    // Professions juridiques et comptables
+    'notary_public': 'Notaire',
+    'lawyer': 'Avocat',
+    'law_firm': 'Cabinet d\'avocat',
+    'accounting': 'Expert-comptable',
+    'accountant': 'Expert-comptable',
+    'tax_consultant': 'Conseiller fiscal',
     
-    // Mapping des professions mal catégorisées par Google
-    const corrections: Record<string, { keywords: string[], correctType: string }> = {
-      'notaire': {
-        keywords: ['notaire', 'notarial'],
-        correctType: 'Notaire'
-      },
-      'avocat': {
-        keywords: ['avocat', 'cabinet d\'avocat', 'conseil juridique'],
-        correctType: 'Avocat'
-      },
-      'huissier': {
-        keywords: ['huissier', 'huissier de justice'],
-        correctType: 'Huissier de justice'
-      },
-      'expert-comptable': {
-        keywords: ['expert-comptable', 'expert comptable', 'cabinet comptable', 'comptabilité'],
-        correctType: 'Expert-comptable'
-      }
-    };
+    // Professions de santé
+    'physiotherapist': 'Kinésiologue',
+    'physical_therapist': 'Kinésithérapeute',
+    'massage_therapist': 'Masseur',
+    'spa': 'Spa',
+    'osteopath': 'Ostéopathe',
+    'chiropractor': 'Chiropracteur',
+    'acupuncturist': 'Acupuncteur',
+    'doctor': 'Médecin',
+    'dentist': 'Dentiste',
+    'orthodontist': 'Orthodontiste',
+    'dental_clinic': 'Cabinet dentaire',
+    'optometrist': 'Opticien',
+    'ophthalmologist': 'Ophtalmologiste',
+    'psychologist': 'Psychologue',
+    'psychiatrist': 'Psychiatre',
+    'nutritionist': 'Nutritionniste',
+    'dietitian': 'Diététicien',
+    'speech_therapist': 'Orthophoniste',
+    'occupational_therapist': 'Ergothérapeute',
+    'podiatrist': 'Podologue',
+    'pharmacy': 'Pharmacie',
+    'hospital': 'Hôpital',
+    'medical_clinic': 'Clinique médicale',
+    'veterinarian': 'Vétérinaire',
+    
+    // Beauté et bien-être
+    'hair_salon': 'Salon de coiffure',
+    'barber_shop': 'Salon de coiffure',
+    'beauty_salon': 'Institut de beauté',
+    'nail_salon': 'Salon d\'onglerie',
+    'hair_care': 'Coiffeur',
+    'day_spa': 'Spa',
+    'tanning_salon': 'Salon de bronzage',
+    'cosmetics_store': 'Magasin de cosmétiques',
+    
+    // Fitness et sport
+    'gym': 'Salle de sport',
+    'fitness_center': 'Centre de fitness',
+    'yoga_studio': 'Studio de yoga',
+    'pilates_studio': 'Studio de Pilates',
+    'sports_club': 'Club de sport',
+    'swimming_pool': 'Piscine',
+    'personal_trainer': 'Coach sportif',
+    
+    // Restauration
+    'restaurant': 'Restaurant',
+    'cafe': 'Café',
+    'bar': 'Bar',
+    'bakery': 'Boulangerie',
+    'pastry_shop': 'Pâtisserie',
+    'pizza_restaurant': 'Pizzeria',
+    'fast_food_restaurant': 'Fast-food',
+    'french_restaurant': 'Restaurant français',
+    'italian_restaurant': 'Restaurant italien',
+    'chinese_restaurant': 'Restaurant chinois',
+    'japanese_restaurant': 'Restaurant japonais',
+    'seafood_restaurant': 'Restaurant de fruits de mer',
+    'steakhouse': 'Grill',
+    'vegetarian_restaurant': 'Restaurant végétarien',
+    'ice_cream_shop': 'Glacier',
+    'sandwich_shop': 'Sandwicherie',
+    'coffee_shop': 'Café',
+    'tea_house': 'Salon de thé',
+    'wine_bar': 'Bar à vin',
+    'brewery': 'Brasserie',
+    
+    // Commerce de détail
+    'store': 'Magasin',
+    'clothing_store': 'Magasin de vêtements',
+    'shoe_store': 'Magasin de chaussures',
+    'jewelry_store': 'Bijouterie',
+    'electronics_store': 'Magasin d\'électronique',
+    'book_store': 'Librairie',
+    'florist': 'Fleuriste',
+    'gift_shop': 'Boutique de cadeaux',
+    'toy_store': 'Magasin de jouets',
+    'pet_store': 'Animalerie',
+    'furniture_store': 'Magasin de meubles',
+    'home_goods_store': 'Magasin de décoration',
+    'hardware_store': 'Quincaillerie',
+    'convenience_store': 'Supérette',
+    'supermarket': 'Supermarché',
+    'grocery_store': 'Épicerie',
+    'liquor_store': 'Caviste',
+    'department_store': 'Grand magasin',
+    'shopping_mall': 'Centre commercial',
+    
+    // Services automobiles
+    'car_repair': 'Garage automobile',
+    'auto_repair_shop': 'Garage',
+    'car_dealer': 'Concessionnaire automobile',
+    'car_wash': 'Station de lavage',
+    'gas_station': 'Station-service',
+    'parking': 'Parking',
+    'car_rental': 'Location de voiture',
+    
+    // Services professionnels
+    'real_estate_agency': 'Agence immobilière',
+    'insurance_agency': 'Agence d\'assurance',
+    'bank': 'Banque',
+    'atm': 'Distributeur automatique',
+    'post_office': 'Bureau de poste',
+    'travel_agency': 'Agence de voyage',
+    'moving_company': 'Déménageur',
+    'cleaning_service': 'Service de nettoyage',
+    'locksmith': 'Serrurier',
+    'plumber': 'Plombier',
+    'electrician': 'Électricien',
+    'painter': 'Peintre en bâtiment',
+    'carpenter': 'Menuisier',
+    'roofing_contractor': 'Couvreur',
+    'hvac_contractor': 'Chauffagiste',
+    'landscaper': 'Paysagiste',
+    'architect': 'Architecte',
+    'interior_designer': 'Architecte d\'intérieur',
+    'graphic_designer': 'Designer graphique',
+    'photographer': 'Photographe',
+    'event_planner': 'Organisateur d\'événements',
+    'wedding_planner': 'Wedding planner',
+    'catering': 'Traiteur',
+    'printing_service': 'Imprimerie',
+    'tailor': 'Couturier',
+    'laundry': 'Pressing',
+    'dry_cleaner': 'Pressing',
+    
+    // Éducation
+    'school': 'École',
+    'primary_school': 'École primaire',
+    'secondary_school': 'Collège',
+    'high_school': 'Lycée',
+    'university': 'Université',
+    'driving_school': 'Auto-école',
+    'language_school': 'École de langues',
+    'music_school': 'École de musique',
+    'dance_school': 'École de danse',
+    'art_school': 'École d\'art',
+    'tutoring_service': 'Cours particuliers',
+    
+    // Loisirs et culture
+    'museum': 'Musée',
+    'art_gallery': 'Galerie d\'art',
+    'movie_theater': 'Cinéma',
+    'theater': 'Théâtre',
+    'concert_hall': 'Salle de concert',
+    'night_club': 'Boîte de nuit',
+    'library': 'Bibliothèque',
+    'park': 'Parc',
+    'zoo': 'Zoo',
+    'aquarium': 'Aquarium',
+    'amusement_park': 'Parc d\'attractions',
+    'bowling_alley': 'Bowling',
+    'casino': 'Casino',
+    
+    // Hébergement
+    'hotel': 'Hôtel',
+    'motel': 'Motel',
+    'hostel': 'Auberge de jeunesse',
+    'bed_and_breakfast': 'Chambre d\'hôtes',
+    'resort': 'Resort',
+    'campground': 'Camping',
+    
+    // Services religieux
+    'church': 'Église',
+    'mosque': 'Mosquée',
+    'synagogue': 'Synagogue',
+    'temple': 'Temple',
+    'place_of_worship': 'Lieu de culte',
+  };
 
-    // Parcourir les corrections possibles
-    for (const config of Object.values(corrections)) {
-      if (config.keywords.some(keyword => nameLower.includes(keyword))) {
-        console.log(`✅ Correction détectée: "${businessName}" → ${config.correctType}`);
-        return config.correctType;
-      }
-    }
-
-    return '';
+  private static getPrimaryTypeLabel(primaryType: string): string | null {
+    return this.GOOGLE_TYPE_TO_FRENCH[primaryType] || null;
   }
 
   private static getActivityType(
     place: GooglePlace,
     selectedTypes: BusinessType[]
   ): string {
-    // Correction basée sur le nom pour les professions mal catégorisées
-    const correctType = this.correctActivityType(place.name, '');
-    if (correctType !== '') {
-      return correctType;
+    // PRIORITÉ 1 : Utiliser le mapping primaryType vers français (le plus fiable)
+    if (place.primary_type) {
+      const mappedType = this.getPrimaryTypeLabel(place.primary_type);
+      if (mappedType) {
+        console.log(`📍 Mapped ${place.primary_type} → ${mappedType} for ${place.name}`);
+        return mappedType;
+      }
     }
 
-    // PRIORITÉ 1 : Utiliser primaryTypeDisplayName de Google (le plus précis)
+    // PRIORITÉ 2 : Utiliser primaryTypeDisplayName de Google si disponible
     if (place.primary_type_display_name) {
       return place.primary_type_display_name;
     }
 
-    // PRIORITÉ 2 : Utiliser le type sélectionné par l'utilisateur
+    // PRIORITÉ 3 : Utiliser le type sélectionné par l'utilisateur
     if (selectedTypes.length > 0 && selectedTypes[0].id !== 'all') {
       return selectedTypes[0].label;
     }
 
-    // PRIORITÉ 3 : Fallback sur l'ancien système
-    if (place.types && place.types.length > 0) {
-      const typeMap: Record<string, string> = {
-        'restaurant': 'Restaurant',
-        'cafe': 'Café',
-        'bakery': 'Boulangerie',
-        'store': 'Magasin',
-        'health': 'Santé',
-        'beauty_salon': 'Salon de beauté',
-        'gym': 'Salle de sport',
-      };
-      return typeMap[place.types[0]] || place.types[0];
-    }
-
+    // PRIORITÉ 4 : Fallback
     return 'Autre';
   }
 
