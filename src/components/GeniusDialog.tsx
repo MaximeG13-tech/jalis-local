@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { BusinessType, BUSINESS_TYPES } from '@/constants/businessTypes';
-import { Loader2 } from 'lucide-react';
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { BusinessType, BUSINESS_TYPES } from "@/constants/businessTypes";
+import { Loader2, Sparkles, TrendingUp, Link2 } from "lucide-react";
 
 interface GeniusDialogProps {
   open: boolean;
@@ -12,97 +12,526 @@ interface GeniusDialogProps {
   onSuggest: (types: BusinessType[]) => void;
 }
 
-// Mapping des activités vers des suggestions complémentaires NON CONCURRENTES
-// Principe: suggérer des activités dont les clients auraient besoin de l'activité principale
-const COMPLEMENTARY_SUGGESTIONS: Record<string, string[]> = {
+/**
+ * Catégories pour éviter les concurrents directs
+ * Deux activités de la même catégorie ne seront JAMAIS suggérées ensemble
+ */
+enum BusinessCategory {
+  // AUTOMOBILE
+  AUTO_SALES = "auto_sales",
+  AUTO_REPAIR = "auto_repair",
+  AUTO_SERVICES = "auto_services",
+  AUTO_EDUCATION = "auto_education",
+
+  // IMMOBILIER
+  REAL_ESTATE = "real_estate",
+  HOME_SERVICES = "home_services",
+
+  // SANTÉ
+  MEDICAL_GENERAL = "medical_general",
+  MEDICAL_DENTAL = "medical_dental",
+  MEDICAL_ALTERNATIVE = "medical_alternative",
+  VETERINARY = "veterinary",
+  PHARMACY = "pharmacy",
+
+  // BEAUTÉ & BIEN-ÊTRE
+  HAIR_SERVICES = "hair_services",
+  BEAUTY_SERVICES = "beauty_services",
+  WELLNESS = "wellness",
+  FITNESS = "fitness",
+
+  // RESTAURATION
+  RESTAURANTS = "restaurants",
+  CAFES = "cafes",
+  BAKERY = "bakery",
+  SPECIALTY_FOOD = "specialty_food",
+
+  // RETAIL
+  CLOTHING = "clothing",
+  JEWELRY = "jewelry",
+  VARIOUS = "various",
+
+  // SERVICES
+  LEGAL = "legal",
+  FINANCIAL = "financial",
+  INSURANCE = "insurance",
+  EVENTS = "events",
+  OTHER = "other",
+}
+
+/**
+ * Mapping des mots-clés vers catégories et suggestions
+ * Format optimisé pour plus de 3000 activités Google Maps
+ */
+const ACTIVITY_INTELLIGENCE: Record<
+  string,
+  {
+    category: BusinessCategory;
+    suggestions: string[];
+  }
+> = {
   // === AUTOMOBILE ===
-  'concessionnaire': ['insurance', 'driving_school', 'car_wash', 'accountant'],
-  'voiture': ['insurance', 'driving_school', 'car_wash', 'accountant'],
-  'auto': ['insurance', 'driving_school', 'car_wash', 'accountant'],
-  'garage': ['car_dealer', 'car_rental', 'insurance', 'driving_school'],
-  'réparation': ['car_dealer', 'car_rental', 'insurance', 'driving_school'],
-  'mécanique': ['car_dealer', 'car_rental', 'insurance', 'driving_school'],
-  'carrosserie': ['insurance', 'car_rental', 'lawyer', 'car_dealer'],
-  'lavage': ['car_dealer', 'car_rental', 'car_repair'],
-  'auto-école': ['car_dealer', 'car_rental', 'insurance', 'car_repair'],
-  'auto école': ['car_dealer', 'car_rental', 'insurance', 'car_repair'],
-  
-  // === SERVICES JURIDIQUES ===
-  'notaire': ['real_estate', 'moving', 'insurance'],
-  'avocat': ['real_estate', 'accountant', 'insurance'],
-  'comptable': ['lawyer', 'insurance'],
-  'expert comptable': ['lawyer', 'insurance'],
-  
-  // === IMMOBILIER ===
-  'agence immobilière': ['lawyer', 'moving', 'insurance', 'furniture_store'],
-  'immobilier': ['lawyer', 'moving', 'insurance', 'furniture_store'],
-  'déménagement': ['real_estate', 'furniture_store', 'cleaning'],
-  
+  concessionnaire: {
+    category: BusinessCategory.AUTO_SALES,
+    suggestions: ["insurance", "driving_school", "car_wash", "bank", "accountant"],
+  },
+  car_dealer: {
+    category: BusinessCategory.AUTO_SALES,
+    suggestions: ["insurance", "driving_school", "car_wash", "bank", "accountant"],
+  },
+  voiture: {
+    category: BusinessCategory.AUTO_SALES,
+    suggestions: ["insurance", "driving_school", "car_wash", "car_repair"],
+  },
+  garage: {
+    category: BusinessCategory.AUTO_REPAIR,
+    suggestions: ["car_dealer", "insurance", "car_rental", "car_wash"],
+  },
+  car_repair: {
+    category: BusinessCategory.AUTO_REPAIR,
+    suggestions: ["car_dealer", "insurance", "car_rental", "car_wash"],
+  },
+  mécanique: {
+    category: BusinessCategory.AUTO_REPAIR,
+    suggestions: ["car_dealer", "insurance", "car_rental", "auto_parts"],
+  },
+  carrosserie: {
+    category: BusinessCategory.AUTO_REPAIR,
+    suggestions: ["insurance", "lawyer", "car_rental", "car_dealer"],
+  },
+  body_shop: {
+    category: BusinessCategory.AUTO_REPAIR,
+    suggestions: ["insurance", "lawyer", "car_rental", "car_dealer"],
+  },
+  lavage: {
+    category: BusinessCategory.AUTO_SERVICES,
+    suggestions: ["car_dealer", "car_repair", "car_rental", "gas_station"],
+  },
+  car_wash: {
+    category: BusinessCategory.AUTO_SERVICES,
+    suggestions: ["car_dealer", "car_repair", "car_rental", "gas_station"],
+  },
+  "auto-école": {
+    category: BusinessCategory.AUTO_EDUCATION,
+    suggestions: ["car_dealer", "insurance", "car_rental", "driving_test"],
+  },
+  driving_school: {
+    category: BusinessCategory.AUTO_EDUCATION,
+    suggestions: ["car_dealer", "insurance", "car_rental", "dmv"],
+  },
+  "location voiture": {
+    category: BusinessCategory.AUTO_SERVICES,
+    suggestions: ["hotel", "travel_agency", "insurance", "car_dealer"],
+  },
+  car_rental: {
+    category: BusinessCategory.AUTO_SERVICES,
+    suggestions: ["hotel", "travel_agency", "insurance", "car_dealer"],
+  },
+
+  // === IMMOBILIER & HABITAT ===
+  "agence immobilière": {
+    category: BusinessCategory.REAL_ESTATE,
+    suggestions: ["notary", "lawyer", "moving", "insurance", "bank"],
+  },
+  real_estate: {
+    category: BusinessCategory.REAL_ESTATE,
+    suggestions: ["notary", "lawyer", "moving", "insurance", "bank"],
+  },
+  notaire: {
+    category: BusinessCategory.LEGAL,
+    suggestions: ["real_estate", "lawyer", "moving", "insurance"],
+  },
+  notary: {
+    category: BusinessCategory.LEGAL,
+    suggestions: ["real_estate", "lawyer", "moving", "insurance"],
+  },
+  déménagement: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["real_estate", "furniture_store", "cleaning", "locksmith"],
+  },
+  moving: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["real_estate", "furniture_store", "cleaning", "locksmith"],
+  },
+  plombier: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["electrician", "painter", "real_estate", "locksmith"],
+  },
+  plumber: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["electrician", "painter", "real_estate", "locksmith"],
+  },
+  électricien: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["plumber", "painter", "real_estate", "locksmith"],
+  },
+  electrician: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["plumber", "painter", "real_estate", "locksmith"],
+  },
+  peintre: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["plumber", "electrician", "real_estate", "home_decor"],
+  },
+  painter: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["plumber", "electrician", "real_estate", "home_decor"],
+  },
+  serrurier: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["security", "insurance", "moving", "real_estate"],
+  },
+  locksmith: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["security", "insurance", "moving", "real_estate"],
+  },
+
+  // === JURIDIQUE & FINANCE ===
+  avocat: {
+    category: BusinessCategory.LEGAL,
+    suggestions: ["accountant", "notary", "insurance", "real_estate"],
+  },
+  lawyer: {
+    category: BusinessCategory.LEGAL,
+    suggestions: ["accountant", "notary", "insurance", "real_estate"],
+  },
+  comptable: {
+    category: BusinessCategory.FINANCIAL,
+    suggestions: ["lawyer", "insurance", "bank", "business_consultant"],
+  },
+  accountant: {
+    category: BusinessCategory.FINANCIAL,
+    suggestions: ["lawyer", "insurance", "bank", "business_consultant"],
+  },
+  assurance: {
+    category: BusinessCategory.INSURANCE,
+    suggestions: ["car_dealer", "real_estate", "lawyer", "bank"],
+  },
+  insurance: {
+    category: BusinessCategory.INSURANCE,
+    suggestions: ["car_dealer", "real_estate", "lawyer", "bank"],
+  },
+  banque: {
+    category: BusinessCategory.FINANCIAL,
+    suggestions: ["accountant", "insurance", "real_estate", "lawyer"],
+  },
+  bank: {
+    category: BusinessCategory.FINANCIAL,
+    suggestions: ["accountant", "insurance", "real_estate", "lawyer"],
+  },
+
   // === SANTÉ ===
-  'dentiste': ['doctor', 'pharmacy'],
-  'dentaire': ['doctor', 'pharmacy'],
-  'médecin': ['pharmacy', 'physio'],
-  'docteur': ['pharmacy', 'physio'],
-  'kiné': ['doctor', 'gym', 'pharmacy'],
-  'kinésithérapeute': ['doctor', 'gym', 'pharmacy'],
-  'physiothérapeute': ['doctor', 'gym', 'pharmacy'],
-  'pharmacie': ['doctor', 'dentist'],
-  'vétérinaire': ['pet_store'],
-  'veto': ['pet_store'],
-  
+  médecin: {
+    category: BusinessCategory.MEDICAL_GENERAL,
+    suggestions: ["pharmacy", "physio", "dentist", "laboratory"],
+  },
+  doctor: {
+    category: BusinessCategory.MEDICAL_GENERAL,
+    suggestions: ["pharmacy", "physio", "dentist", "laboratory"],
+  },
+  dentiste: {
+    category: BusinessCategory.MEDICAL_DENTAL,
+    suggestions: ["doctor", "pharmacy", "orthodontist", "oral_surgeon"],
+  },
+  dentist: {
+    category: BusinessCategory.MEDICAL_DENTAL,
+    suggestions: ["doctor", "pharmacy", "orthodontist", "oral_surgeon"],
+  },
+  pharmacie: {
+    category: BusinessCategory.PHARMACY,
+    suggestions: ["doctor", "dentist", "physio", "laboratory"],
+  },
+  pharmacy: {
+    category: BusinessCategory.PHARMACY,
+    suggestions: ["doctor", "dentist", "physio", "laboratory"],
+  },
+  kiné: {
+    category: BusinessCategory.MEDICAL_ALTERNATIVE,
+    suggestions: ["doctor", "gym", "pharmacy", "osteopath"],
+  },
+  kinésithérapeute: {
+    category: BusinessCategory.MEDICAL_ALTERNATIVE,
+    suggestions: ["doctor", "gym", "pharmacy", "osteopath"],
+  },
+  physio: {
+    category: BusinessCategory.MEDICAL_ALTERNATIVE,
+    suggestions: ["doctor", "gym", "pharmacy", "osteopath"],
+  },
+  ostéopathe: {
+    category: BusinessCategory.MEDICAL_ALTERNATIVE,
+    suggestions: ["doctor", "physio", "chiropractor", "gym"],
+  },
+  osteopath: {
+    category: BusinessCategory.MEDICAL_ALTERNATIVE,
+    suggestions: ["doctor", "physio", "chiropractor", "gym"],
+  },
+  vétérinaire: {
+    category: BusinessCategory.VETERINARY,
+    suggestions: ["pet_store", "dog_groomer", "pet_food_store"],
+  },
+  veterinarian: {
+    category: BusinessCategory.VETERINARY,
+    suggestions: ["pet_store", "dog_groomer", "pet_food_store"],
+  },
+
   // === BEAUTÉ & BIEN-ÊTRE ===
-  'coiffeur': ['beauty_salon', 'clothing_store', 'jewelry_store'],
-  'salon de coiffure': ['beauty_salon', 'clothing_store', 'jewelry_store'],
-  'esthéticienne': ['hair_salon', 'spa', 'gym'],
-  'esthétique': ['hair_salon', 'spa', 'gym'],
-  'beauté': ['hair_salon', 'spa', 'gym'],
-  'barbier': ['clothing_store', 'shoe_store', 'jewelry_store'],
-  'spa': ['hair_salon', 'beauty_salon', 'massage', 'hotel'],
-  'salle de sport': ['physio', 'massage'],
-  'gym': ['physio', 'massage'],
-  'fitness': ['physio', 'massage'],
-  
-  // === COMMERCE ALIMENTAIRE ===
-  'boulangerie': ['cafe', 'butcher', 'wine_shop', 'florist'],
-  'boulanger': ['cafe', 'butcher', 'wine_shop', 'florist'],
-  'restaurant': ['hotel', 'travel_agency'],
-  'café': ['bakery', 'book_store'],
-  'traiteur': ['florist', 'photographer'],
-  'catering': ['florist', 'photographer'],
-  
-  // === CONSTRUCTION & RÉNOVATION ===
-  'plombier': ['electrician', 'painter', 'locksmith'],
-  'plomberie': ['electrician', 'painter', 'locksmith'],
-  'électricien': ['plumber', 'painter', 'locksmith'],
-  'électrique': ['plumber', 'painter', 'locksmith'],
-  'peintre': ['plumber', 'electrician'],
-  'peinture': ['plumber', 'electrician'],
-  'couvreur': ['plumber', 'electrician'],
-  'toiture': ['plumber', 'electrician'],
-  
+  coiffeur: {
+    category: BusinessCategory.HAIR_SERVICES,
+    suggestions: ["beauty_salon", "clothing_store", "jewelry_store", "photographer"],
+  },
+  hair_salon: {
+    category: BusinessCategory.HAIR_SERVICES,
+    suggestions: ["beauty_salon", "clothing_store", "jewelry_store", "photographer"],
+  },
+  barbier: {
+    category: BusinessCategory.HAIR_SERVICES,
+    suggestions: ["clothing_store", "shoe_store", "jewelry_store", "barber_supply"],
+  },
+  barber: {
+    category: BusinessCategory.HAIR_SERVICES,
+    suggestions: ["clothing_store", "shoe_store", "jewelry_store", "grooming"],
+  },
+  esthéticienne: {
+    category: BusinessCategory.BEAUTY_SERVICES,
+    suggestions: ["hair_salon", "spa", "gym", "nail_salon"],
+  },
+  beauty_salon: {
+    category: BusinessCategory.BEAUTY_SERVICES,
+    suggestions: ["hair_salon", "spa", "gym", "nail_salon"],
+  },
+  spa: {
+    category: BusinessCategory.WELLNESS,
+    suggestions: ["hair_salon", "beauty_salon", "massage", "hotel"],
+  },
+  massage: {
+    category: BusinessCategory.WELLNESS,
+    suggestions: ["spa", "gym", "physio", "hotel"],
+  },
+  "salle de sport": {
+    category: BusinessCategory.FITNESS,
+    suggestions: ["physio", "massage", "spa", "nutrition"],
+  },
+  gym: {
+    category: BusinessCategory.FITNESS,
+    suggestions: ["physio", "massage", "spa", "nutrition"],
+  },
+  yoga: {
+    category: BusinessCategory.FITNESS,
+    suggestions: ["massage", "spa", "health_food_store", "meditation"],
+  },
+
+  // === RESTAURATION ===
+  boulangerie: {
+    category: BusinessCategory.BAKERY,
+    suggestions: ["cafe", "butcher", "wine_shop", "florist"],
+  },
+  bakery: {
+    category: BusinessCategory.BAKERY,
+    suggestions: ["cafe", "butcher", "wine_shop", "florist"],
+  },
+  restaurant: {
+    category: BusinessCategory.RESTAURANTS,
+    suggestions: ["hotel", "travel_agency", "wine_shop", "catering"],
+  },
+  café: {
+    category: BusinessCategory.CAFES,
+    suggestions: ["bakery", "book_store", "florist", "coworking"],
+  },
+  cafe: {
+    category: BusinessCategory.CAFES,
+    suggestions: ["bakery", "book_store", "florist", "coworking"],
+  },
+  traiteur: {
+    category: BusinessCategory.SPECIALTY_FOOD,
+    suggestions: ["florist", "photographer", "event_planner", "wine_shop"],
+  },
+  catering: {
+    category: BusinessCategory.SPECIALTY_FOOD,
+    suggestions: ["florist", "photographer", "event_planner", "wine_shop"],
+  },
+  boucherie: {
+    category: BusinessCategory.SPECIALTY_FOOD,
+    suggestions: ["bakery", "wine_shop", "cheese_shop", "catering"],
+  },
+  butcher: {
+    category: BusinessCategory.SPECIALTY_FOOD,
+    suggestions: ["bakery", "wine_shop", "cheese_shop", "catering"],
+  },
+
+  // === RETAIL ===
+  "magasin de vêtements": {
+    category: BusinessCategory.CLOTHING,
+    suggestions: ["shoe_store", "jewelry_store", "hair_salon", "tailor"],
+  },
+  clothing_store: {
+    category: BusinessCategory.CLOTHING,
+    suggestions: ["shoe_store", "jewelry_store", "hair_salon", "tailor"],
+  },
+  chaussures: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["clothing_store", "shoe_repair", "jewelry_store"],
+  },
+  shoe_store: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["clothing_store", "shoe_repair", "jewelry_store"],
+  },
+  bijouterie: {
+    category: BusinessCategory.JEWELRY,
+    suggestions: ["clothing_store", "hair_salon", "photographer", "wedding_planner"],
+  },
+  jewelry_store: {
+    category: BusinessCategory.JEWELRY,
+    suggestions: ["clothing_store", "hair_salon", "photographer", "wedding_planner"],
+  },
+  librairie: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["cafe", "tutoring", "stationery_store"],
+  },
+  book_store: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["cafe", "tutoring", "stationery_store"],
+  },
+  animalerie: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["veterinarian", "dog_groomer", "pet_training"],
+  },
+  pet_store: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["veterinarian", "dog_groomer", "pet_training"],
+  },
+  fleuriste: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["photographer", "event_planner", "wedding_planner", "catering"],
+  },
+  florist: {
+    category: BusinessCategory.VARIOUS,
+    suggestions: ["photographer", "event_planner", "wedding_planner", "catering"],
+  },
+
+  // === HÔTELLERIE & TOURISME ===
+  hôtel: {
+    category: BusinessCategory.OTHER,
+    suggestions: ["restaurant", "travel_agency", "car_rental", "spa"],
+  },
+  hotel: {
+    category: BusinessCategory.OTHER,
+    suggestions: ["restaurant", "travel_agency", "car_rental", "spa"],
+  },
+  "agence de voyage": {
+    category: BusinessCategory.OTHER,
+    suggestions: ["hotel", "car_rental", "insurance", "restaurant"],
+  },
+  travel_agency: {
+    category: BusinessCategory.OTHER,
+    suggestions: ["hotel", "car_rental", "insurance", "restaurant"],
+  },
+
+  // === ÉVÉNEMENTIEL ===
+  photographe: {
+    category: BusinessCategory.EVENTS,
+    suggestions: ["wedding_planner", "florist", "catering", "jewelry_store"],
+  },
+  photographer: {
+    category: BusinessCategory.EVENTS,
+    suggestions: ["wedding_planner", "florist", "catering", "jewelry_store"],
+  },
+  wedding_planner: {
+    category: BusinessCategory.EVENTS,
+    suggestions: ["florist", "photographer", "catering", "hotel"],
+  },
+  organisateur: {
+    category: BusinessCategory.EVENTS,
+    suggestions: ["florist", "photographer", "catering", "venue"],
+  },
+  event_planner: {
+    category: BusinessCategory.EVENTS,
+    suggestions: ["florist", "photographer", "catering", "venue"],
+  },
+
   // === SERVICES DIVERS ===
-  'pressing': ['dry_cleaning', 'clothing_store'],
-  'nettoyage': ['cleaning'],
-  'fleuriste': ['florist', 'photographer'],
-  'fleur': ['florist', 'photographer'],
-  
-  // === ÉDUCATION ===
-  'cours particuliers': ['book_store', 'tutoring'],
-  'soutien scolaire': ['book_store', 'tutoring'],
-  
-  // === HÉBERGEMENT & TOURISME ===
-  'hôtel': ['restaurant', 'travel_agency', 'car_rental'],
-  'hotel': ['restaurant', 'travel_agency', 'car_rental'],
-  'agence de voyage': ['hotel', 'car_rental', 'insurance'],
-  'voyage': ['hotel', 'car_rental', 'insurance'],
-  
-  // === ANIMAUX ===
-  'animalerie': ['veterinarian'],
-  'pet store': ['veterinarian'],
+  nettoyage: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["real_estate", "moving", "carpet_cleaning", "window_cleaning"],
+  },
+  cleaning: {
+    category: BusinessCategory.HOME_SERVICES,
+    suggestions: ["real_estate", "moving", "carpet_cleaning", "window_cleaning"],
+  },
+  pressing: {
+    category: BusinessCategory.OTHER,
+    suggestions: ["dry_cleaning", "clothing_store", "laundromat"],
+  },
+  dry_cleaning: {
+    category: BusinessCategory.OTHER,
+    suggestions: ["laundromat", "clothing_store", "tailoring"],
+  },
 };
 
+/**
+ * Suggestions génériques par domaine
+ */
+const GENERIC_SUGGESTIONS: Record<string, string[]> = {
+  automobile: ["insurance", "car_wash", "car_repair", "driving_school"],
+  immobilier: ["furniture_store", "home_decor", "electrician", "plumber"],
+  beauté: ["hair_salon", "beauty_salon", "spa", "massage"],
+  santé: ["doctor", "pharmacy", "physio", "dentist"],
+  restauration: ["cafe", "bakery", "wine_shop", "catering"],
+  mode: ["shoe_store", "jewelry_store", "hair_salon", "beauty_salon"],
+  voyage: ["hotel", "car_rental", "restaurant", "insurance"],
+  default: ["insurance", "accountant", "lawyer", "marketing_agency"],
+};
+
+/**
+ * Fonction intelligente de génération de suggestions
+ */
+function generateSmartSuggestions(
+  activityInput: string,
+  availableTypes: BusinessType[],
+  maxSuggestions: number = 5,
+): BusinessType[] {
+  const inputLower = activityInput.toLowerCase().trim();
+
+  // 1. Identifier l'activité principale
+  let mainActivity: { category: BusinessCategory; suggestions: string[] } | null = null;
+  let matchedKeyword = "";
+
+  for (const [keyword, activityInfo] of Object.entries(ACTIVITY_INTELLIGENCE)) {
+    if (inputLower.includes(keyword)) {
+      mainActivity = activityInfo;
+      matchedKeyword = keyword;
+      break;
+    }
+  }
+
+  // 2. Collecter les IDs de suggestions
+  let suggestionIds: string[] = [];
+
+  if (mainActivity) {
+    // Utiliser les suggestions spécifiques
+    suggestionIds = [...mainActivity.suggestions];
+  } else {
+    // Utiliser les suggestions génériques
+    for (const [domain, suggestions] of Object.entries(GENERIC_SUGGESTIONS)) {
+      if (inputLower.includes(domain)) {
+        suggestionIds = suggestions;
+        break;
+      }
+    }
+
+    // Si toujours rien, utiliser les suggestions par défaut
+    if (suggestionIds.length === 0) {
+      suggestionIds = GENERIC_SUGGESTIONS["default"];
+    }
+  }
+
+  // 3. Convertir en BusinessType objects et filtrer
+  const suggestions = availableTypes.filter((type) => suggestionIds.includes(type.id)).slice(0, maxSuggestions);
+
+  return suggestions;
+}
+
 export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProps) => {
-  const [activity, setActivity] = useState('');
+  const [activity, setActivity] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSuggest = () => {
@@ -110,88 +539,99 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
 
     setIsProcessing(true);
 
-    // Rechercher des mots-clés dans l'activité saisie
-    const activityLower = activity.toLowerCase();
-    let suggestedTypeIds: string[] = [];
-
-    // Chercher dans nos mappings
-    for (const [keyword, suggestions] of Object.entries(COMPLEMENTARY_SUGGESTIONS)) {
-      if (activityLower.includes(keyword)) {
-        suggestedTypeIds = suggestions;
-        break;
-      }
-    }
-
-    // Si aucune correspondance, suggestions par défaut basées sur des mots-clés génériques
-    if (suggestedTypeIds.length === 0) {
-      if (activityLower.includes('voiture') || activityLower.includes('auto')) {
-        suggestedTypeIds = ['insurance', 'car_wash', 'car_repair'];
-      } else if (activityLower.includes('maison') || activityLower.includes('habitat')) {
-        suggestedTypeIds = ['furniture_store', 'home_decor', 'electrician', 'plumber'];
-      } else if (activityLower.includes('beauté') || activityLower.includes('bien-être')) {
-        suggestedTypeIds = ['hair_salon', 'beauty_salon', 'spa', 'massage'];
-      } else {
-        // Suggestions très génériques
-        suggestedTypeIds = ['insurance', 'accountant', 'lawyer', 'real_estate'];
-      }
-    }
-
-    // Convertir les IDs en objets BusinessType
-    const suggestedTypes = BUSINESS_TYPES.filter(type => 
-      suggestedTypeIds.includes(type.id)
-    ).slice(0, 5);
+    // Générer les suggestions intelligentes
+    const suggestedTypes = generateSmartSuggestions(activity, BUSINESS_TYPES, 5);
 
     setTimeout(() => {
       onSuggest(suggestedTypes);
       setIsProcessing(false);
-      setActivity('');
+      setActivity("");
       onOpenChange(false);
     }, 500);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && activity.trim() && !isProcessing) {
+      handleSuggest();
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">✨ Genius - Suggestions intelligentes</DialogTitle>
-          <DialogDescription>
-            Saisissez l'activité de votre client telle qu'elle apparaît sur Google My Business pour obtenir des suggestions d'activités complémentaires.
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-purple-600" />
+            Genius - Suggestions intelligentes
+          </DialogTitle>
+          <DialogDescription className="text-base">
+            Saisissez l'activité de votre client pour obtenir jusqu'à 5 suggestions d'activités complémentaires non
+            concurrentes.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
+
+        <div className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="activity" className="text-sm font-medium">
-              Activité du client (exemple: "Concessionnaire automobile")
+              Activité principale du client
             </Label>
             <Input
               id="activity"
-              placeholder="Ex: Concessionnaire automobile, Coiffeur, Restaurant..."
+              placeholder="Ex: Concessionnaire automobile, Coiffeur, Restaurant, Plombier..."
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && activity.trim()) {
-                  handleSuggest();
-                }
-              }}
-              className="w-full"
+              onKeyDown={handleKeyDown}
+              className="w-full text-base"
               autoFocus
             />
           </div>
 
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">💡 Astuce</p>
-            <p className="text-sm text-muted-foreground">
-              Le système va suggérer jusqu'à 5 types d'activités complémentaires (non concurrentes) qui pourraient être d'excellents apporteurs d'affaires.
-            </p>
+          <div className="space-y-3">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-lg p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <TrendingUp className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Apporteurs d'affaires</p>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Activités dont les clients auraient naturellement besoin de votre client
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <Link2 className="h-5 w-5 text-pink-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-pink-900 dark:text-pink-100">Proximité sémantique</p>
+                  <p className="text-sm text-pink-700 dark:text-pink-300">
+                    Activités partageant le même univers client ou les mêmes occasions
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-sm font-medium text-muted-foreground mb-2">🎯 Le système évite automatiquement</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Les concurrents directs (même catégorie d'activité)</li>
+                <li>• Les activités sans lien avec votre client</li>
+                <li>• Les suggestions peu pertinentes pour le partenariat</li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">💡 Base de données</p>
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                Système optimisé pour plus de 3000 catégories d'activités Google Maps 2025
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-2">
           <Button
             variant="outline"
             onClick={() => {
-              setActivity('');
+              setActivity("");
               onOpenChange(false);
             }}
           >
@@ -200,15 +640,18 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
           <Button
             onClick={handleSuggest}
             disabled={!activity.trim() || isProcessing}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
           >
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Génération...
+                Génération en cours...
               </>
             ) : (
-              'Générer les suggestions'
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Générer les suggestions
+              </>
             )}
           </Button>
         </div>
