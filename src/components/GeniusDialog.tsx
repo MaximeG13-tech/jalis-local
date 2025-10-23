@@ -508,6 +508,8 @@ function generateSmartSuggestions(
   maxSuggestions: number = 5,
 ): BusinessType[] {
   const inputLower = activityInput.toLowerCase().trim();
+  console.log("🔍 Genius Debug - Input:", inputLower);
+  console.log("📦 Available types count:", availableTypes.length);
 
   // 1. Chercher dans tous les écosystèmes
   let bestMatch: { ecosystem: string; score: number } | null = null;
@@ -529,28 +531,42 @@ function generateSmartSuggestions(
 
   // 2. Si on a trouvé un écosystème, utiliser ses suggestions
   if (bestMatch && BUSINESS_ECOSYSTEMS[bestMatch.ecosystem]) {
+    console.log("✅ Écosystème trouvé:", bestMatch.ecosystem);
     const ecosystem = BUSINESS_ECOSYSTEMS[bestMatch.ecosystem];
 
     // 🔧 CORRECTION : Convertir les IDs courts en IDs Google via le mapping
-    const suggestionIds = ecosystem.activities
+    const shortIds = ecosystem.activities
       .sort((a, b) => b.score - a.score)
       .slice(0, maxSuggestions)
-      .map((activity) => ID_MAPPING[activity.id] || activity.id); // ← Mapping appliqué ici
+      .map((activity) => activity.id);
+    console.log("🔑 Short IDs (avant mapping):", shortIds);
+
+    const suggestionIds = shortIds.map((id) => ID_MAPPING[id] || id);
+    console.log("📋 IDs suggérés (après mapping):", suggestionIds);
 
     const suggestions = availableTypes.filter((type) => suggestionIds.includes(type.id));
+    console.log("✨ Suggestions trouvées:", suggestions.length, suggestions.map(s => ({ id: s.id, label: s.label })));
 
     if (suggestions.length > 0) {
       return suggestions;
     }
+    console.log("⚠️ Aucune suggestion trouvée dans availableTypes - passage au fallback");
+  } else {
+    console.log("❌ Aucun écosystème trouvé pour l'input:", inputLower);
   }
 
   // 3. Fallback : suggestions très génériques mais pertinentes
   // 🔧 CORRECTION : Appliquer le mapping aussi au fallback
+  console.log("🔄 Utilisation du fallback générique");
   const fallbackIds = ["insurance", "accountant", "lawyer", "marketing_agency", "bank"].map(
     (id) => ID_MAPPING[id] || id,
   ); // ← Mapping appliqué ici aussi
+  console.log("📋 Fallback IDs:", fallbackIds);
 
-  return availableTypes.filter((type) => fallbackIds.includes(type.id)).slice(0, maxSuggestions);
+  const fallbackSuggestions = availableTypes.filter((type) => fallbackIds.includes(type.id)).slice(0, maxSuggestions);
+  console.log("✨ Fallback suggestions:", fallbackSuggestions.map(s => ({ id: s.id, label: s.label })));
+
+  return fallbackSuggestions;
 }
 
 export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProps) => {
