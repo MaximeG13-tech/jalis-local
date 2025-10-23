@@ -1,6 +1,7 @@
 import { Business, GooglePlace } from '@/types/business';
 import { supabase } from '@/integrations/supabase/client';
 import { BusinessType, BUSINESS_TYPES } from '@/constants/businessTypes';
+import { GOOGLE_TYPES_MAPPING } from '@/constants/googleTypesMapping';
 
 export class GooglePlacesService {
   static async getLocationFromPlaceId(placeId: string): Promise<{ lat: number; lng: number } | null> {
@@ -142,21 +143,117 @@ export class GooglePlacesService {
     });
   }
 
+  private static mapBusinessCategoryFromTypes(
+    place: GooglePlace,
+    businessName: string
+  ): string {
+    // Si pas de types disponibles, fallback
+    if (!place.types || place.types.length === 0) {
+      return place.primary_type_display_name || 'Autre';
+    }
+
+    // 1. Créer un dictionnaire de poids pour les types de ce place
+    const typeWeights: Record<string, number> = {};
+    
+    GOOGLE_TYPES_MAPPING.forEach(mapping => {
+      if (place.types!.includes(mapping.googleType)) {
+        typeWeights[mapping.googleType] = mapping.weight;
+      }
+    });
+
+    // 2. Enrichissement sémantique par analyse du nom
+    const nameLower = businessName.toLowerCase();
+    
+    // Bonus de poids si le nom contient des mots-clés liés au type
+    const keywordBonus: Record<string, string[]> = {
+      'interior_designer': ['design', 'décoration', 'déco', 'aménagement', 'intérieur'],
+      'electrician': ['électric', 'élec', 'installation électrique'],
+      'plumber': ['plomb', 'sanitaire', 'chauffage', 'salle de bain'],
+      'hvac_contractor': ['clim', 'climatisation', 'chauffage', 'ventilation', 'cvc'],
+      'physiotherapist': ['kiné', 'kinési', 'rééducation', 'masseur'],
+      'lawyer': ['avocat', 'juridique', 'droit'],
+      'notary_public': ['notaire', 'notarial'],
+      'hair_care': ['coiffeur', 'coiffure', 'salon'],
+      'beauty_salon': ['beauté', 'esthétique', 'institut'],
+      'dentist': ['dentiste', 'dentaire', 'orthodon'],
+      'doctor': ['médecin', 'docteur', 'cabinet médical'],
+      'roofing_contractor': ['couvreur', 'toiture', 'toit'],
+      'painter': ['peintre', 'peinture'],
+      'locksmith': ['serrurier', 'serrurerie'],
+      'cleaning_service': ['nettoyage', 'ménage', 'propreté'],
+      'pest_control_service': ['dératisation', 'désinsectisation', 'nuisible'],
+      'real_estate_agency': ['immobilier', 'immo'],
+      'accounting': ['comptable', 'comptabilité'],
+      'photographer': ['photo', 'photographe'],
+      'restaurant': ['restaurant', 'bistro', 'brasserie'],
+      'bakery': ['boulang', 'pain'],
+    };
+
+    Object.entries(keywordBonus).forEach(([type, keywords]) => {
+      if (typeWeights[type] !== undefined) {
+        const hasKeyword = keywords.some(kw => nameLower.includes(kw));
+        if (hasKeyword) {
+          typeWeights[type] += 5; // Bonus de 5 points si mot-clé trouvé
+        }
+      }
+    });
+
+    // 3. Trouver le type avec le poids le plus élevé
+    let bestType: string | null = null;
+    let maxWeight = -1;
+
+    Object.entries(typeWeights).forEach(([type, weight]) => {
+      if (weight > maxWeight) {
+        maxWeight = weight;
+        bestType = type;
+      }
+    });
+
+    // 4. Retourner le label français correspondant
+    if (bestType && maxWeight > 0) {
+      const mapping = GOOGLE_TYPES_MAPPING.find(m => m.googleType === bestType);
+      if (mapping) {
+        console.log(`✅ Mapped ${businessName}: ${bestType} (weight: ${maxWeight}) → ${mapping.frenchLabel}`);
+        return mapping.frenchLabel;
+      }
+    }
+
+    // Fallback : utiliser primary_type_display_name de Google
+    return place.primary_type_display_name || 'Autre';
+  }
+
+  private static logUnmappedTypes(place: GooglePlace): void {
+    if (!place.types) return;
+    
+    const mappedTypes = GOOGLE_TYPES_MAPPING.map(m => m.googleType);
+    const unmappedTypes = place.types.filter(t => !mappedTypes.includes(t));
+    
+    if (unmappedTypes.length > 0) {
+      console.warn(`⚠️ Unmapped types for ${place.name}:`, unmappedTypes);
+    }
+  }
+
   private static getActivityType(
     place: GooglePlace,
     selectedTypes: BusinessType[]
   ): string {
-    // PRIORITÉ 1 : Utiliser primaryTypeDisplayName de Google (déjà en français grâce à languageCode='fr')
+    // NOUVELLE PRIORITÉ 1 : Mapping intelligent basé sur types[]
+    const mappedCategory = this.mapBusinessCategoryFromTypes(place, place.name);
+    if (mappedCategory !== 'Autre') {
+      return mappedCategory;
+    }
+
+    // PRIORITÉ 2 : Utiliser primaryTypeDisplayName de Google
     if (place.primary_type_display_name) {
       return place.primary_type_display_name;
     }
 
-    // PRIORITÉ 2 : Utiliser le type sélectionné par l'utilisateur
+    // PRIORITÉ 3 : Utiliser le type sélectionné par l'utilisateur
     if (selectedTypes.length > 0 && selectedTypes[0].id !== 'all') {
       return selectedTypes[0].label;
     }
 
-    // PRIORITÉ 3 : Fallback
+    // PRIORITÉ 4 : Fallback
     return 'Autre';
   }
 
@@ -242,6 +339,9 @@ export class GooglePlacesService {
             
             const details = await this.getPlaceDetails(place.place_id);
             if (!details) continue;
+            
+            // Log les types non mappés pour amélioration future
+            this.logUnmappedTypes(details);
             
             // Final filter on detailed info
             const finalFiltered = this.filterPlaces(
