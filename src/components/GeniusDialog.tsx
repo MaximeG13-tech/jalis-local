@@ -291,6 +291,182 @@ const ID_MAPPING: Record<string, string> = {
   industrial_equipment: "gcid:industrial_equipment_supplier",
   manufacturing: "gcid:manufacturer",
   warehouse: "gcid:warehouse",
+  
+  // === ÉLECTRONIQUE & TÉLÉPHONIE ===
+  mobile_phone_repair: "gcid:mobile_phone_repair_shop",
+  cell_phone_store: "gcid:cell_phone_store",
+  electronics_repair: "gcid:electronics_repair_shop",
+  electronics_store_extended: "gcid:electronics_store",
+  computer_store: "gcid:computer_store",
+  
+  // === OPTIQUE & AUDITION ===
+  optician_health: "gcid:optician",
+  hearing_aid_specialist: "gcid:hearing_aid_store",
+  ophthalmologist_eye: "gcid:ophthalmologist",
+  
+  // === LIVRES & PAPETERIE ===
+  book_store_retail: "gcid:book_store",
+  stationery_store: "gcid:stationery_store",
+  comic_book_store: "gcid:book_store",
+  office_supply: "gcid:office_supply_store",
+  
+  // === JOUETS & ENFANTS ===
+  toy_store_retail: "gcid:toy_store",
+  baby_store_extended: "gcid:baby_store",
+  children_clothing: "gcid:children_clothing_store",
+  game_store: "gcid:toy_store",
+  
+  // === ANIMALERIE & SERVICES ===
+  pet_store_retail: "gcid:pet_store",
+  pet_grooming: "gcid:pet_grooming_service",
+  veterinarian_extended: "gcid:veterinarian",
+  pet_boarding_extended: "gcid:pet_boarding_service",
+  dog_trainer: "gcid:dog_trainer",
+  
+  // === BRICOLAGE & QUINCAILLERIE ===
+  hardware_store_retail: "gcid:hardware_store",
+  home_improvement: "gcid:home_improvement_store",
+  tool_store: "gcid:tool_store",
+  paint_store: "gcid:paint_store",
+  
+  // === ÉCOLES DE CONDUITE ===
+  driving_school_auto: "gcid:driving_school",
+  motorcycle_school: "gcid:motorcycle_driving_school",
+  truck_driving_school: "gcid:truck_driving_school",
+  
+  // === ÉCOLES ARTISTIQUES ===
+  art_school_extended: "gcid:art_school",
+  dance_school_extended: "gcid:dance_school",
+  music_school_extended: "gcid:music_school",
+  drama_school: "gcid:drama_school",
+  cooking_school_extended: "gcid:cooking_school",
+  
+  // === CRÈCHE & GARDE ENFANTS ===
+  day_care_center: "gcid:day_care_center",
+  preschool: "gcid:preschool",
+  baby_sitter: "gcid:baby_sitter",
+  after_school: "gcid:after_school_program",
+  
+  // === PERSONNES ÂGÉES ===
+  nursing_home_extended: "gcid:nursing_home",
+  retirement_home: "gcid:retirement_home",
+  home_care_service: "gcid:home_care_service",
+  meal_delivery_senior: "gcid:meal_delivery",
+  home_health_care: "gcid:home_health_care_service",
+  
+  // === ARTISANAT ALIMENTAIRE - CHOCOLAT ===
+  chocolate_shop_retail: "gcid:chocolate_shop",
+  confectionery: "gcid:candy_store",
+  pastry_shop: "gcid:patisserie",
+  
+  // === ARTISANAT ALIMENTAIRE - GLACE ===
+  ice_cream_shop_retail: "gcid:ice_cream_shop",
+  frozen_yogurt: "gcid:frozen_yogurt_shop",
+  dessert_shop: "gcid:dessert_shop",
+  
+  // === ARTISANAT ALIMENTAIRE - CAFÉ ===
+  coffee_roasters_retail: "gcid:coffee_roasters",
+  coffee_shop: "gcid:coffee_shop",
+  coffee_store: "gcid:coffee_store",
+  
+  // === ARTISANAT ALIMENTAIRE - BIÈRE ===
+  brewery_retail: "gcid:brewery",
+  beer_store: "gcid:beer_store",
+  wine_store_retail: "gcid:wine_store",
+  
+  // === BOUCHERIE ===
+  butcher_shop_retail: "gcid:butcher_shop",
+  butcher_deli: "gcid:butcher_shop_deli",
+  charcuterie: "gcid:deli",
+  poultry_store: "gcid:poultry_store",
+  
+  // === TRANSPORT - TAXI ===
+  taxi_service_extended: "gcid:taxi_service",
+  taxi_stand: "gcid:taxi_stand",
+  limousine_service: "gcid:limousine_service",
+  airport_shuttle: "gcid:airport_shuttle_service",
+  
+  // === TRANSPORT - FRET ===
+  freight_service: "gcid:freight_forwarding_service",
+  shipping_service: "gcid:shipping_service",
+  logistics_company: "gcid:logistics_service",
+  moving_storage: "gcid:moving_and_storage_service",
+  
+  // === CONSTRUCTION LOURDE ===
+  demolition_service: "gcid:demolition_contractor",
+  excavation: "gcid:excavating_contractor",
+  concrete_contractor: "gcid:concrete_contractor",
+  steel_erection: "gcid:steel_erection_contractor",
+  
+  // === MATÉRIAUX CONSTRUCTION ===
+  building_materials: "gcid:building_materials_store",
+  lumber_store_retail: "gcid:lumber_store",
+  concrete_supplier: "gcid:ready_mix_concrete_supplier",
+  stone_supplier: "gcid:stone_supplier",
+  
+  // === AUTOMOBILE TECHNIQUE ===
+  car_inspection_station_retail: "gcid:car_inspection_station",
+  smog_check: "gcid:smog_inspection_station",
+  emissions_testing: "gcid:smog_inspection_station",
+  vehicle_inspection: "gcid:car_inspection_station",
+  
+  // === CARROSSERIE ===
+  auto_body_shop: "gcid:auto_body_shop",
+  auto_glass_shop: "gcid:auto_glass_shop",
+  auto_painting: "gcid:auto_body_shop",
+  dent_removal: "gcid:auto_dent_removal_service",
+  
+  // === CINÉMA & SPECTACLE ===
+  movie_theater_retail: "gcid:movie_theater",
+  performing_arts: "gcid:performing_arts_theater",
+  concert_hall_retail: "gcid:concert_hall",
+  comedy_club: "gcid:comedy_club",
+  
+  // === DIVERTISSEMENT INTÉRIEUR ===
+  bowling_alley_retail: "gcid:bowling_alley",
+  laser_tag: "gcid:laser_tag_center",
+  escape_room: "gcid:escape_room_center",
+  arcade: "gcid:video_arcade",
+  pool_hall_retail: "gcid:pool_hall",
+  
+  // === ACTIVITÉS EXTÉRIEURES ===
+  go_kart_track_retail: "gcid:go_kart_track",
+  adventure_sports_retail: "gcid:adventure_sports_center",
+  paintball_center_retail: "gcid:paintball_center",
+  amusement_park_retail: "gcid:amusement_park",
+  horse_riding: "gcid:horse_riding_school",
+  golf_course_retail: "gcid:golf_course",
+  
+  // === TEXTILE & COUTURE ===
+  tailor_extended: "gcid:tailor",
+  clothing_alteration: "gcid:clothing_alteration_service",
+  notions_store: "gcid:notions_store",
+  fabric_store_retail: "gcid:fabric_store",
+  sewing_machine_store: "gcid:sewing_machine_store",
+  
+  // === SÉCURITÉ ===
+  security_guard_service_retail: "gcid:security_guard_service",
+  security_system: "gcid:security_system_supplier",
+  locksmith_extended: "gcid:locksmith",
+  alarm_system: "gcid:burglar_alarm_store",
+  
+  // === ÉNERGIE RENOUVELABLE ===
+  solar_energy_supplier: "gcid:solar_energy_equipment_supplier",
+  heat_pump: "gcid:heating_contractor",
+  insulation_contractor_extended: "gcid:insulation_contractor",
+  energy_consultant: "gcid:energy_equipment_and_solutions",
+  
+  // === FINANCE SPÉCIALISÉE ===
+  mortgage_broker_extended: "gcid:mortgage_broker",
+  financial_planner_extended: "gcid:financial_planner",
+  investment_service_extended: "gcid:investment_service",
+  insurance_broker: "gcid:insurance_broker",
+  
+  // === AGRICULTURE ===
+  farm_extended: "gcid:farm",
+  livestock_farm_extended: "gcid:livestock_farm",
+  produce_market_extended: "gcid:produce_market",
+  agricultural_cooperative: "gcid:agricultural_cooperative",
 };
 
 /**
@@ -724,17 +900,6 @@ const BUSINESS_ECOSYSTEMS: Record<
     ],
   },
 
-  // === ÉCOSYSTÈME LIBRAIRIE & PAPETERIE ===
-  retail_books: {
-    keywords: ["librairie", "bookstore", "book store", "livres"],
-    activities: [
-      { id: "stationery", score: 9, reason: "Fournitures scolaires et bureau" },
-      { id: "cafe", score: 8, reason: "Café-librairie concept" },
-      { id: "library", score: 7, reason: "Complémentarité lecture" },
-      { id: "tutoring_service", score: 6, reason: "Soutien scolaire avec livres" },
-      { id: "art_school", score: 6, reason: "Livres d'art et éducation" },
-    ],
-  },
 
   stationery_store: {
     keywords: ["papeterie", "stationery", "fournitures bureau", "fournitures scolaires"],
@@ -747,17 +912,6 @@ const BUSINESS_ECOSYSTEMS: Record<
     ],
   },
 
-  // === ÉCOSYSTÈME SANTÉ SPÉCIALISÉE ===
-  health_ophthalmology: {
-    keywords: ["ophtalmologiste", "ophthalmologist", "opticien", "optique", "lunettes", "vision"],
-    activities: [
-      { id: "optician", score: 10, reason: "Prescriptions de lunettes" },
-      { id: "optician", score: 9, reason: "Lentilles de contact" },
-      { id: "doctor", score: 7, reason: "Suivi médical général" },
-      { id: "pharmacy", score: 6, reason: "Collyres et médicaments" },
-      { id: "hearing_aid", score: 5, reason: "Autres appareillages médicaux" },
-    ],
-  },
 
   health_chiropractic: {
     keywords: ["chiropracteur", "chiropractor", "chiropraxie", "manipulation vertébrale"],
@@ -1079,15 +1233,363 @@ const BUSINESS_ECOSYSTEMS: Record<
     ],
   },
 
-  // === ÉCOSYSTÈME SERVICES INDUSTRIELS ===
-  industrial_services: {
-    keywords: ["industrie", "industrial", "usine", "fabrication", "manufacturing"],
+  // === 1. ÉLECTRONIQUE & TÉLÉPHONIE MOBILE ===
+  electronics_mobile: {
+    keywords: ["téléphone", "mobile", "smartphone", "réparation téléphone", "phone repair", "cellphone", "iphone", "samsung", "tablette", "tablet"],
     activities: [
-      { id: "welding", score: 9, reason: "Soudure industrielle" },
-      { id: "industrial_equipment", score: 10, reason: "Équipements industriels" },
-      { id: "electrician", score: 8, reason: "Électricité industrielle" },
-      { id: "logistics_transport", score: 8, reason: "Transport marchandises" },
-      { id: "warehouse", score: 8, reason: "Stockage production" },
+      { id: "cell_phone_store", score: 10, reason: "Vente accessoires et protections" },
+      { id: "electronics_store_extended", score: 9, reason: "Accessoires électroniques connexes" },
+      { id: "computer_repair", score: 8, reason: "Réparation ordinateurs et tablettes" },
+      { id: "electronics_repair", score: 9, reason: "Réparation composants électroniques" },
+      { id: "computer_store", score: 7, reason: "Vente ordinateurs portables" },
+    ],
+  },
+
+  // === 2. OPTIQUE & AUDITION ===
+  optics_hearing: {
+    keywords: ["opticien", "optician", "lunettes", "glasses", "audioprothésiste", "hearing aid", "appareil auditif", "lentilles", "orthoptiste"],
+    activities: [
+      { id: "ophthalmologist_eye", score: 10, reason: "Prescriptions médicales pour lunettes" },
+      { id: "hearing_aid_specialist", score: 9, reason: "Audioprothésistes partagent clientèle seniors" },
+      { id: "doctor", score: 8, reason: "Médecins prescrivent contrôles visuels" },
+      { id: "pharmacy", score: 7, reason: "Produits d'entretien lentilles" },
+      { id: "optician_health", score: 10, reason: "Réseau d'opticiens collaboratifs" },
+    ],
+  },
+
+  // === 3. LIBRAIRIE & PAPETERIE ===
+  retail_books: {
+    keywords: ["librairie", "book store", "livres", "books", "papeterie", "stationery", "bd", "comic", "manga"],
+    activities: [
+      { id: "stationery_store", score: 10, reason: "Fournitures scolaires complémentaires" },
+      { id: "comic_book_store", score: 9, reason: "Clientèle passionnée de lecture" },
+      { id: "office_supply", score: 8, reason: "Fournitures bureau" },
+      { id: "cafe", score: 7, reason: "Café littéraire, espace lecture" },
+      { id: "library", score: 6, reason: "Promotion lecture et événements culturels" },
+    ],
+  },
+
+  // === 4. JOUETS & LOISIRS CRÉATIFS ===
+  retail_toys: {
+    keywords: ["jouets", "toys", "jeux", "games", "magasin jouets", "toy store", "loisirs créatifs", "puériculture"],
+    activities: [
+      { id: "baby_store_extended", score: 9, reason: "Articles puériculture 0-3 ans" },
+      { id: "children_clothing", score: 8, reason: "Vêtements enfants même clientèle" },
+      { id: "game_store", score: 10, reason: "Jeux de société et cartes" },
+      { id: "craft_store", score: 7, reason: "Loisirs créatifs pour enfants" },
+      { id: "day_care_center", score: 6, reason: "Équipement crèches et écoles" },
+    ],
+  },
+
+  // === 5. ANIMALERIE & SERVICES ANIMAUX ===
+  pet_store_services: {
+    keywords: ["animalerie", "pet store", "animaux", "pets", "toilettage", "grooming", "chien", "dog", "chat", "cat"],
+    activities: [
+      { id: "pet_grooming", score: 10, reason: "Toilettage régulier animaux" },
+      { id: "veterinarian_extended", score: 10, reason: "Soins vétérinaires essentiels" },
+      { id: "pet_boarding_extended", score: 9, reason: "Garde pendant vacances" },
+      { id: "dog_trainer", score: 8, reason: "Éducation canine recommandée" },
+      { id: "pet_food", score: 9, reason: "Alimentation spécialisée" },
+    ],
+  },
+
+  // === 6. QUINCAILLERIE & BRICOLAGE ===
+  hardware_diy: {
+    keywords: ["quincaillerie", "hardware", "bricolage", "diy", "outils", "tools", "visserie", "home improvement"],
+    activities: [
+      { id: "home_improvement", score: 10, reason: "Grands travaux rénovation" },
+      { id: "tool_store", score: 9, reason: "Outillage professionnel" },
+      { id: "paint_store", score: 8, reason: "Peinture et décoration" },
+      { id: "electrician", score: 7, reason: "Installation électrique" },
+      { id: "plumber", score: 7, reason: "Plomberie et sanitaires" },
+    ],
+  },
+
+  // === 7. AUTO-ÉCOLE & PERMIS ===
+  schools_driving: {
+    keywords: ["auto-école", "driving school", "permis", "license", "conduite", "driving", "moto-école", "motorcycle", "code de la route"],
+    activities: [
+      { id: "car_dealer", score: 9, reason: "Première voiture après permis" },
+      { id: "insurance", score: 10, reason: "Assurance jeune conducteur obligatoire" },
+      { id: "motorcycle_school", score: 8, reason: "Formation moto complémentaire" },
+      { id: "truck_driving_school", score: 7, reason: "Permis poids lourds" },
+      { id: "dmv", score: 8, reason: "Démarches administratives permis" },
+    ],
+  },
+
+  // === 8. ÉCOLES ARTISTIQUES ===
+  schools_arts: {
+    keywords: ["école musique", "music school", "danse", "dance", "théâtre", "theater", "arts", "conservatoire", "cours musique", "cours danse"],
+    activities: [
+      { id: "music_store", score: 10, reason: "Instruments et partitions" },
+      { id: "dance_school_extended", score: 9, reason: "Écoles de danse partagent élèves" },
+      { id: "drama_school", score: 8, reason: "Cours théâtre complémentaires" },
+      { id: "art_school_extended", score: 8, reason: "Arts plastiques" },
+      { id: "event_planner", score: 7, reason: "Organisation spectacles" },
+    ],
+  },
+
+  // === 9. CRÈCHE & GARDE D'ENFANTS ===
+  childcare: {
+    keywords: ["crèche", "daycare", "nursery", "garde enfants", "childcare", "halte-garderie", "assistante maternelle", "nounou", "babysitter"],
+    activities: [
+      { id: "pediatrician", score: 10, reason: "Suivi médical enfants obligatoire" },
+      { id: "toy_store_retail", score: 9, reason: "Jeux éducatifs crèche" },
+      { id: "baby_store_extended", score: 8, reason: "Équipement puériculture" },
+      { id: "preschool", score: 9, reason: "Transition maternelle 3 ans" },
+      { id: "after_school", score: 7, reason: "Garde périscolaire" },
+    ],
+  },
+
+  // === 10. PERSONNES ÂGÉES ===
+  elderly_care: {
+    keywords: ["ehpad", "nursing home", "maison retraite", "retirement", "personnes âgées", "seniors", "aide domicile", "home care"],
+    activities: [
+      { id: "home_health_care", score: 10, reason: "Soins infirmiers à domicile" },
+      { id: "meal_delivery_senior", score: 9, reason: "Portage repas personnes âgées" },
+      { id: "home_care_service", score: 10, reason: "Aide ménagère et accompagnement" },
+      { id: "pharmacy", score: 9, reason: "Livraison médicaments seniors" },
+      { id: "doctor", score: 8, reason: "Consultations gériatriques" },
+    ],
+  },
+
+  // === 11. CHOCOLATERIE & CONFISERIE ===
+  food_artisan_chocolate: {
+    keywords: ["chocolatier", "chocolat", "chocolate", "confiserie", "confectionery", "pralines", "truffes", "bonbons"],
+    activities: [
+      { id: "pastry_shop", score: 9, reason: "Pâtisserie fine complémentaire" },
+      { id: "confectionery", score: 10, reason: "Bonbons et friandises" },
+      { id: "cafe", score: 8, reason: "Chocolat chaud artisanal" },
+      { id: "florist", score: 7, reason: "Cadeaux gourmands" },
+      { id: "event_planner", score: 6, reason: "Desserts événements" },
+    ],
+  },
+
+  // === 12. GLACIER & DESSERTS GLACÉS ===
+  food_artisan_ice_cream: {
+    keywords: ["glacier", "glace", "ice cream", "gelato", "sorbet", "frozen yogurt", "crème glacée"],
+    activities: [
+      { id: "frozen_yogurt", score: 9, reason: "Yaourt glacé tendance" },
+      { id: "dessert_shop", score: 8, reason: "Desserts gourmands" },
+      { id: "cafe", score: 8, reason: "Café gourmand" },
+      { id: "pastry_shop", score: 7, reason: "Pâtisserie artisanale" },
+      { id: "candy_store", score: 7, reason: "Confiseries sucrées" },
+    ],
+  },
+
+  // === 13. TORRÉFACTION & CAFÉ SPÉCIALISÉ ===
+  food_artisan_coffee: {
+    keywords: ["torréfacteur", "coffee roaster", "café spécialisé", "specialty coffee", "barista", "coffee shop"],
+    activities: [
+      { id: "coffee_shop", score: 10, reason: "Cafés spécialisés utilisent grains" },
+      { id: "coffee_store", score: 9, reason: "Vente machines et accessoires" },
+      { id: "bakery_shop", score: 8, reason: "Viennoiseries avec café" },
+      { id: "restaurant", score: 7, reason: "Restaurants achètent café qualité" },
+      { id: "grocery_store", score: 6, reason: "Distribution épiceries fines" },
+    ],
+  },
+
+  // === 14. BRASSERIE ARTISANALE ===
+  food_artisan_brewery: {
+    keywords: ["brasserie", "brewery", "bière artisanale", "craft beer", "microbrasserie", "micro-brewery", "bière"],
+    activities: [
+      { id: "beer_store", score: 10, reason: "Cave à bières vend production" },
+      { id: "wine_store_retail", score: 8, reason: "Cavistes diversifient avec bières" },
+      { id: "bar", score: 9, reason: "Bars proposent bières locales" },
+      { id: "restaurant", score: 8, reason: "Restaurants carte bières artisanales" },
+      { id: "pub", score: 9, reason: "Pubs spécialisés bières" },
+    ],
+  },
+
+  // === 15. BOUCHERIE & CHARCUTERIE ===
+  food_butcher: {
+    keywords: ["boucherie", "butcher", "boucher", "charcuterie", "viande", "meat", "volaille", "poultry"],
+    activities: [
+      { id: "butcher_deli", score: 10, reason: "Charcuterie traiteur" },
+      { id: "charcuterie", score: 9, reason: "Spécialités charcuterie" },
+      { id: "poultry_store", score: 8, reason: "Volailles fermières" },
+      { id: "grocery_store", score: 7, reason: "Épicerie fine produits terroir" },
+      { id: "restaurant", score: 7, reason: "Restaurants achètent viande qualité" },
+    ],
+  },
+
+  // === 16. TAXI & VTC ===
+  transport_taxi: {
+    keywords: ["taxi", "vtc", "chauffeur", "driver", "uber", "transport personnes", "navette"],
+    activities: [
+      { id: "airport_shuttle", score: 9, reason: "Navettes aéroport complémentaires" },
+      { id: "limousine_service", score: 8, reason: "Prestations haut de gamme" },
+      { id: "hotel", score: 9, reason: "Partenariats hôtels" },
+      { id: "restaurant", score: 7, reason: "Retour sécurisé après sorties" },
+      { id: "car_rental", score: 8, reason: "Location alternative" },
+    ],
+  },
+
+  // === 17. TRANSPORT MARCHANDISES ===
+  transport_freight: {
+    keywords: ["transport marchandises", "freight", "fret", "logistique", "logistics", "livraison", "delivery"],
+    activities: [
+      { id: "logistics_company", score: 10, reason: "Gestion chaîne logistique" },
+      { id: "shipping_service", score: 9, reason: "Expéditions nationales/internationales" },
+      { id: "moving_storage", score: 8, reason: "Déménagement entreprises" },
+      { id: "warehouse", score: 9, reason: "Stockage marchandises" },
+      { id: "courier", score: 7, reason: "Colis express" },
+    ],
+  },
+
+  // === 18. CONSTRUCTION LOURDE ===
+  construction_heavy: {
+    keywords: ["charpente", "carpenter", "couverture", "roofing", "gros œuvre", "terrassement", "excavation"],
+    activities: [
+      { id: "concrete_contractor", score: 9, reason: "Fondations béton" },
+      { id: "steel_erection", score: 8, reason: "Structures métalliques" },
+      { id: "excavation", score: 10, reason: "Terrassement préalable" },
+      { id: "demolition_service", score: 8, reason: "Démolition avant construction" },
+      { id: "architect", score: 9, reason: "Plans architecturaux" },
+    ],
+  },
+
+  // === 19. DÉMOLITION & TERRASSEMENT ===
+  construction_demolition: {
+    keywords: ["démolition", "demolition", "terrassement", "excavation", "désamiantage", "asbestos"],
+    activities: [
+      { id: "excavation", score: 10, reason: "Terrassement après démolition" },
+      { id: "concrete_contractor", score: 8, reason: "Nouvelles fondations" },
+      { id: "waste_management", score: 9, reason: "Évacuation gravats" },
+      { id: "environmental_consultant", score: 7, reason: "Études pollution sols" },
+      { id: "contractor", score: 8, reason: "Reconstruction" },
+    ],
+  },
+
+  // === 20. NÉGOCE MATÉRIAUX ===
+  construction_materials: {
+    keywords: ["matériaux", "materials", "négoce", "carrière", "quarry", "béton", "concrete", "pierre", "stone"],
+    activities: [
+      { id: "concrete_supplier", score: 10, reason: "Béton prêt à l'emploi" },
+      { id: "stone_supplier", score: 9, reason: "Pierres naturelles" },
+      { id: "lumber_store_retail", score: 9, reason: "Bois construction" },
+      { id: "contractor", score: 8, reason: "Entreprises générales" },
+      { id: "mason", score: 8, reason: "Maçonnerie traditionnelle" },
+    ],
+  },
+
+  // === 21. CONTRÔLE TECHNIQUE AUTO ===
+  auto_technical: {
+    keywords: ["contrôle technique", "car inspection", "ct", "technical inspection", "diagnostic auto", "vehicle inspection"],
+    activities: [
+      { id: "auto_body_shop", score: 9, reason: "Réparations contre-visite" },
+      { id: "tire_shop", score: 8, reason: "Changement pneus usés" },
+      { id: "oil_change", score: 7, reason: "Vidange entretien" },
+      { id: "car_dealer", score: 8, reason: "Vente véhicules occasion" },
+      { id: "insurance", score: 7, reason: "Assurance après achat" },
+    ],
+  },
+
+  // === 22. CARROSSERIE & PARE-BRISE ===
+  auto_bodywork: {
+    keywords: ["carrosserie", "body shop", "carrossier", "pare-brise", "windshield", "débosselage", "peinture auto"],
+    activities: [
+      { id: "auto_glass_shop", score: 10, reason: "Remplacement pare-brise" },
+      { id: "auto_painting", score: 9, reason: "Peinture carrosserie" },
+      { id: "dent_removal", score: 9, reason: "Débosselage sans peinture" },
+      { id: "insurance", score: 10, reason: "Sinistres assurance" },
+      { id: "car_wash", score: 7, reason: "Nettoyage après réparation" },
+    ],
+  },
+
+  // === 23. CINÉMA & SALLES DE SPECTACLE ===
+  entertainment_cinema: {
+    keywords: ["cinéma", "cinema", "movie theater", "film", "salle spectacle", "theater"],
+    activities: [
+      { id: "restaurant", score: 9, reason: "Dîner avant/après séance" },
+      { id: "cafe", score: 8, reason: "Boisson après film" },
+      { id: "performing_arts", score: 8, reason: "Théâtre même clientèle culture" },
+      { id: "concert_hall_retail", score: 7, reason: "Concerts et spectacles" },
+      { id: "parking", score: 6, reason: "Stationnement salle" },
+    ],
+  },
+
+  // === 24. DIVERTISSEMENT INTÉRIEUR ===
+  entertainment_indoor: {
+    keywords: ["bowling", "laser game", "escape game", "salle jeux", "arcade", "billard", "pool"],
+    activities: [
+      { id: "laser_tag", score: 9, reason: "Activités groupe similaires" },
+      { id: "escape_room", score: 9, reason: "Jeux immersifs" },
+      { id: "arcade", score: 8, reason: "Jeux vidéo arcade" },
+      { id: "pool_hall_retail", score: 8, reason: "Billard américain" },
+      { id: "restaurant", score: 8, reason: "Restauration avant/après" },
+    ],
+  },
+
+  // === 25. ACTIVITÉS PLEIN AIR ===
+  entertainment_outdoor: {
+    keywords: ["karting", "kart", "accrobranche", "paintball", "parc aventure", "adventure park"],
+    activities: [
+      { id: "adventure_sports_retail", score: 10, reason: "Parcours aventure similaires" },
+      { id: "paintball_center_retail", score: 9, reason: "Activités groupe adrenaline" },
+      { id: "amusement_park_retail", score: 8, reason: "Parcs loisirs familiaux" },
+      { id: "golf_course_retail", score: 6, reason: "Activités extérieures" },
+      { id: "camping", score: 7, reason: "Hébergement groupes" },
+    ],
+  },
+
+  // === 26. RETOUCHERIE & COUTURE ===
+  textile_sewing: {
+    keywords: ["retoucherie", "alteration", "couture", "sewing", "retouches", "tailleur", "tailor", "mercerie"],
+    activities: [
+      { id: "clothing_alteration", score: 10, reason: "Services retouches identiques" },
+      { id: "notions_store", score: 9, reason: "Mercerie fournitures couture" },
+      { id: "fabric_store_retail", score: 9, reason: "Tissus pour créations" },
+      { id: "sewing_machine_store", score: 8, reason: "Machines à coudre" },
+      { id: "dry_cleaner", score: 7, reason: "Nettoyage vêtements" },
+    ],
+  },
+
+  // === 27. SERVICES DE SÉCURITÉ ===
+  security_services: {
+    keywords: ["gardiennage", "security", "sécurité", "alarme", "alarm", "vidéosurveillance", "surveillance"],
+    activities: [
+      { id: "security_system", score: 10, reason: "Systèmes alarme et caméras" },
+      { id: "locksmith_extended", score: 9, reason: "Serrurerie sécurisée" },
+      { id: "alarm_system", score: 10, reason: "Installation alarmes" },
+      { id: "electrician", score: 7, reason: "Installation électrique sécurité" },
+      { id: "insurance", score: 8, reason: "Assurance habitation" },
+    ],
+  },
+
+  // === 28. ÉNERGIES RENOUVELABLES ===
+  energy_renewable: {
+    keywords: ["panneau solaire", "solar", "photovoltaïque", "pompe chaleur", "heat pump", "énergie renouvelable", "renewable"],
+    activities: [
+      { id: "heat_pump", score: 9, reason: "Pompes chaleur complémentaires" },
+      { id: "insulation_contractor_extended", score: 8, reason: "Isolation thermique optimale" },
+      { id: "energy_consultant", score: 8, reason: "Audit énergétique" },
+      { id: "electrician", score: 9, reason: "Installation électrique" },
+      { id: "roofer", score: 7, reason: "Pose panneaux toiture" },
+    ],
+  },
+
+  // === 29. COURTAGE & FINANCE ===
+  financial_specialized: {
+    keywords: ["courtier", "broker", "crédit", "mortgage", "prêt", "loan", "gestion patrimoine", "wealth management"],
+    activities: [
+      { id: "mortgage_broker_extended", score: 10, reason: "Courtage crédit immobilier" },
+      { id: "financial_planner_extended", score: 9, reason: "Gestion patrimoine globale" },
+      { id: "investment_service_extended", score: 9, reason: "Placements financiers" },
+      { id: "insurance_broker", score: 8, reason: "Courtage assurances" },
+      { id: "accountant", score: 8, reason: "Optimisation fiscale" },
+    ],
+  },
+
+  // === 30. AGRICULTURE & ÉLEVAGE ===
+  agriculture: {
+    keywords: ["agriculteur", "farmer", "agriculture", "élevage", "livestock", "ferme", "farm", "maraîcher", "market garden"],
+    activities: [
+      { id: "agricultural_cooperative", score: 10, reason: "Coopératives agricoles" },
+      { id: "livestock_farm_extended", score: 9, reason: "Élevage animaux" },
+      { id: "produce_market_extended", score: 9, reason: "Vente directe producteurs" },
+      { id: "farm_supplies", score: 8, reason: "Matériel et fournitures agricoles" },
+      { id: "veterinarian", score: 8, reason: "Soins animaux élevage" },
     ],
   },
 };
