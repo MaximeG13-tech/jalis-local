@@ -25,6 +25,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY!,
         'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location,primaryType,primaryTypeDisplayName',
+        'X-Goog-Language-Preference': 'fr'
       },
     });
 

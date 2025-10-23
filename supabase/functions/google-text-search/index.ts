@@ -48,7 +48,8 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY || '',
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.primaryTypeDisplayName,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri'
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.primaryTypeDisplayName,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri',
+        'X-Goog-Language-Preference': 'fr'
       },
       body: JSON.stringify(requestBody)
     });
