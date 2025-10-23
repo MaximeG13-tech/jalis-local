@@ -7,8 +7,15 @@ import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Sparkles, RefreshCw, RotateCcw } from 'lucide-react';
+import { Sparkles, RefreshCw, RotateCcw, AlertCircle } from 'lucide-react';
 import { BusinessType } from '@/constants/businessTypes';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Index = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -22,6 +29,8 @@ const Index = () => {
     maxResults: number;
     selectedTypes: BusinessType[];
   } | null>(null);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [limitDialogData, setLimitDialogData] = useState<{ found: number; requested: number } | null>(null);
   const { toast } = useToast();
 
   const handleSearch = async (
@@ -61,6 +70,12 @@ const Index = () => {
       setExcludedPlaceIds(newExcludedIds);
 
       setBusinesses(results);
+      
+      // Afficher un avertissement si moins d'entreprises trouvées que demandé
+      if (results.length < maxResults) {
+        setLimitDialogData({ found: results.length, requested: maxResults });
+        setShowLimitDialog(true);
+      }
       
       toast({
         title: isRegeneration ? "Nouvelles entreprises générées" : "Recherche terminée",
@@ -151,27 +166,29 @@ const Index = () => {
                     Résultats prêts à être exportés
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={handleRegenerate}
-                    variant="outline"
-                    disabled={isLoading}
-                    className="gap-2 font-semibold"
-                    size="sm"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    Régénérer
-                  </Button>
-                  <Button
-                    onClick={handleNewSearch}
-                    variant="outline"
-                    disabled={isLoading}
-                    className="gap-2 font-semibold"
-                    size="sm"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Nouvelle recherche
-                  </Button>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleRegenerate}
+                      variant="outline"
+                      disabled={isLoading}
+                      className="gap-2 font-semibold flex-1 sm:flex-none"
+                      size="sm"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                      Régénérer
+                    </Button>
+                    <Button
+                      onClick={handleNewSearch}
+                      variant="outline"
+                      disabled={isLoading}
+                      className="gap-2 font-semibold flex-1 sm:flex-none"
+                      size="sm"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Nouvelle recherche
+                    </Button>
+                  </div>
                   <ExportButton 
                     businesses={businesses}
                     companyName={lastSearch?.companyName}
@@ -185,6 +202,30 @@ const Index = () => {
           )}
         </div>
 
+        {/* Dialog d'avertissement pour résultats limités */}
+        <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+                <DialogTitle>Résultats limités</DialogTitle>
+              </div>
+              <DialogDescription className="text-base space-y-2">
+                <p>
+                  Votre recherche demandait <strong>{limitDialogData?.requested} entreprises</strong>, mais nous n'avons trouvé que <strong>{limitDialogData?.found} entreprise{(limitDialogData?.found ?? 0) > 1 ? 's' : ''} exploitable{(limitDialogData?.found ?? 0) > 1 ? 's' : ''}</strong> dans cette zone.
+                </p>
+                <p className="text-muted-foreground">
+                  L'application vous présente toutes les entreprises disponibles correspondant à vos critères.
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end">
+              <Button onClick={() => setShowLimitDialog(false)}>
+                Compris
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
