@@ -167,10 +167,19 @@ serve(async (req) => {
       // Générer un numéro aléatoire pour varier les styles de rédaction
       const styleVariant = Math.floor(Math.random() * 5) + 1;
       
+      // Extraire la ville de l'adresse pour un contexte géographique précis
+      const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
+      const cityName = cityMatch ? cityMatch[1].trim() : '';
+      
       const prompt = `Tu es un rédacteur web talentueux qui écrit des contenus naturels et engageants.
 
 🎯 MISSION : ${companyName} présente et recommande ${business.nom}
 Tu rédiges comme si c'était ${companyName} qui parlait de ${business.nom} à ses clients.
+
+CONTEXTE IMPORTANT :
+- ${companyName} est une ENTREPRISE (pas un lieu géographique)
+- ${business.nom} est situé à ${cityName}
+- Utilise le NOM DE LA VILLE (${cityName}) pour les références géographiques
 
 ENTREPRISE : ${business.nom}
 Adresse : ${business.adresse}
@@ -243,8 +252,13 @@ PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
 Selon le style choisi, commence différemment :
 - Question : "Besoin de..." / "Vous cherchez..." / "Un souci avec..."
 - Affirmation : "Chez ${business.nom}..." / "Depuis X ans..." / "Dans le quartier..."
-- Situation : "Quand on habite près de ${companyName}..."
-Intègre ${companyName} NATURELLEMENT (varie : "non loin de", "dans le secteur de", "près de", "à côté de", "tout proche de")
+- Situation : "Quand on habite à ${cityName}..." / "Dans la région de ${cityName}..."
+Intègre ${companyName} NATURELLEMENT avec des formulations LOGIQUES :
+- "recommandé par ${companyName}"
+- "partenaire de confiance de ${companyName}"
+- "dans le réseau de ${companyName}"
+- "à proximité de chez ${companyName}"
+ÉVITE ABSOLUMENT : "dans le secteur de ${companyName}" (illogique car ${companyName} n'est pas un lieu)
 
 PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
 Décris VRAIMENT ce que propose ${business.nom}. Varie les approches :
