@@ -19,13 +19,12 @@ serve(async (req) => {
     console.log('Fetching place details for:', placeId);
 
     // Call new Places API (New) Place Details
-    const response = await fetch(`https://places.googleapis.com/v1/${placeId}`, {
+    const response = await fetch(`https://places.googleapis.com/v1/${placeId}?languageCode=fr`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY!,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location,primaryType,primaryTypeDisplayName',
-        'X-Goog-Language-Preference': 'fr'
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location,primaryType,primaryTypeDisplayName'
       },
     });
 

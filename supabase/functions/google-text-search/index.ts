@@ -38,7 +38,8 @@ serve(async (req) => {
         }
       },
       maxResultCount: maxResults,
-      rankPreference: "DISTANCE"
+      rankPreference: "DISTANCE",
+      languageCode: "fr"
     };
 
     console.log('Calling Google Text Search API with body:', JSON.stringify(requestBody));
@@ -48,8 +49,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY || '',
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.primaryTypeDisplayName,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri',
-        'X-Goog-Language-Preference': 'fr'
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.primaryTypeDisplayName,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri'
       },
       body: JSON.stringify(requestBody)
     });
