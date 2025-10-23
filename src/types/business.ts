@@ -5,6 +5,9 @@ export interface Business {
   telephone: string;
   site_web: string;
   lien_maps: string;
+  category_id?: string;
+  primary_type_display_name?: string;
+  confidence_level?: 'verified' | 'probable' | 'unverified';
 }
 
 export interface GooglePlace {
@@ -15,6 +18,8 @@ export interface GooglePlace {
   website?: string;
   url?: string;
   types?: string[];
+  primary_type?: string;
+  primary_type_display_name?: string;
   geometry?: {
     location: {
       lat: number;

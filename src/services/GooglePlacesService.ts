@@ -142,21 +142,107 @@ export class GooglePlacesService {
     });
   }
 
-  private static getActivityType(types: string[]): string {
-    if (types.length === 0) return 'Autre';
-    
-    // Map common types to French labels
-    const typeMap: Record<string, string> = {
-      'restaurant': 'Restaurant',
-      'cafe': 'Café',
-      'bakery': 'Boulangerie',
-      'store': 'Magasin',
-      'health': 'Santé',
-      'beauty_salon': 'Salon de beauté',
-      'gym': 'Salle de sport',
+  private static getActivityType(
+    place: GooglePlace,
+    selectedTypes: BusinessType[]
+  ): string {
+    // PRIORITÉ 1 : Utiliser primaryTypeDisplayName de Google (le plus précis)
+    if (place.primary_type_display_name) {
+      return place.primary_type_display_name;
+    }
+
+    // PRIORITÉ 2 : Utiliser le type sélectionné par l'utilisateur
+    if (selectedTypes.length > 0 && selectedTypes[0].id !== 'all') {
+      return selectedTypes[0].label;
+    }
+
+    // PRIORITÉ 3 : Fallback sur l'ancien système
+    if (place.types && place.types.length > 0) {
+      const typeMap: Record<string, string> = {
+        'restaurant': 'Restaurant',
+        'cafe': 'Café',
+        'bakery': 'Boulangerie',
+        'store': 'Magasin',
+        'health': 'Santé',
+        'beauty_salon': 'Salon de beauté',
+        'gym': 'Salle de sport',
+      };
+      return typeMap[place.types[0]] || place.types[0];
+    }
+
+    return 'Autre';
+  }
+
+  /**
+   * Valide la catégorie d'un établissement en comparant :
+   * - Le primaryType de Google avec les types sélectionnés
+   * - Les mots-clés dans le primaryTypeDisplayName
+   */
+  private static validateBusinessCategory(
+    place: GooglePlace,
+    selectedTypes: BusinessType[]
+  ): 'verified' | 'probable' | 'unverified' {
+    // Si pas de types sélectionnés ou "Tous", on accepte tout
+    if (selectedTypes.length === 0 || selectedTypes.some(t => t.id === 'all')) {
+      return place.primary_type_display_name ? 'verified' : 'probable';
+    }
+
+    const primaryType = place.primary_type?.toLowerCase() || '';
+    const primaryDisplayName = place.primary_type_display_name?.toLowerCase() || '';
+    const businessName = place.name.toLowerCase();
+
+    // Mapping des IDs vers les mots-clés de validation
+    const validationKeywords: Record<string, { included: string[]; excluded: string[] }> = {
+      'physiotherapist': {
+        included: ['kinésithérapeute', 'kiné', 'masseur-kinésithérapeute', 'physiothérapeute'],
+        excluded: ['massage', 'spa', 'bien-être', 'relaxation']
+      },
+      'massage': {
+        included: ['massage', 'masseur', 'spa', 'relaxation', 'bien-être'],
+        excluded: ['kiné', 'kinésithérapeute', 'ostéo', 'ongle', 'manucure']
+      },
+      'beauty_salon': {
+        included: ['beauté', 'esthétique', 'institut', 'spa'],
+        excluded: ['coiffure', 'barbier']
+      },
+      'hair_salon': {
+        included: ['coiffeur', 'coiffure', 'barbier', 'salon'],
+        excluded: ['ongle', 'esthétique']
+      },
+      'nail_salon': {
+        included: ['ongle', 'manucure', 'pédicure', 'nail'],
+        excluded: ['coiffure', 'massage']
+      },
     };
 
-    return typeMap[types[0]] || types[0];
+    // Trouver le type sélectionné le plus pertinent
+    for (const selectedType of selectedTypes) {
+      const typeId = selectedType.id;
+      const keywords = validationKeywords[typeId];
+
+      if (!keywords) continue;
+
+      // Vérifier les mots-clés d'exclusion dans primaryDisplayName
+      const hasExcludedKeyword = keywords.excluded.some(kw => 
+        primaryDisplayName.includes(kw) || businessName.includes(kw)
+      );
+
+      if (hasExcludedKeyword) {
+        return 'unverified';
+      }
+
+      // Vérifier les mots-clés inclus dans primaryDisplayName
+      const hasIncludedKeyword = keywords.included.some(kw => 
+        primaryDisplayName.includes(kw) || businessName.includes(kw)
+      );
+
+      if (hasIncludedKeyword) {
+        return 'verified';
+      }
+    }
+
+    // Si on arrive ici, c'est probablement valide mais pas certifié
+    return 'probable';
   }
 
   static async searchBusinesses(
@@ -252,10 +338,17 @@ export class GooglePlacesService {
             
             if (finalFiltered.length === 0) continue;
             
-            // Determine activity type from selected types or use the first type
-            const activityType = selectedTypes.length > 0 && selectedTypes[0].id !== 'all'
-              ? selectedTypes[0].label
-              : this.getActivityType(details.types || []);
+            // Valider la catégorie avant d'ajouter
+            const confidenceLevel = this.validateBusinessCategory(details, selectedTypes);
+            
+            // Optionnel : rejeter les "unverified" si on veut une qualité maximale
+            // if (confidenceLevel === 'unverified') {
+            //   console.log(`⏭️ Skipping unverified business: ${details.name}`);
+            //   continue;
+            // }
+            
+            // Déterminer le type d'activité à afficher (utilise primaryTypeDisplayName en priorité)
+            const activityType = this.getActivityType(details, selectedTypes);
             
             const business: Business = {
               nom: details.name,
@@ -263,7 +356,10 @@ export class GooglePlacesService {
               adresse: details.formatted_address || '',
               telephone: details.formatted_phone_number || 'Non disponible',
               site_web: details.website || 'Non disponible',
-              lien_maps: details.url || ''
+              lien_maps: details.url || '',
+              category_id: details.primary_type,
+              primary_type_display_name: details.primary_type_display_name,
+              confidence_level: confidenceLevel
             };
             
             // Créer une clé unique basée sur nom + adresse pour détecter les doublons

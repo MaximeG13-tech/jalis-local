@@ -2,7 +2,7 @@ import { Business } from '@/types/business';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Phone, Globe, X, MapPin, Building2 } from 'lucide-react';
+import { ExternalLink, Phone, Globe, X, MapPin, Building2, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
 
 interface ResultsTableProps {
   businesses: Business[];
@@ -11,6 +11,37 @@ interface ResultsTableProps {
 
 export const ResultsTable = ({ businesses, onRemove }: ResultsTableProps) => {
   if (businesses.length === 0) return null;
+
+  const getConfidenceBadge = (level?: 'verified' | 'probable' | 'unverified') => {
+    if (!level) return null;
+
+    const config = {
+      verified: {
+        icon: CheckCircle2,
+        label: 'Vérifié',
+        className: 'bg-success/10 text-success border-success/20',
+      },
+      probable: {
+        icon: HelpCircle,
+        label: 'Probable',
+        className: 'bg-warning/10 text-warning border-warning/20',
+      },
+      unverified: {
+        icon: AlertCircle,
+        label: 'Non vérifié',
+        className: 'bg-destructive/10 text-destructive border-destructive/20',
+      },
+    };
+
+    const { icon: Icon, label, className } = config[level];
+
+    return (
+      <Badge variant="outline" className={`w-fit text-xs font-medium gap-1 ${className}`}>
+        <Icon className="h-3 w-3" />
+        {label}
+      </Badge>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -26,9 +57,12 @@ export const ResultsTable = ({ businesses, onRemove }: ResultsTableProps) => {
                   <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
                   <CardTitle className="text-xl">{business.nom}</CardTitle>
                 </div>
-                <Badge variant="secondary" className="w-fit text-xs font-medium">
-                  {business.type_activite}
-                </Badge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary" className="w-fit text-xs font-medium">
+                    {business.type_activite}
+                  </Badge>
+                  {getConfidenceBadge(business.confidence_level)}
+                </div>
                 <div className="flex items-start gap-2 text-muted-foreground">
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <CardDescription className="text-sm leading-relaxed">

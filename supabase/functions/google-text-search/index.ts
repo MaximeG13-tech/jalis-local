@@ -48,7 +48,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY || '',
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri'
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.primaryType,places.primaryTypeDisplayName,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri'
       },
       body: JSON.stringify(requestBody)
     });
@@ -74,6 +74,8 @@ serve(async (req) => {
       website: place.websiteUri || '',
       url: place.googleMapsUri || '',
       types: place.types || [],
+      primary_type: place.primaryType || '',
+      primary_type_display_name: place.primaryTypeDisplayName?.text || '',
       geometry: place.location ? {
         location: {
           lat: place.location.latitude,

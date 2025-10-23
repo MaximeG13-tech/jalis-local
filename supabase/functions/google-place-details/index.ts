@@ -24,7 +24,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY!,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location',
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location,primaryType,primaryTypeDisplayName',
       },
     });
 
@@ -44,6 +44,8 @@ serve(async (req) => {
       formatted_phone_number: data.nationalPhoneNumber || '',
       website: data.websiteUri || '',
       url: data.googleMapsUri || '', // Use native Google URL only
+      primary_type: data.primaryType || '',
+      primary_type_display_name: data.primaryTypeDisplayName?.text || '',
       geometry: {
         location: {
           lat: data.location?.latitude || 0,
