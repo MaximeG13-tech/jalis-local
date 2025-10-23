@@ -62,7 +62,7 @@ export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) =>
     setSelectedTypes(types);
     toast({
       title: "✨ Suggestions Genius",
-      description: `${types.length} type(s) d'activités complémentaires suggéré(s)`,
+      description: `${types.length} type${types.length > 1 ? 's' : ''} d'activités complémentaires suggéré${types.length > 1 ? 's' : ''}`,
     });
   };
 
