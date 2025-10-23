@@ -154,6 +154,143 @@ const ID_MAPPING: Record<string, string> = {
 
   // === AUTRES ===
   marketing_agency: "gcid:marketing_agency",
+
+  // === CONSTRUCTION & ARTISANAT ===
+  carpenter: "gcid:carpenter",
+  roofer: "gcid:roofing_contractor",
+  mason: "gcid:masonry_contractor",
+  hvac: "gcid:heating_contractor",
+  contractor: "gcid:general_contractor",
+  window_installer: "gcid:window_installation_service",
+  flooring: "gcid:flooring_store",
+  tile_contractor: "gcid:tile_contractor",
+  drywall: "gcid:dry_wall_contractor",
+  insulation: "gcid:insulation_contractor",
+
+  // === FORMATION & ÉDUCATION ===
+  music_school: "gcid:music_school",
+  language_school: "gcid:language_school",
+  art_school: "gcid:art_school",
+  dance_school: "gcid:dance_school",
+  computer_training: "gcid:computer_training_school",
+  tutoring_service: "gcid:tutoring_service",
+
+  // === SERVICES INFORMATIQUES ===
+  computer_repair: "gcid:computer_repair_service",
+  software_company: "gcid:software_company",
+  web_designer: "gcid:website_designer",
+  it_support: "gcid:computer_support_and_services",
+  electronics_store: "gcid:electronics_store",
+
+  // === JARDIN & PAYSAGISME ===
+  landscaper: "gcid:landscaper",
+  garden_center: "gcid:garden_center",
+  tree_service: "gcid:tree_service",
+  lawn_care: "gcid:lawn_care_service",
+  irrigation: "gcid:landscape_lighting_designer",
+
+  // === SERVICES À DOMICILE ===
+  handyman: "gcid:handyman",
+  pest_control: "gcid:pest_control_service",
+  window_cleaning: "gcid:window_cleaning_service",
+  gutter_cleaning: "gcid:gutter_cleaning_service",
+  chimney_sweep: "gcid:chimney_sweep",
+  pool_maintenance: "gcid:swimming_pool_repair_service",
+
+  // === SANTÉ SPÉCIALISÉE ===
+  ophthalmologist: "gcid:ophthalmologist",
+  optician: "gcid:optician",
+  chiropractor: "gcid:chiropractor",
+  acupuncturist: "gcid:acupuncturist",
+  osteopath: "gcid:osteopath",
+  podiatrist: "gcid:podiatrist",
+  midwife: "gcid:midwife",
+  hearing_aid: "gcid:hearing_aid_store",
+
+  // === SERVICES FINANCIERS ===
+  financial_planner: "gcid:financial_planner",
+  tax_consultant: "gcid:tax_consultant",
+  investment_service: "gcid:investment_service",
+  mortgage_broker: "gcid:mortgage_broker",
+  credit_union: "gcid:credit_union",
+
+  // === LOGISTIQUE & TRANSPORT ===
+  courier: "gcid:courier_service",
+  shipping: "gcid:shipping_service",
+  freight: "gcid:freight_forwarding_service",
+  taxi: "gcid:taxi_service",
+  bus_company: "gcid:bus_company",
+
+  // === MÉDIAS & COMMUNICATION ===
+  advertising_agency: "gcid:advertising_agency",
+  graphic_designer: "gcid:graphic_designer",
+  video_production: "gcid:video_production_service",
+  public_relations: "gcid:public_relations_firm",
+  copywriter: "gcid:publisher",
+
+  // === ARTISANAT & ARTS ===
+  art_gallery: "gcid:art_gallery",
+  frame_shop: "gcid:picture_frame_shop",
+  craft_store: "gcid:craft_store",
+  pottery_studio: "gcid:pottery_classes",
+  music_store: "gcid:musical_instrument_store",
+
+  // === SERVICES ANIMALIERS ÉTENDUS ===
+  animal_hospital: "gcid:animal_hospital",
+  pet_adoption: "gcid:animal_shelter",
+  equestrian: "gcid:horse_riding_school",
+  farm_supplies: "gcid:agricultural_service",
+
+  // === BÉBÉ & PUÉRICULTURE ===
+  baby_store: "gcid:baby_store",
+
+  // === NAUTISME ===
+  boat_dealer: "gcid:boat_dealer",
+  boat_repair: "gcid:boat_repair_shop",
+  fishing_store: "gcid:fishing_store",
+
+  // === DIVERS ===
+  wood_supplier: "gcid:lumber_store",
+  outdoor_store: "gcid:outdoor_sports_store",
+
+  // === COMMERCE ALIMENTAIRE ===
+  bakery_shop: "gcid:bakery",
+  cheese_shop: "gcid:cheese_shop",
+  organic_shop: "gcid:organic_food_store",
+  fish_market: "gcid:seafood_market",
+  candy_store: "gcid:candy_store",
+
+  // === SERVICES AUTOMOBILES ÉTENDUS ===
+  tire_shop: "gcid:tire_shop",
+  oil_change: "gcid:oil_change_service",
+  auto_glass: "gcid:auto_glass_shop",
+  car_detailing: "gcid:car_detailing_service",
+  motorcycle_dealer: "gcid:motorcycle_dealer",
+  rv_dealer: "gcid:rv_dealer",
+
+  // === SERVICES FUNÉRAIRES ===
+  funeral_home: "gcid:funeral_home",
+  cremation_service: "gcid:cremation_service",
+  cemetery: "gcid:cemetery",
+  monument_maker: "gcid:monument_maker",
+
+  // === IMMOBILIER ÉTENDU ===
+  property_management: "gcid:property_management_company",
+  appraiser: "gcid:real_estate_appraiser",
+  title_company: "gcid:title_company",
+
+  // === TOURISME ÉTENDU ===
+  campground: "gcid:campground",
+  rv_park: "gcid:rv_park",
+  boat_rental: "gcid:boat_rental_service",
+  ski_resort: "gcid:ski_resort",
+  amusement_park: "gcid:amusement_park",
+
+  // === SERVICES INDUSTRIELS ===
+  welding: "gcid:welder",
+  industrial_equipment: "gcid:industrial_equipment_supplier",
+  manufacturing: "gcid:manufacturer",
+  warehouse: "gcid:warehouse",
 };
 
 /**
@@ -496,6 +633,463 @@ const BUSINESS_ECOSYSTEMS: Record<
       { id: "pet_photographer", score: 5, reason: "Photos d'animaux" },
     ],
   },
+
+  // === ÉCOSYSTÈME CONSTRUCTION RÉSIDENTIELLE ===
+  home_construction: {
+    keywords: ["charpentier", "carpenter", "menuisier", "charpente", "construction bois"],
+    activities: [
+      { id: "electrician", score: 9, reason: "Installation électrique après charpente" },
+      { id: "plumber", score: 9, reason: "Plomberie intégrée aux travaux" },
+      { id: "roofer", score: 10, reason: "Couverture après charpente" },
+      { id: "insulation", score: 8, reason: "Isolation des combles et murs" },
+      { id: "hardware_store", score: 7, reason: "Matériaux de construction" },
+    ],
+  },
+
+  roofing: {
+    keywords: ["couvreur", "roofer", "toiture", "couverture", "zingueur"],
+    activities: [
+      { id: "carpenter", score: 9, reason: "Charpente avant couverture" },
+      { id: "gutter_cleaning", score: 8, reason: "Entretien gouttières" },
+      { id: "insulation", score: 8, reason: "Isolation sous toiture" },
+      { id: "mason", score: 7, reason: "Travaux de maçonnerie associés" },
+      { id: "hardware_store", score: 7, reason: "Matériaux toiture" },
+    ],
+  },
+
+  masonry: {
+    keywords: ["maçon", "mason", "maçonnerie", "béton", "parpaing"],
+    activities: [
+      { id: "electrician", score: 9, reason: "Installations électriques dans maçonnerie" },
+      { id: "plumber", score: 9, reason: "Passages de plomberie" },
+      { id: "painter", score: 8, reason: "Finitions après maçonnerie" },
+      { id: "tile_contractor", score: 8, reason: "Carrelage sur supports maçonnés" },
+      { id: "hardware_store", score: 7, reason: "Ciment, parpaings, outils" },
+    ],
+  },
+
+  hvac_services: {
+    keywords: ["chauffagiste", "hvac", "climatisation", "pompe chaleur", "plombier chauffagiste"],
+    activities: [
+      { id: "electrician", score: 10, reason: "Raccordements électriques obligatoires" },
+      { id: "plumber", score: 9, reason: "Circuit hydraulique chauffage" },
+      { id: "insulation", score: 8, reason: "Isolation pour efficacité énergétique" },
+      { id: "contractor", score: 7, reason: "Coordination travaux énergétiques" },
+      { id: "hardware_store", score: 6, reason: "Fournitures chauffage" },
+    ],
+  },
+
+  general_contracting: {
+    keywords: ["entrepreneur général", "general contractor", "rénovation complète", "maître d'oeuvre"],
+    activities: [
+      { id: "architect", score: 9, reason: "Plans et conception" },
+      { id: "electrician", score: 8, reason: "Sous-traitance électricité" },
+      { id: "plumber", score: 8, reason: "Sous-traitance plomberie" },
+      { id: "carpenter", score: 8, reason: "Travaux menuiserie" },
+      { id: "painter", score: 7, reason: "Finitions peinture" },
+    ],
+  },
+
+  flooring_services: {
+    keywords: ["parquet", "flooring", "revêtement sol", "carreleur", "pose sol"],
+    activities: [
+      { id: "tile_contractor", score: 9, reason: "Carrelage complémentaire" },
+      { id: "painter", score: 8, reason: "Peinture après pose sol" },
+      { id: "carpenter", score: 7, reason: "Découpes et finitions bois" },
+      { id: "hardware_store", score: 8, reason: "Matériaux revêtement" },
+      { id: "cleaning", score: 7, reason: "Nettoyage après travaux" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME CONSEIL B2B ===
+  business_consulting: {
+    keywords: ["consultant", "business consultant", "conseil entreprise", "stratégie", "management"],
+    activities: [
+      { id: "accountant", score: 10, reason: "Comptabilité et gestion financière" },
+      { id: "lawyer", score: 9, reason: "Conseil juridique d'entreprise" },
+      { id: "marketing_agency", score: 8, reason: "Stratégie marketing" },
+      { id: "web_designer", score: 7, reason: "Présence digitale" },
+      { id: "financial_planner", score: 7, reason: "Planification financière" },
+    ],
+  },
+
+  marketing_services: {
+    keywords: ["marketing", "agence marketing", "communication", "publicité", "marketing agency"],
+    activities: [
+      { id: "web_designer", score: 10, reason: "Sites web pour campagnes" },
+      { id: "graphic_designer", score: 9, reason: "Supports visuels" },
+      { id: "photographer", score: 8, reason: "Photos produits et corporate" },
+      { id: "video_production", score: 8, reason: "Contenus vidéo marketing" },
+      { id: "printing_service", score: 7, reason: "Supports print" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME LIBRAIRIE & PAPETERIE ===
+  retail_books: {
+    keywords: ["librairie", "bookstore", "book store", "livres"],
+    activities: [
+      { id: "stationery", score: 9, reason: "Fournitures scolaires et bureau" },
+      { id: "cafe", score: 8, reason: "Café-librairie concept" },
+      { id: "library", score: 7, reason: "Complémentarité lecture" },
+      { id: "tutoring_service", score: 6, reason: "Soutien scolaire avec livres" },
+      { id: "art_school", score: 6, reason: "Livres d'art et éducation" },
+    ],
+  },
+
+  stationery_store: {
+    keywords: ["papeterie", "stationery", "fournitures bureau", "fournitures scolaires"],
+    activities: [
+      { id: "book_store", score: 9, reason: "Manuels scolaires" },
+      { id: "printing_service", score: 8, reason: "Impression documents" },
+      { id: "tutoring_service", score: 7, reason: "Fournitures pour cours" },
+      { id: "art_school", score: 7, reason: "Matériel artistique" },
+      { id: "craft_store", score: 6, reason: "Loisirs créatifs" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME SANTÉ SPÉCIALISÉE ===
+  health_ophthalmology: {
+    keywords: ["ophtalmologiste", "ophthalmologist", "opticien", "optique", "lunettes", "vision"],
+    activities: [
+      { id: "optician", score: 10, reason: "Prescriptions de lunettes" },
+      { id: "optician", score: 9, reason: "Lentilles de contact" },
+      { id: "doctor", score: 7, reason: "Suivi médical général" },
+      { id: "pharmacy", score: 6, reason: "Collyres et médicaments" },
+      { id: "hearing_aid", score: 5, reason: "Autres appareillages médicaux" },
+    ],
+  },
+
+  health_chiropractic: {
+    keywords: ["chiropracteur", "chiropractor", "chiropraxie", "manipulation vertébrale"],
+    activities: [
+      { id: "physio", score: 9, reason: "Rééducation complémentaire" },
+      { id: "massage", score: 8, reason: "Détente musculaire" },
+      { id: "acupuncturist", score: 7, reason: "Médecine alternative" },
+      { id: "osteopath", score: 9, reason: "Approches similaires" },
+      { id: "sports_medicine", score: 7, reason: "Blessures sportives" },
+    ],
+  },
+
+  health_podiatry: {
+    keywords: ["podologue", "podiatrist", "pédicure", "soins pieds"],
+    activities: [
+      { id: "orthopedic", score: 8, reason: "Problèmes orthopédiques" },
+      { id: "shoe_store", score: 9, reason: "Chaussures orthopédiques" },
+      { id: "doctor", score: 7, reason: "Diabète et problèmes vasculaires" },
+      { id: "pharmacy", score: 6, reason: "Produits de soins" },
+      { id: "sports_store", score: 6, reason: "Chaussures de sport adaptées" },
+    ],
+  },
+
+  health_maternity: {
+    keywords: ["sage-femme", "midwife", "maternité", "accouchement", "grossesse"],
+    activities: [
+      { id: "pediatrician", score: 10, reason: "Suivi du nouveau-né" },
+      { id: "doctor", score: 9, reason: "Suivi médical grossesse" },
+      { id: "pharmacy", score: 8, reason: "Produits maternité et bébé" },
+      { id: "photographer", score: 7, reason: "Photos grossesse et nouveau-né" },
+      { id: "baby_store", score: 8, reason: "Équipement bébé" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME FORMATION PROFESSIONNELLE ===
+  professional_training: {
+    keywords: ["formation professionnelle", "centre formation", "training center", "formateur"],
+    activities: [
+      { id: "computer_training", score: 8, reason: "Formations informatiques" },
+      { id: "business_consultant", score: 7, reason: "Conseil et formation" },
+      { id: "book_store", score: 6, reason: "Manuels de formation" },
+      { id: "stationery", score: 6, reason: "Fournitures formation" },
+      { id: "hotel", score: 7, reason: "Hébergement stagiaires" },
+    ],
+  },
+
+  language_education: {
+    keywords: ["école langue", "language school", "cours anglais", "cours langue"],
+    activities: [
+      { id: "book_store", score: 8, reason: "Livres et méthodes langues" },
+      { id: "tutoring_service", score: 7, reason: "Soutien scolaire langues" },
+      { id: "travel_agency", score: 7, reason: "Séjours linguistiques" },
+      { id: "stationery", score: 6, reason: "Cahiers et fournitures" },
+      { id: "cafe", score: 6, reason: "Espaces conversation" },
+    ],
+  },
+
+  music_education: {
+    keywords: ["école musique", "music school", "conservatoire", "cours musique"],
+    activities: [
+      { id: "music_store", score: 10, reason: "Instruments de musique" },
+      { id: "book_store", score: 7, reason: "Partitions et méthodes" },
+      { id: "event_planner", score: 6, reason: "Récitals et concerts" },
+      { id: "photographer", score: 5, reason: "Photos spectacles" },
+      { id: "venue", score: 6, reason: "Salles de spectacle" },
+    ],
+  },
+
+  art_education: {
+    keywords: ["école art", "art school", "cours dessin", "atelier peinture", "beaux-arts"],
+    activities: [
+      { id: "art_gallery", score: 9, reason: "Exposition travaux élèves" },
+      { id: "craft_store", score: 10, reason: "Matériel artistique" },
+      { id: "frame_shop", score: 8, reason: "Encadrement œuvres" },
+      { id: "book_store", score: 7, reason: "Livres d'art" },
+      { id: "photographer", score: 6, reason: "Documentation œuvres" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME SERVICES INFORMATIQUES ===
+  it_services: {
+    keywords: ["informatique", "it support", "dépannage informatique", "technicien", "ordinateur"],
+    activities: [
+      { id: "computer_repair", score: 10, reason: "Réparations matérielles" },
+      { id: "software_company", score: 8, reason: "Solutions logicielles" },
+      { id: "web_designer", score: 7, reason: "Sites web professionnels" },
+      { id: "electronics_store", score: 8, reason: "Équipements informatiques" },
+      { id: "computer_training", score: 7, reason: "Formation utilisateurs" },
+    ],
+  },
+
+  web_design: {
+    keywords: ["web designer", "site web", "website", "développeur web", "agence web"],
+    activities: [
+      { id: "graphic_designer", score: 9, reason: "Design graphique" },
+      { id: "photographer", score: 8, reason: "Photos pour sites" },
+      { id: "marketing_agency", score: 9, reason: "Référencement et marketing" },
+      { id: "copywriter", score: 7, reason: "Rédaction contenu" },
+      { id: "video_production", score: 7, reason: "Vidéos pour sites" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME JARDIN & PAYSAGISME ===
+  garden_landscape: {
+    keywords: ["paysagiste", "landscaper", "jardinier", "aménagement extérieur", "espaces verts"],
+    activities: [
+      { id: "garden_center", score: 10, reason: "Plants et matériaux" },
+      { id: "tree_service", score: 9, reason: "Élagage et abattage" },
+      { id: "lawn_care", score: 8, reason: "Entretien pelouse" },
+      { id: "irrigation", score: 8, reason: "Systèmes d'arrosage" },
+      { id: "mason", score: 7, reason: "Terrasses et murets" },
+    ],
+  },
+
+  tree_services: {
+    keywords: ["élagueur", "tree service", "abattage", "élagage", "arboriste"],
+    activities: [
+      { id: "landscaper", score: 9, reason: "Aménagement après élagage" },
+      { id: "garden_center", score: 7, reason: "Nouvelles plantations" },
+      { id: "wood_supplier", score: 7, reason: "Valorisation du bois" },
+      { id: "insurance", score: 6, reason: "Arbres dangereux" },
+      { id: "contractor", score: 6, reason: "Travaux connexes" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME SERVICES À DOMICILE ===
+  home_services: {
+    keywords: ["homme toutes mains", "handyman", "bricoleur", "réparations", "dépannage"],
+    activities: [
+      { id: "hardware_store", score: 9, reason: "Outils et matériaux" },
+      { id: "locksmith", score: 7, reason: "Serrurerie" },
+      { id: "electrician", score: 7, reason: "Électricité complexe" },
+      { id: "plumber", score: 7, reason: "Plomberie complexe" },
+      { id: "painter", score: 6, reason: "Peinture" },
+    ],
+  },
+
+  pest_control: {
+    keywords: ["désinsectisation", "pest control", "nuisibles", "dératisation", "termites"],
+    activities: [
+      { id: "cleaning", score: 8, reason: "Nettoyage après traitement" },
+      { id: "contractor", score: 7, reason: "Réparations dégâts" },
+      { id: "home_inspector", score: 7, reason: "Inspection préventive" },
+      { id: "hardware_store", score: 6, reason: "Produits préventifs" },
+      { id: "insurance", score: 6, reason: "Dégâts nuisibles" },
+    ],
+  },
+
+  pool_services: {
+    keywords: ["piscine", "pool", "pisciniste", "entretien piscine"],
+    activities: [
+      { id: "landscaper", score: 8, reason: "Aménagement autour piscine" },
+      { id: "electrician", score: 7, reason: "Installation pompes" },
+      { id: "hardware_store", score: 8, reason: "Produits entretien" },
+      { id: "contractor", score: 7, reason: "Construction piscine" },
+      { id: "mason", score: 7, reason: "Plages et margelles" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME SERVICES FINANCIERS ===
+  financial_services: {
+    keywords: ["conseiller financier", "financial planner", "gestion patrimoine", "investissement"],
+    activities: [
+      { id: "accountant", score: 9, reason: "Fiscalité et déclarations" },
+      { id: "lawyer", score: 8, reason: "Succession et contrats" },
+      { id: "bank", score: 9, reason: "Produits bancaires" },
+      { id: "insurance", score: 9, reason: "Assurances vie et prévoyance" },
+      { id: "notary", score: 7, reason: "Actes patrimoniaux" },
+    ],
+  },
+
+  tax_services: {
+    keywords: ["fiscaliste", "tax consultant", "impôts", "déclaration fiscale"],
+    activities: [
+      { id: "accountant", score: 10, reason: "Comptabilité d'entreprise" },
+      { id: "lawyer", score: 8, reason: "Droit fiscal" },
+      { id: "financial_planner", score: 7, reason: "Optimisation fiscale" },
+      { id: "business_consultant", score: 6, reason: "Conseil entreprise" },
+      { id: "notary", score: 6, reason: "Fiscalité immobilière" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME LOGISTIQUE ===
+  logistics_transport: {
+    keywords: ["transport", "logistique", "livraison", "coursier", "courier"],
+    activities: [
+      { id: "warehouse", score: 9, reason: "Stockage marchandises" },
+      { id: "shipping", score: 8, reason: "Expédition nationale/internationale" },
+      { id: "freight", score: 8, reason: "Transport de fret" },
+      { id: "moving", score: 7, reason: "Déménagement" },
+      { id: "storage", score: 7, reason: "Entreposage" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME MÉDIAS & COMMUNICATION ===
+  media_communication: {
+    keywords: ["agence communication", "relations publiques", "public relations", "attaché presse"],
+    activities: [
+      { id: "advertising_agency", score: 9, reason: "Campagnes publicitaires" },
+      { id: "marketing_agency", score: 9, reason: "Stratégie marketing" },
+      { id: "graphic_designer", score: 8, reason: "Supports visuels" },
+      { id: "web_designer", score: 8, reason: "Présence digitale" },
+      { id: "photographer", score: 7, reason: "Photos corporate" },
+    ],
+  },
+
+  video_production: {
+    keywords: ["production vidéo", "video production", "réalisateur", "montage vidéo"],
+    activities: [
+      { id: "photographer", score: 8, reason: "Photo et vidéo complémentaires" },
+      { id: "marketing_agency", score: 9, reason: "Contenus marketing" },
+      { id: "event_planner", score: 7, reason: "Captation événements" },
+      { id: "graphic_designer", score: 7, reason: "Motion design" },
+      { id: "web_designer", score: 7, reason: "Intégration vidéos web" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME ARTISANAT & ARTS ===
+  arts_crafts: {
+    keywords: ["galerie art", "art gallery", "artiste", "peintre", "sculpteur"],
+    activities: [
+      { id: "frame_shop", score: 10, reason: "Encadrement œuvres" },
+      { id: "art_school", score: 8, reason: "Cours et ateliers" },
+      { id: "photographer", score: 7, reason: "Documentation œuvres" },
+      { id: "insurance", score: 7, reason: "Assurance œuvres" },
+      { id: "event_planner", score: 6, reason: "Vernissages" },
+    ],
+  },
+
+  pottery_ceramics: {
+    keywords: ["poterie", "pottery", "céramique", "atelier céramique"],
+    activities: [
+      { id: "art_school", score: 8, reason: "Cours de poterie" },
+      { id: "craft_store", score: 9, reason: "Matériaux céramique" },
+      { id: "art_gallery", score: 7, reason: "Exposition créations" },
+      { id: "hardware_store", score: 6, reason: "Outils et fournitures" },
+      { id: "florist", score: 5, reason: "Vases et contenants" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME COMMERCE ALIMENTAIRE ===
+  retail_food_specialty: {
+    keywords: ["fromagerie", "cheese shop", "épicerie fine", "delicatessen"],
+    activities: [
+      { id: "wine_shop", score: 10, reason: "Accords mets et vins" },
+      { id: "bakery_shop", score: 8, reason: "Pain frais" },
+      { id: "butcher", score: 8, reason: "Charcuterie" },
+      { id: "restaurant", score: 7, reason: "Recommandations" },
+      { id: "catering", score: 7, reason: "Plateaux fromages événements" },
+    ],
+  },
+
+  organic_food: {
+    keywords: ["bio", "organic", "épicerie bio", "magasin bio", "produits bio"],
+    activities: [
+      { id: "nutritionist", score: 9, reason: "Conseils diététiques" },
+      { id: "pharmacy", score: 7, reason: "Compléments naturels" },
+      { id: "gym", score: 7, reason: "Alimentation sportifs" },
+      { id: "restaurant", score: 6, reason: "Restaurants bio" },
+      { id: "supplement_store", score: 8, reason: "Compléments bio" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME AUTOMOBILE ÉTENDU ===
+  auto_specialized: {
+    keywords: ["pneumatique", "tire shop", "pneus", "vidange", "oil change"],
+    activities: [
+      { id: "car_wash", score: 8, reason: "Nettoyage après entretien" },
+      { id: "auto_parts", score: 9, reason: "Pièces et accessoires" },
+      { id: "oil_change", score: 9, reason: "Vidange régulière" },
+      { id: "car_dealer", score: 7, reason: "Pneus véhicules neufs" },
+      { id: "insurance", score: 6, reason: "Garantie pneus" },
+    ],
+  },
+
+  car_detailing: {
+    keywords: ["detailing", "esthétique auto", "nettoyage voiture", "car detailing"],
+    activities: [
+      { id: "car_wash", score: 9, reason: "Lavage complémentaire" },
+      { id: "auto_glass", score: 7, reason: "Vitres impeccables" },
+      { id: "car_accessories", score: 8, reason: "Accessoires intérieur" },
+      { id: "car_dealer", score: 7, reason: "Préparation véhicules occasion" },
+      { id: "car_rental", score: 6, reason: "Entretien flotte" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME SERVICES FUNÉRAIRES ===
+  funeral_services: {
+    keywords: ["pompes funèbres", "funeral home", "funérailles", "enterrement"],
+    activities: [
+      { id: "florist", score: 10, reason: "Fleurs funéraires" },
+      { id: "cemetery", score: 10, reason: "Inhumation" },
+      { id: "cremation_service", score: 9, reason: "Crémation" },
+      { id: "monument_maker", score: 8, reason: "Pierres tombales" },
+      { id: "notary", score: 7, reason: "Succession" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME TOURISME ÉTENDU ===
+  tourism_specialized: {
+    keywords: ["camping", "campground", "caravaning", "rv park", "glamping"],
+    activities: [
+      { id: "rv_dealer", score: 8, reason: "Vente camping-cars" },
+      { id: "outdoor_store", score: 8, reason: "Équipement camping" },
+      { id: "tour_guide", score: 7, reason: "Excursions" },
+      { id: "restaurant", score: 7, reason: "Restauration campeurs" },
+      { id: "grocery_store", score: 7, reason: "Courses campeurs" },
+    ],
+  },
+
+  boat_services: {
+    keywords: ["bateau", "boat", "nautisme", "marina", "voilier"],
+    activities: [
+      { id: "boat_rental", score: 9, reason: "Location bateaux" },
+      { id: "boat_dealer", score: 8, reason: "Vente bateaux" },
+      { id: "boat_repair", score: 8, reason: "Entretien bateaux" },
+      { id: "insurance", score: 8, reason: "Assurance bateau" },
+      { id: "fishing_store", score: 7, reason: "Équipement pêche" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME SERVICES INDUSTRIELS ===
+  industrial_services: {
+    keywords: ["industrie", "industrial", "usine", "fabrication", "manufacturing"],
+    activities: [
+      { id: "welding", score: 9, reason: "Soudure industrielle" },
+      { id: "industrial_equipment", score: 10, reason: "Équipements industriels" },
+      { id: "electrician", score: 8, reason: "Électricité industrielle" },
+      { id: "logistics_transport", score: 8, reason: "Transport marchandises" },
+      { id: "warehouse", score: 8, reason: "Stockage production" },
+    ],
+  },
 };
 
 /**
@@ -508,8 +1102,6 @@ function generateSmartSuggestions(
   maxSuggestions: number = 5,
 ): BusinessType[] {
   const inputLower = activityInput.toLowerCase().trim();
-  console.log("🔍 Genius Debug - Input:", inputLower);
-  console.log("📦 Available types count:", availableTypes.length);
 
   // 1. Chercher dans tous les écosystèmes
   let bestMatch: { ecosystem: string; score: number } | null = null;
@@ -531,7 +1123,6 @@ function generateSmartSuggestions(
 
   // 2. Si on a trouvé un écosystème, utiliser ses suggestions
   if (bestMatch && BUSINESS_ECOSYSTEMS[bestMatch.ecosystem]) {
-    console.log("✅ Écosystème trouvé:", bestMatch.ecosystem);
     const ecosystem = BUSINESS_ECOSYSTEMS[bestMatch.ecosystem];
 
     // 🔧 CORRECTION : Convertir les IDs courts en IDs Google via le mapping
@@ -539,32 +1130,23 @@ function generateSmartSuggestions(
       .sort((a, b) => b.score - a.score)
       .slice(0, maxSuggestions)
       .map((activity) => activity.id);
-    console.log("🔑 Short IDs (avant mapping):", shortIds);
 
     const suggestionIds = shortIds.map((id) => ID_MAPPING[id] || id);
-    console.log("📋 IDs suggérés (après mapping):", suggestionIds);
 
     const suggestions = availableTypes.filter((type) => suggestionIds.includes(type.id));
-    console.log("✨ Suggestions trouvées:", suggestions.length, suggestions.map(s => ({ id: s.id, label: s.label })));
 
     if (suggestions.length > 0) {
       return suggestions;
     }
-    console.log("⚠️ Aucune suggestion trouvée dans availableTypes - passage au fallback");
-  } else {
-    console.log("❌ Aucun écosystème trouvé pour l'input:", inputLower);
   }
 
   // 3. Fallback : suggestions très génériques mais pertinentes
   // 🔧 CORRECTION : Appliquer le mapping aussi au fallback
-  console.log("🔄 Utilisation du fallback générique");
   const fallbackIds = ["insurance", "accountant", "lawyer", "marketing_agency", "bank"].map(
     (id) => ID_MAPPING[id] || id,
-  ); // ← Mapping appliqué ici aussi
-  console.log("📋 Fallback IDs:", fallbackIds);
+  );
 
   const fallbackSuggestions = availableTypes.filter((type) => fallbackIds.includes(type.id)).slice(0, maxSuggestions);
-  console.log("✨ Fallback suggestions:", fallbackSuggestions.map(s => ({ id: s.id, label: s.label })));
 
   return fallbackSuggestions;
 }
