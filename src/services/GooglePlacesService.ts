@@ -142,10 +142,51 @@ export class GooglePlacesService {
     });
   }
 
+  // Corrige le type d'activité basé sur le nom du business pour les professions mal catégorisées par Google
+  private static correctActivityType(businessName: string, _originalType: string): string {
+    const nameLower = businessName.toLowerCase();
+    
+    // Mapping des professions mal catégorisées par Google
+    const corrections: Record<string, { keywords: string[], correctType: string }> = {
+      'notaire': {
+        keywords: ['notaire', 'notarial'],
+        correctType: 'Notaire'
+      },
+      'avocat': {
+        keywords: ['avocat', 'cabinet d\'avocat', 'conseil juridique'],
+        correctType: 'Avocat'
+      },
+      'huissier': {
+        keywords: ['huissier', 'huissier de justice'],
+        correctType: 'Huissier de justice'
+      },
+      'expert-comptable': {
+        keywords: ['expert-comptable', 'expert comptable', 'cabinet comptable', 'comptabilité'],
+        correctType: 'Expert-comptable'
+      }
+    };
+
+    // Parcourir les corrections possibles
+    for (const config of Object.values(corrections)) {
+      if (config.keywords.some(keyword => nameLower.includes(keyword))) {
+        console.log(`✅ Correction détectée: "${businessName}" → ${config.correctType}`);
+        return config.correctType;
+      }
+    }
+
+    return '';
+  }
+
   private static getActivityType(
     place: GooglePlace,
     selectedTypes: BusinessType[]
   ): string {
+    // Correction basée sur le nom pour les professions mal catégorisées
+    const correctType = this.correctActivityType(place.name, '');
+    if (correctType !== '') {
+      return correctType;
+    }
+
     // PRIORITÉ 1 : Utiliser primaryTypeDisplayName de Google (le plus précis)
     if (place.primary_type_display_name) {
       return place.primary_type_display_name;
