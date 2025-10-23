@@ -167,9 +167,10 @@ serve(async (req) => {
       // Générer un numéro aléatoire pour varier les styles de rédaction
       const styleVariant = Math.floor(Math.random() * 5) + 1;
       
-      const prompt = `Tu es un rédacteur web talentueux qui écrit des contenus naturels et engageants pour ${companyName}.
+      const prompt = `Tu es un rédacteur web talentueux qui écrit des contenus naturels et engageants.
 
-🎯 MISSION : Rédiger une fiche professionnelle UNIQUE et NATURELLE
+🎯 MISSION : ${companyName} présente et recommande ${business.nom}
+Tu rédiges comme si c'était ${companyName} qui parlait de ${business.nom} à ses clients.
 
 ENTREPRISE : ${business.nom}
 Adresse : ${business.adresse}
@@ -236,7 +237,7 @@ Mini-pitch unique qui donne envie. Varie les angles :
 IMPORTANT : Mentionne ${companyName} de façon NATURELLE (pas forcément "à deux pas de")
 Utilise les prépositions correctes (au/à la/aux/à l')
 
-3. **description** (110-130 mots en 3 paragraphes)
+3. **description** (110-130 mots en 3 paragraphes) - ${companyName} présente ${business.nom}
 
 PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
 Selon le style choisi, commence différemment :
@@ -246,12 +247,11 @@ Selon le style choisi, commence différemment :
 Intègre ${companyName} NATURELLEMENT (varie : "non loin de", "dans le secteur de", "près de", "à côté de", "tout proche de")
 
 PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
-Décris VRAIMENT ce que propose l'entreprise. Varie les approches :
+Décris VRAIMENT ce que propose ${business.nom}. Varie les approches :
 - Liste des services/produits phares
 - Points forts uniques
 - Ce qui fait la différence
 - Exemples concrets d'intervention
-- Gamme de prix / Horaires pratiques
 IMPORTANT : Reste FACTUEL et CONCRET, évite les formules creuses
 
 PARAGRAPHE 3 (30-40 mots) - COORDONNÉES
@@ -260,7 +260,7 @@ Varie la formulation :
 - "Pour les joindre, c'est simple : ..."
 - "${business.nom} vous accueille au..."
 - "Rendez-vous chez eux : ..."
-Donne l'adresse ET le téléphone de façon fluide
+Donne l'adresse ET le téléphone de façon fluide.
 
 🚨 RÈGLES CRITIQUES
 
