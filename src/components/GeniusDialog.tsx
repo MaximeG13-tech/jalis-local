@@ -13,6 +13,138 @@ interface GeniusDialogProps {
 }
 
 /**
+ * MAPPING DES IDS COURTS VERS LES IDS GOOGLE MAPS
+ * Ce mapping permet de faire correspondre nos suggestions avec les vrais IDs de businessTypes
+ */
+const ID_MAPPING: Record<string, string> = {
+  // AUTOMOBILE
+  car_dealer: "car_dealer",
+  insurance: "insurance_agency",
+  driving_school: "drivers_license_training_school",
+  car_wash: "car_wash",
+  bank: "bank",
+  accountant: "accountant",
+  car_repair: "car_repair",
+  car_rental: "car_rental_agency",
+  body_shop: "auto_body_shop",
+  gas_station: "gas_station",
+  auto_parts: "auto_parts_store",
+  dmv: "department_of_motor_vehicles",
+  driving_test: "drivers_license_office",
+
+  // IMMOBILIER & HABITAT
+  real_estate: "real_estate",
+  notary: "notary_public",
+  lawyer: "lawyer",
+  moving: "moving_company",
+  furniture_store: "furniture_store",
+  cleaning: "house_cleaning_service",
+  locksmith: "locksmith",
+  plumber: "plumber",
+  electrician: "electrician",
+  painter: "painter",
+  home_decor: "home_goods_store",
+  security: "security",
+  carpenter: "carpenter",
+  roofer: "roofer",
+
+  // JURIDIQUE & FINANCE
+  business_consultant: "business_management_consultant",
+  financial_advisor: "financial_consultant",
+
+  // SANTÉ
+  doctor: "doctor",
+  pharmacy: "pharmacy",
+  physio: "physiotherapist",
+  dentist: "dentist",
+  laboratory: "medical_lab",
+  orthodontist: "orthodontist",
+  oral_surgeon: "oral_surgeon",
+  osteopath: "osteopath",
+  chiropractor: "chiropractor",
+  gym: "gym",
+  pet_store: "pet_store",
+  dog_groomer: "pet_groomer",
+  pet_food_store: "pet_store",
+  pet_training: "dog_trainer",
+
+  // BEAUTÉ & BIEN-ÊTRE
+  hair_salon: "hair_salon",
+  beauty_salon: "beauty_salon",
+  clothing_store: "clothing_store",
+  jewelry_store: "jewelry_store",
+  photographer: "photographer",
+  barber: "barber_shop",
+  barber_supply: "barber_supply_store",
+  grooming: "barber_shop",
+  shoe_store: "shoe_store",
+  nail_salon: "nail_salon",
+  spa: "spa",
+  massage: "massage_therapist",
+  nutrition: "nutritionist",
+  health_food_store: "health_food_store",
+  meditation: "meditation_center",
+  tailor: "custom_tailor",
+
+  // RESTAURATION
+  bakery: "bakery",
+  cafe: "cafe",
+  butcher: "butcher_shop",
+  wine_shop: "wine_shop",
+  florist: "florist",
+  hotel: "hotel",
+  travel_agency: "travel_agency",
+  catering: "catering_service",
+  cheese_shop: "cheese_shop",
+  restaurant: "restaurant",
+  book_store: "book_store",
+  coworking: "coworking_space",
+
+  // ÉVÉNEMENTIEL
+  wedding_planner: "wedding_planner",
+  event_planner: "event_planner",
+  venue: "event_venue",
+
+  // SERVICES DIVERS
+  carpet_cleaning: "carpet_cleaning_service",
+  window_cleaning: "window_cleaning_service",
+  dry_cleaning: "dry_cleaner",
+  laundromat: "laundromat",
+  tailoring: "clothing_alteration_service",
+  tutoring: "tutoring",
+  stationery_store: "office_supply_store",
+  shoe_repair: "boot_repair_shop",
+  marketing_agency: "marketing_agency",
+};
+
+/**
+ * Fonction pour trouver le vrai ID d'un type d'activité
+ * Gère les cas où l'ID n'est pas mappé en faisant une recherche partielle
+ */
+function findBusinessTypeId(shortId: string, availableTypes: BusinessType[]): string | null {
+  // 1. Chercher dans le mapping explicite
+  const mappedId = ID_MAPPING[shortId];
+  if (mappedId) {
+    // Vérifier que cet ID existe vraiment
+    const exists = availableTypes.some((type) => type.id === mappedId || type.id.includes(mappedId));
+    if (exists) return mappedId;
+  }
+
+  // 2. Recherche partielle (fuzzy matching)
+  // Chercher un type dont l'ID contient le shortId
+  const match = availableTypes.find(
+    (type) =>
+      type.id.toLowerCase().includes(shortId.toLowerCase()) ||
+      type.id.replace(/_/g, "").toLowerCase().includes(shortId.replace(/_/g, "").toLowerCase()),
+  );
+
+  if (match) return match.id;
+
+  // 3. Aucune correspondance trouvée
+  return null;
+}
+
+/**
  * Catégories pour éviter les concurrents directs
  * Deux activités de la même catégorie ne seront JAMAIS suggérées ensemble
  */
@@ -483,6 +615,7 @@ const GENERIC_SUGGESTIONS: Record<string, string[]> = {
 
 /**
  * Fonction intelligente de génération de suggestions
+ * CORRIGÉE : Utilise le mapping ID pour faire correspondre les suggestions avec les vrais IDs
  */
 function generateSmartSuggestions(
   activityInput: string,
@@ -503,29 +636,67 @@ function generateSmartSuggestions(
     }
   }
 
-  // 2. Collecter les IDs de suggestions
-  let suggestionIds: string[] = [];
+  // 2. Collecter les IDs de suggestions (format court)
+  let shortSuggestionIds: string[] = [];
 
   if (mainActivity) {
     // Utiliser les suggestions spécifiques
-    suggestionIds = [...mainActivity.suggestions];
+    shortSuggestionIds = [...mainActivity.suggestions];
   } else {
     // Utiliser les suggestions génériques
     for (const [domain, suggestions] of Object.entries(GENERIC_SUGGESTIONS)) {
       if (inputLower.includes(domain)) {
-        suggestionIds = suggestions;
+        shortSuggestionIds = suggestions;
         break;
       }
     }
 
     // Si toujours rien, utiliser les suggestions par défaut
-    if (suggestionIds.length === 0) {
-      suggestionIds = GENERIC_SUGGESTIONS["default"];
+    if (shortSuggestionIds.length === 0) {
+      shortSuggestionIds = GENERIC_SUGGESTIONS["default"];
     }
   }
 
-  // 3. Convertir en BusinessType objects et filtrer
-  const suggestions = availableTypes.filter((type) => suggestionIds.includes(type.id)).slice(0, maxSuggestions);
+  // 3. Convertir les IDs courts en vrais IDs et trouver les BusinessType correspondants
+  const suggestions: BusinessType[] = [];
+  const usedIds = new Set<string>();
+
+  for (const shortId of shortSuggestionIds) {
+    // Trouver le vrai ID correspondant
+    const realId = findBusinessTypeId(shortId, availableTypes);
+
+    if (realId && !usedIds.has(realId)) {
+      // Chercher le BusinessType correspondant
+      const businessType = availableTypes.find((type) => type.id === realId || type.id.includes(realId));
+
+      if (businessType) {
+        suggestions.push(businessType);
+        usedIds.add(realId);
+
+        // Arrêter si on a assez de suggestions
+        if (suggestions.length >= maxSuggestions) {
+          break;
+        }
+      }
+    }
+  }
+
+  // 4. Si on n'a pas assez de suggestions, ajouter des suggestions génériques
+  if (suggestions.length < maxSuggestions) {
+    // Chercher des activités universellement complémentaires
+    const universalIds = ["insurance_agency", "accountant", "lawyer", "marketing_agency", "bank"];
+
+    for (const id of universalIds) {
+      if (suggestions.length >= maxSuggestions) break;
+
+      const businessType = availableTypes.find((type) => type.id === id || type.id.includes(id));
+
+      if (businessType && !usedIds.has(businessType.id)) {
+        suggestions.push(businessType);
+        usedIds.add(businessType.id);
+      }
+    }
+  }
 
   return suggestions;
 }
