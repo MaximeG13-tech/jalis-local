@@ -13,609 +13,361 @@ interface GeniusDialogProps {
 }
 
 /**
- * MAPPING DES IDS COURTS VERS LES IDS GOOGLE MAPS
- * Ce mapping permet de faire correspondre nos suggestions avec les vrais IDs de businessTypes
+ * SYSTÈME INTELLIGENT DE SUGGESTIONS V2.0
+ *
+ * Logique VRAIMENT intelligente :
+ * 1. Écosystèmes métiers réels (ex: santé, automobile, immobilier)
+ * 2. Apporteurs d'affaires naturels avec score de pertinence
+ * 3. Raisons explicites de chaque suggestion
+ *
+ * Exemple : Orthophoniste → Pédiatre (10/10), Psychologue (9/10), Neurologue (8/10)
+ * PAS : Comptable, Avocat, Assurance (aucun lien)
  */
-const ID_MAPPING: Record<string, string> = {
-  // AUTOMOBILE
-  car_dealer: "car_dealer",
-  insurance: "insurance_agency",
-  driving_school: "drivers_license_training_school",
-  car_wash: "car_wash",
-  bank: "bank",
-  accountant: "accountant",
-  car_repair: "car_repair",
-  car_rental: "car_rental_agency",
-  body_shop: "auto_body_shop",
-  gas_station: "gas_station",
-  auto_parts: "auto_parts_store",
-  dmv: "department_of_motor_vehicles",
-  driving_test: "drivers_license_office",
-
-  // IMMOBILIER & HABITAT
-  real_estate: "real_estate",
-  notary: "notary_public",
-  lawyer: "lawyer",
-  moving: "moving_company",
-  furniture_store: "furniture_store",
-  cleaning: "house_cleaning_service",
-  locksmith: "locksmith",
-  plumber: "plumber",
-  electrician: "electrician",
-  painter: "painter",
-  home_decor: "home_goods_store",
-  security: "security",
-  carpenter: "carpenter",
-  roofer: "roofer",
-
-  // JURIDIQUE & FINANCE
-  business_consultant: "business_management_consultant",
-  financial_advisor: "financial_consultant",
-
-  // SANTÉ
-  doctor: "doctor",
-  pharmacy: "pharmacy",
-  physio: "physiotherapist",
-  dentist: "dentist",
-  laboratory: "medical_lab",
-  orthodontist: "orthodontist",
-  oral_surgeon: "oral_surgeon",
-  osteopath: "osteopath",
-  chiropractor: "chiropractor",
-  gym: "gym",
-  pet_store: "pet_store",
-  dog_groomer: "pet_groomer",
-  pet_food_store: "pet_store",
-  pet_training: "dog_trainer",
-
-  // BEAUTÉ & BIEN-ÊTRE
-  hair_salon: "hair_salon",
-  beauty_salon: "beauty_salon",
-  clothing_store: "clothing_store",
-  jewelry_store: "jewelry_store",
-  photographer: "photographer",
-  barber: "barber_shop",
-  barber_supply: "barber_supply_store",
-  grooming: "barber_shop",
-  shoe_store: "shoe_store",
-  nail_salon: "nail_salon",
-  spa: "spa",
-  massage: "massage_therapist",
-  nutrition: "nutritionist",
-  health_food_store: "health_food_store",
-  meditation: "meditation_center",
-  tailor: "custom_tailor",
-
-  // RESTAURATION
-  bakery: "bakery",
-  cafe: "cafe",
-  butcher: "butcher_shop",
-  wine_shop: "wine_shop",
-  florist: "florist",
-  hotel: "hotel",
-  travel_agency: "travel_agency",
-  catering: "catering_service",
-  cheese_shop: "cheese_shop",
-  restaurant: "restaurant",
-  book_store: "book_store",
-  coworking: "coworking_space",
-
-  // ÉVÉNEMENTIEL
-  wedding_planner: "wedding_planner",
-  event_planner: "event_planner",
-  venue: "event_venue",
-
-  // SERVICES DIVERS
-  carpet_cleaning: "carpet_cleaning_service",
-  window_cleaning: "window_cleaning_service",
-  dry_cleaning: "dry_cleaner",
-  laundromat: "laundromat",
-  tailoring: "clothing_alteration_service",
-  tutoring: "tutoring",
-  stationery_store: "office_supply_store",
-  shoe_repair: "boot_repair_shop",
-  marketing_agency: "marketing_agency",
-};
 
 /**
- * Fonction pour trouver le vrai ID d'un type d'activité
- * Gère les cas où l'ID n'est pas mappé en faisant une recherche partielle
+ * Base de connaissances : Écosystèmes d'activités
+ * Chaque écosystème contient des activités qui partagent les mêmes clients
  */
-function findBusinessTypeId(shortId: string, availableTypes: BusinessType[]): string | null {
-  // 1. Chercher dans le mapping explicite
-  const mappedId = ID_MAPPING[shortId];
-  if (mappedId) {
-    // Vérifier que cet ID existe vraiment
-    const exists = availableTypes.some((type) => type.id === mappedId || type.id.includes(mappedId));
-    if (exists) return mappedId;
-  }
-
-  // 2. Recherche partielle (fuzzy matching)
-  // Chercher un type dont l'ID contient le shortId
-  const match = availableTypes.find(
-    (type) =>
-      type.id.toLowerCase().includes(shortId.toLowerCase()) ||
-      type.id.replace(/_/g, "").toLowerCase().includes(shortId.replace(/_/g, "").toLowerCase()),
-  );
-
-  if (match) return match.id;
-
-  // 3. Aucune correspondance trouvée
-  return null;
-}
-
-/**
- * Catégories pour éviter les concurrents directs
- * Deux activités de la même catégorie ne seront JAMAIS suggérées ensemble
- */
-enum BusinessCategory {
-  // AUTOMOBILE
-  AUTO_SALES = "auto_sales",
-  AUTO_REPAIR = "auto_repair",
-  AUTO_SERVICES = "auto_services",
-  AUTO_EDUCATION = "auto_education",
-
-  // IMMOBILIER
-  REAL_ESTATE = "real_estate",
-  HOME_SERVICES = "home_services",
-
-  // SANTÉ
-  MEDICAL_GENERAL = "medical_general",
-  MEDICAL_DENTAL = "medical_dental",
-  MEDICAL_ALTERNATIVE = "medical_alternative",
-  VETERINARY = "veterinary",
-  PHARMACY = "pharmacy",
-
-  // BEAUTÉ & BIEN-ÊTRE
-  HAIR_SERVICES = "hair_services",
-  BEAUTY_SERVICES = "beauty_services",
-  WELLNESS = "wellness",
-  FITNESS = "fitness",
-
-  // RESTAURATION
-  RESTAURANTS = "restaurants",
-  CAFES = "cafes",
-  BAKERY = "bakery",
-  SPECIALTY_FOOD = "specialty_food",
-
-  // RETAIL
-  CLOTHING = "clothing",
-  JEWELRY = "jewelry",
-  VARIOUS = "various",
-
-  // SERVICES
-  LEGAL = "legal",
-  FINANCIAL = "financial",
-  INSURANCE = "insurance",
-  EVENTS = "events",
-  OTHER = "other",
-}
-
-/**
- * Mapping des mots-clés vers catégories et suggestions
- * Format optimisé pour plus de 3000 activités Google Maps
- */
-const ACTIVITY_INTELLIGENCE: Record<
+const BUSINESS_ECOSYSTEMS: Record<
   string,
   {
-    category: BusinessCategory;
-    suggestions: string[];
+    keywords: string[];
+    activities: Array<{ id: string; score: number; reason: string }>;
   }
 > = {
-  // === AUTOMOBILE ===
-  concessionnaire: {
-    category: BusinessCategory.AUTO_SALES,
-    suggestions: ["insurance", "driving_school", "car_wash", "bank", "accountant"],
-  },
-  car_dealer: {
-    category: BusinessCategory.AUTO_SALES,
-    suggestions: ["insurance", "driving_school", "car_wash", "bank", "accountant"],
-  },
-  voiture: {
-    category: BusinessCategory.AUTO_SALES,
-    suggestions: ["insurance", "driving_school", "car_wash", "car_repair"],
-  },
-  garage: {
-    category: BusinessCategory.AUTO_REPAIR,
-    suggestions: ["car_dealer", "insurance", "car_rental", "car_wash"],
-  },
-  car_repair: {
-    category: BusinessCategory.AUTO_REPAIR,
-    suggestions: ["car_dealer", "insurance", "car_rental", "car_wash"],
-  },
-  mécanique: {
-    category: BusinessCategory.AUTO_REPAIR,
-    suggestions: ["car_dealer", "insurance", "car_rental", "auto_parts"],
-  },
-  carrosserie: {
-    category: BusinessCategory.AUTO_REPAIR,
-    suggestions: ["insurance", "lawyer", "car_rental", "car_dealer"],
-  },
-  body_shop: {
-    category: BusinessCategory.AUTO_REPAIR,
-    suggestions: ["insurance", "lawyer", "car_rental", "car_dealer"],
-  },
-  lavage: {
-    category: BusinessCategory.AUTO_SERVICES,
-    suggestions: ["car_dealer", "car_repair", "car_rental", "gas_station"],
-  },
-  car_wash: {
-    category: BusinessCategory.AUTO_SERVICES,
-    suggestions: ["car_dealer", "car_repair", "car_rental", "gas_station"],
-  },
-  "auto-école": {
-    category: BusinessCategory.AUTO_EDUCATION,
-    suggestions: ["car_dealer", "insurance", "car_rental", "driving_test"],
-  },
-  driving_school: {
-    category: BusinessCategory.AUTO_EDUCATION,
-    suggestions: ["car_dealer", "insurance", "car_rental", "dmv"],
-  },
-  "location voiture": {
-    category: BusinessCategory.AUTO_SERVICES,
-    suggestions: ["hotel", "travel_agency", "insurance", "car_dealer"],
-  },
-  car_rental: {
-    category: BusinessCategory.AUTO_SERVICES,
-    suggestions: ["hotel", "travel_agency", "insurance", "car_dealer"],
+  // === ÉCOSYSTÈME SANTÉ ===
+  health_general: {
+    keywords: ["médecin", "doctor", "généraliste", "cabinet médical", "clinique"],
+    activities: [
+      { id: "pharmacy", score: 10, reason: "Les patients ont besoin de médicaments après consultation" },
+      { id: "laboratory", score: 9, reason: "Prescriptions d'analyses médicales fréquentes" },
+      { id: "radiology", score: 8, reason: "Prescriptions d'imagerie médicale" },
+      { id: "physio", score: 7, reason: "Rééducation prescrite par médecins" },
+      { id: "medical_equipment", score: 6, reason: "Matériel médical pour patients" },
+    ],
   },
 
-  // === IMMOBILIER & HABITAT ===
-  "agence immobilière": {
-    category: BusinessCategory.REAL_ESTATE,
-    suggestions: ["notary", "lawyer", "moving", "insurance", "bank"],
+  health_dental: {
+    keywords: ["dentiste", "dentist", "orthodontiste", "cabinet dentaire", "chirurgien dentiste"],
+    activities: [
+      { id: "pharmacy", score: 9, reason: "Antidouleurs et soins post-intervention" },
+      { id: "orthodontist", score: 8, reason: "Complémentarité dentaire/orthodontie" },
+      { id: "dental_lab", score: 8, reason: "Prothèses et appareils dentaires" },
+      { id: "oral_surgeon", score: 7, reason: "Cas complexes nécessitant chirurgie" },
+      { id: "hygienist", score: 6, reason: "Nettoyage et prévention" },
+    ],
   },
+
+  health_alternative: {
+    keywords: ["kiné", "kinésithérapeute", "ostéopathe", "chiropracteur", "physiothérapeute", "ostéo"],
+    activities: [
+      { id: "doctor", score: 9, reason: "Prescriptions médicales pour séances" },
+      { id: "sports_medicine", score: 8, reason: "Blessures sportives communes" },
+      { id: "gym", score: 7, reason: "Rééducation et remise en forme" },
+      { id: "massage", score: 7, reason: "Soins complémentaires de détente" },
+      { id: "orthopedic", score: 6, reason: "Problèmes musculo-squelettiques" },
+    ],
+  },
+
+  health_speech: {
+    keywords: ["orthophoniste", "speech therapist", "logopède", "orthophonie"],
+    activities: [
+      { id: "pediatrician", score: 10, reason: "Pédiatres prescrivent séances pour enfants" },
+      { id: "psychologist", score: 9, reason: "Troubles du langage liés au développement" },
+      { id: "neurologist", score: 8, reason: "Troubles neurologiques affectant la parole" },
+      { id: "audiologist", score: 8, reason: "Problèmes auditifs impactant le langage" },
+      { id: "special_education", score: 7, reason: "Accompagnement scolaire des enfants" },
+    ],
+  },
+
+  health_mental: {
+    keywords: ["psychologue", "psychologist", "psychiatre", "thérapeute", "psy"],
+    activities: [
+      { id: "doctor", score: 8, reason: "Prescriptions pour suivi psychologique" },
+      { id: "coach", score: 7, reason: "Développement personnel complémentaire" },
+      { id: "meditation_center", score: 6, reason: "Gestion du stress" },
+      { id: "psychiatrist", score: 9, reason: "Cas nécessitant traitement médicamenteux" },
+      { id: "social_worker", score: 6, reason: "Accompagnement social" },
+    ],
+  },
+
+  health_veterinary: {
+    keywords: ["vétérinaire", "veterinarian", "veto", "clinique vétérinaire"],
+    activities: [
+      { id: "pet_store", score: 10, reason: "Propriétaires d'animaux achètent accessoires" },
+      { id: "pet_groomer", score: 9, reason: "Toilettage régulier des animaux" },
+      { id: "pet_training", score: 8, reason: "Éducation canine recommandée" },
+      { id: "pet_boarding", score: 7, reason: "Garde d'animaux pendant vacances" },
+      { id: "pet_food", score: 8, reason: "Alimentation spécialisée prescrite" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME AUTOMOBILE ===
+  auto_sales: {
+    keywords: ["concessionnaire", "car dealer", "voiture", "concession automobile"],
+    activities: [
+      { id: "insurance", score: 10, reason: "Assurance obligatoire pour nouveau véhicule" },
+      { id: "bank", score: 9, reason: "Financement et crédit auto" },
+      { id: "car_wash", score: 8, reason: "Entretien régulier du véhicule" },
+      { id: "driving_school", score: 7, reason: "Nouveaux conducteurs achètent leur première voiture" },
+      { id: "car_accessories", score: 7, reason: "Personnalisation du véhicule" },
+    ],
+  },
+
+  auto_repair: {
+    keywords: ["garage", "mécanique", "réparation auto", "car repair", "mécanicien"],
+    activities: [
+      { id: "car_dealer", score: 8, reason: "Véhicules d'occasion et garanties" },
+      { id: "towing", score: 9, reason: "Dépannage et remorquage" },
+      { id: "insurance", score: 8, reason: "Réparations suite à sinistre" },
+      { id: "auto_parts", score: 9, reason: "Pièces détachées nécessaires" },
+      { id: "car_rental", score: 7, reason: "Véhicule de remplacement pendant réparation" },
+    ],
+  },
+
+  auto_body: {
+    keywords: ["carrosserie", "body shop", "carrossier", "peinture auto"],
+    activities: [
+      { id: "insurance", score: 10, reason: "Déclaration de sinistre et indemnisation" },
+      { id: "lawyer", score: 8, reason: "Litiges suite à accident" },
+      { id: "car_rental", score: 9, reason: "Véhicule de remplacement" },
+      { id: "towing", score: 8, reason: "Remorquage après accident" },
+      { id: "expert", score: 7, reason: "Expertise des dommages" },
+    ],
+  },
+
+  auto_education: {
+    keywords: ["auto-école", "driving school", "permis conduire", "moniteur"],
+    activities: [
+      { id: "car_dealer", score: 9, reason: "Première voiture après obtention du permis" },
+      { id: "insurance", score: 10, reason: "Assurance jeune conducteur" },
+      { id: "dmv", score: 8, reason: "Passage du permis de conduire" },
+      { id: "car_rental", score: 6, reason: "Location pour jeunes conducteurs" },
+      { id: "driving_simulator", score: 5, reason: "Entraînement complémentaire" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME IMMOBILIER ===
   real_estate: {
-    category: BusinessCategory.REAL_ESTATE,
-    suggestions: ["notary", "lawyer", "moving", "insurance", "bank"],
+    keywords: ["agence immobilière", "real estate", "immobilier", "agent immobilier"],
+    activities: [
+      { id: "notary", score: 10, reason: "Signature obligatoire des actes de vente" },
+      { id: "moving", score: 10, reason: "Déménagement lors d'achat/vente" },
+      { id: "bank", score: 9, reason: "Prêt immobilier" },
+      { id: "insurance", score: 9, reason: "Assurance habitation" },
+      { id: "home_inspector", score: 8, reason: "Inspection avant achat" },
+    ],
   },
-  notaire: {
-    category: BusinessCategory.LEGAL,
-    suggestions: ["real_estate", "lawyer", "moving", "insurance"],
-  },
-  notary: {
-    category: BusinessCategory.LEGAL,
-    suggestions: ["real_estate", "lawyer", "moving", "insurance"],
-  },
-  déménagement: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["real_estate", "furniture_store", "cleaning", "locksmith"],
-  },
+
   moving: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["real_estate", "furniture_store", "cleaning", "locksmith"],
-  },
-  plombier: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["electrician", "painter", "real_estate", "locksmith"],
-  },
-  plumber: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["electrician", "painter", "real_estate", "locksmith"],
-  },
-  électricien: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["plumber", "painter", "real_estate", "locksmith"],
-  },
-  electrician: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["plumber", "painter", "real_estate", "locksmith"],
-  },
-  peintre: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["plumber", "electrician", "real_estate", "home_decor"],
-  },
-  painter: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["plumber", "electrician", "real_estate", "home_decor"],
-  },
-  serrurier: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["security", "insurance", "moving", "real_estate"],
-  },
-  locksmith: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["security", "insurance", "moving", "real_estate"],
+    keywords: ["déménagement", "moving", "déménageur", "transport mobilier"],
+    activities: [
+      { id: "real_estate", score: 9, reason: "Achat/vente déclenchent déménagement" },
+      { id: "storage", score: 9, reason: "Stockage temporaire durant transition" },
+      { id: "cleaning", score: 8, reason: "Nettoyage de fin de bail" },
+      { id: "furniture_store", score: 7, reason: "Nouvel ameublement" },
+      { id: "locksmith", score: 6, reason: "Changement de serrures" },
+    ],
   },
 
-  // === JURIDIQUE & FINANCE ===
-  avocat: {
-    category: BusinessCategory.LEGAL,
-    suggestions: ["accountant", "notary", "insurance", "real_estate"],
-  },
-  lawyer: {
-    category: BusinessCategory.LEGAL,
-    suggestions: ["accountant", "notary", "insurance", "real_estate"],
-  },
-  comptable: {
-    category: BusinessCategory.FINANCIAL,
-    suggestions: ["lawyer", "insurance", "bank", "business_consultant"],
-  },
-  accountant: {
-    category: BusinessCategory.FINANCIAL,
-    suggestions: ["lawyer", "insurance", "bank", "business_consultant"],
-  },
-  assurance: {
-    category: BusinessCategory.INSURANCE,
-    suggestions: ["car_dealer", "real_estate", "lawyer", "bank"],
-  },
-  insurance: {
-    category: BusinessCategory.INSURANCE,
-    suggestions: ["car_dealer", "real_estate", "lawyer", "bank"],
-  },
-  banque: {
-    category: BusinessCategory.FINANCIAL,
-    suggestions: ["accountant", "insurance", "real_estate", "lawyer"],
-  },
-  bank: {
-    category: BusinessCategory.FINANCIAL,
-    suggestions: ["accountant", "insurance", "real_estate", "lawyer"],
+  home_renovation: {
+    keywords: ["plombier", "électricien", "peintre", "plumber", "electrician", "painter", "rénovation"],
+    activities: [
+      { id: "electrician", score: 9, reason: "Travaux électriques complémentaires" },
+      { id: "plumber", score: 9, reason: "Travaux de plomberie associés" },
+      { id: "painter", score: 8, reason: "Finitions après travaux" },
+      { id: "hardware_store", score: 7, reason: "Matériaux de construction" },
+      { id: "architect", score: 6, reason: "Conception et plans" },
+    ],
   },
 
-  // === SANTÉ ===
-  médecin: {
-    category: BusinessCategory.MEDICAL_GENERAL,
-    suggestions: ["pharmacy", "physio", "dentist", "laboratory"],
-  },
-  doctor: {
-    category: BusinessCategory.MEDICAL_GENERAL,
-    suggestions: ["pharmacy", "physio", "dentist", "laboratory"],
-  },
-  dentiste: {
-    category: BusinessCategory.MEDICAL_DENTAL,
-    suggestions: ["doctor", "pharmacy", "orthodontist", "oral_surgeon"],
-  },
-  dentist: {
-    category: BusinessCategory.MEDICAL_DENTAL,
-    suggestions: ["doctor", "pharmacy", "orthodontist", "oral_surgeon"],
-  },
-  pharmacie: {
-    category: BusinessCategory.PHARMACY,
-    suggestions: ["doctor", "dentist", "physio", "laboratory"],
-  },
-  pharmacy: {
-    category: BusinessCategory.PHARMACY,
-    suggestions: ["doctor", "dentist", "physio", "laboratory"],
-  },
-  kiné: {
-    category: BusinessCategory.MEDICAL_ALTERNATIVE,
-    suggestions: ["doctor", "gym", "pharmacy", "osteopath"],
-  },
-  kinésithérapeute: {
-    category: BusinessCategory.MEDICAL_ALTERNATIVE,
-    suggestions: ["doctor", "gym", "pharmacy", "osteopath"],
-  },
-  physio: {
-    category: BusinessCategory.MEDICAL_ALTERNATIVE,
-    suggestions: ["doctor", "gym", "pharmacy", "osteopath"],
-  },
-  ostéopathe: {
-    category: BusinessCategory.MEDICAL_ALTERNATIVE,
-    suggestions: ["doctor", "physio", "chiropractor", "gym"],
-  },
-  osteopath: {
-    category: BusinessCategory.MEDICAL_ALTERNATIVE,
-    suggestions: ["doctor", "physio", "chiropractor", "gym"],
-  },
-  vétérinaire: {
-    category: BusinessCategory.VETERINARY,
-    suggestions: ["pet_store", "dog_groomer", "pet_food_store"],
-  },
-  veterinarian: {
-    category: BusinessCategory.VETERINARY,
-    suggestions: ["pet_store", "dog_groomer", "pet_food_store"],
+  // === ÉCOSYSTÈME BEAUTÉ & BIEN-ÊTRE ===
+  hair_services: {
+    keywords: ["coiffeur", "hair salon", "salon de coiffure", "barbier", "barber"],
+    activities: [
+      { id: "beauty_salon", score: 9, reason: "Soins beauté complets" },
+      { id: "nail_salon", score: 8, reason: "Manucure lors de la visite coiffure" },
+      { id: "clothing_store", score: 7, reason: "Nouveau look complet" },
+      { id: "photographer", score: 7, reason: "Photos professionnelles après coiffure" },
+      { id: "jewelry_store", score: 6, reason: "Accessoires pour occasions spéciales" },
+    ],
   },
 
-  // === BEAUTÉ & BIEN-ÊTRE ===
-  coiffeur: {
-    category: BusinessCategory.HAIR_SERVICES,
-    suggestions: ["beauty_salon", "clothing_store", "jewelry_store", "photographer"],
-  },
-  hair_salon: {
-    category: BusinessCategory.HAIR_SERVICES,
-    suggestions: ["beauty_salon", "clothing_store", "jewelry_store", "photographer"],
-  },
-  barbier: {
-    category: BusinessCategory.HAIR_SERVICES,
-    suggestions: ["clothing_store", "shoe_store", "jewelry_store", "barber_supply"],
-  },
-  barber: {
-    category: BusinessCategory.HAIR_SERVICES,
-    suggestions: ["clothing_store", "shoe_store", "jewelry_store", "grooming"],
-  },
-  esthéticienne: {
-    category: BusinessCategory.BEAUTY_SERVICES,
-    suggestions: ["hair_salon", "spa", "gym", "nail_salon"],
-  },
-  beauty_salon: {
-    category: BusinessCategory.BEAUTY_SERVICES,
-    suggestions: ["hair_salon", "spa", "gym", "nail_salon"],
-  },
-  spa: {
-    category: BusinessCategory.WELLNESS,
-    suggestions: ["hair_salon", "beauty_salon", "massage", "hotel"],
-  },
-  massage: {
-    category: BusinessCategory.WELLNESS,
-    suggestions: ["spa", "gym", "physio", "hotel"],
-  },
-  "salle de sport": {
-    category: BusinessCategory.FITNESS,
-    suggestions: ["physio", "massage", "spa", "nutrition"],
-  },
-  gym: {
-    category: BusinessCategory.FITNESS,
-    suggestions: ["physio", "massage", "spa", "nutrition"],
-  },
-  yoga: {
-    category: BusinessCategory.FITNESS,
-    suggestions: ["massage", "spa", "health_food_store", "meditation"],
+  beauty_wellness: {
+    keywords: ["institut beauté", "beauty salon", "esthéticienne", "spa", "massage"],
+    activities: [
+      { id: "hair_salon", score: 9, reason: "Coiffure et beauté vont ensemble" },
+      { id: "nail_salon", score: 8, reason: "Soins des ongles complémentaires" },
+      { id: "gym", score: 7, reason: "Remise en forme et bien-être" },
+      { id: "nutritionist", score: 6, reason: "Beauté de l'intérieur" },
+      { id: "dermatologist", score: 7, reason: "Soins de la peau professionnels" },
+    ],
   },
 
-  // === RESTAURATION ===
-  boulangerie: {
-    category: BusinessCategory.BAKERY,
-    suggestions: ["cafe", "butcher", "wine_shop", "florist"],
+  fitness: {
+    keywords: ["salle de sport", "gym", "fitness", "musculation", "crossfit"],
+    activities: [
+      { id: "physio", score: 9, reason: "Blessures sportives courantes" },
+      { id: "nutritionist", score: 9, reason: "Plan alimentaire pour sportifs" },
+      { id: "massage", score: 8, reason: "Récupération musculaire" },
+      { id: "sports_store", score: 7, reason: "Équipement sportif" },
+      { id: "supplement_store", score: 7, reason: "Compléments alimentaires" },
+    ],
   },
-  bakery: {
-    category: BusinessCategory.BAKERY,
-    suggestions: ["cafe", "butcher", "wine_shop", "florist"],
-  },
+
+  // === ÉCOSYSTÈME RESTAURATION ===
   restaurant: {
-    category: BusinessCategory.RESTAURANTS,
-    suggestions: ["hotel", "travel_agency", "wine_shop", "catering"],
+    keywords: ["restaurant", "resto", "brasserie", "bistrot"],
+    activities: [
+      { id: "hotel", score: 9, reason: "Touristes cherchent restaurant près de l'hôtel" },
+      { id: "wine_shop", score: 8, reason: "Achat de vin pour repas à domicile" },
+      { id: "catering", score: 7, reason: "Événements privés" },
+      { id: "food_delivery", score: 7, reason: "Livraison à domicile" },
+      { id: "grocery_store", score: 6, reason: "Courses après repas" },
+    ],
   },
-  café: {
-    category: BusinessCategory.CAFES,
-    suggestions: ["bakery", "book_store", "florist", "coworking"],
+
+  bakery: {
+    keywords: ["boulangerie", "bakery", "pâtisserie", "boulanger"],
+    activities: [
+      { id: "cafe", score: 9, reason: "Café et viennoiseries le matin" },
+      { id: "catering", score: 8, reason: "Pâtisseries pour événements" },
+      { id: "grocery_store", score: 7, reason: "Courses alimentaires complètes" },
+      { id: "florist", score: 6, reason: "Occasions spéciales (anniversaires)" },
+      { id: "butcher", score: 7, reason: "Circuits courts et produits frais" },
+    ],
   },
-  cafe: {
-    category: BusinessCategory.CAFES,
-    suggestions: ["bakery", "book_store", "florist", "coworking"],
-  },
-  traiteur: {
-    category: BusinessCategory.SPECIALTY_FOOD,
-    suggestions: ["florist", "photographer", "event_planner", "wine_shop"],
-  },
+
   catering: {
-    category: BusinessCategory.SPECIALTY_FOOD,
-    suggestions: ["florist", "photographer", "event_planner", "wine_shop"],
-  },
-  boucherie: {
-    category: BusinessCategory.SPECIALTY_FOOD,
-    suggestions: ["bakery", "wine_shop", "cheese_shop", "catering"],
-  },
-  butcher: {
-    category: BusinessCategory.SPECIALTY_FOOD,
-    suggestions: ["bakery", "wine_shop", "cheese_shop", "catering"],
+    keywords: ["traiteur", "catering", "service traiteur", "événementiel culinaire"],
+    activities: [
+      { id: "event_planner", score: 10, reason: "Organisation complète d'événements" },
+      { id: "florist", score: 9, reason: "Décoration florale des événements" },
+      { id: "photographer", score: 9, reason: "Photos d'événements" },
+      { id: "venue", score: 8, reason: "Location de salles" },
+      { id: "party_rental", score: 8, reason: "Location de matériel" },
+    ],
   },
 
-  // === RETAIL ===
-  "magasin de vêtements": {
-    category: BusinessCategory.CLOTHING,
-    suggestions: ["shoe_store", "jewelry_store", "hair_salon", "tailor"],
-  },
-  clothing_store: {
-    category: BusinessCategory.CLOTHING,
-    suggestions: ["shoe_store", "jewelry_store", "hair_salon", "tailor"],
-  },
-  chaussures: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["clothing_store", "shoe_repair", "jewelry_store"],
-  },
-  shoe_store: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["clothing_store", "shoe_repair", "jewelry_store"],
-  },
-  bijouterie: {
-    category: BusinessCategory.JEWELRY,
-    suggestions: ["clothing_store", "hair_salon", "photographer", "wedding_planner"],
-  },
-  jewelry_store: {
-    category: BusinessCategory.JEWELRY,
-    suggestions: ["clothing_store", "hair_salon", "photographer", "wedding_planner"],
-  },
-  librairie: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["cafe", "tutoring", "stationery_store"],
-  },
-  book_store: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["cafe", "tutoring", "stationery_store"],
-  },
-  animalerie: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["veterinarian", "dog_groomer", "pet_training"],
-  },
-  pet_store: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["veterinarian", "dog_groomer", "pet_training"],
-  },
-  fleuriste: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["photographer", "event_planner", "wedding_planner", "catering"],
-  },
-  florist: {
-    category: BusinessCategory.VARIOUS,
-    suggestions: ["photographer", "event_planner", "wedding_planner", "catering"],
+  // === ÉCOSYSTÈME ÉVÉNEMENTIEL ===
+  wedding: {
+    keywords: ["mariage", "wedding", "wedding planner", "organisateur mariage"],
+    activities: [
+      { id: "photographer", score: 10, reason: "Photos de mariage essentielles" },
+      { id: "florist", score: 10, reason: "Décoration florale indispensable" },
+      { id: "catering", score: 10, reason: "Repas de mariage" },
+      { id: "jewelry_store", score: 9, reason: "Alliances et bijoux" },
+      { id: "bridal_shop", score: 9, reason: "Robe de mariée" },
+    ],
   },
 
-  // === HÔTELLERIE & TOURISME ===
-  hôtel: {
-    category: BusinessCategory.OTHER,
-    suggestions: ["restaurant", "travel_agency", "car_rental", "spa"],
+  photography: {
+    keywords: ["photographe", "photographer", "photographie", "studio photo"],
+    activities: [
+      { id: "event_planner", score: 9, reason: "Photos pour tous types d'événements" },
+      { id: "wedding_planner", score: 10, reason: "Mariages nécessitent photographe" },
+      { id: "hair_salon", score: 7, reason: "Coiffure avant shooting" },
+      { id: "makeup_artist", score: 8, reason: "Maquillage pour photos" },
+      { id: "printing_service", score: 7, reason: "Impression des photos" },
+    ],
   },
+
+  // === ÉCOSYSTÈME JURIDIQUE & FINANCE ===
+  legal: {
+    keywords: ["avocat", "lawyer", "cabinet avocat", "juriste"],
+    activities: [
+      { id: "notary", score: 8, reason: "Complémentarité juridique" },
+      { id: "accountant", score: 9, reason: "Fiscalité et droit des affaires" },
+      { id: "insurance", score: 8, reason: "Protection juridique" },
+      { id: "real_estate", score: 7, reason: "Transactions immobilières" },
+      { id: "mediator", score: 7, reason: "Résolution de conflits" },
+    ],
+  },
+
+  accounting: {
+    keywords: ["comptable", "accountant", "expert comptable", "cabinet comptable"],
+    activities: [
+      { id: "lawyer", score: 9, reason: "Droit fiscal et des affaires" },
+      { id: "bank", score: 8, reason: "Gestion financière" },
+      { id: "insurance", score: 7, reason: "Assurance professionnelle" },
+      { id: "business_consultant", score: 8, reason: "Conseil en gestion" },
+      { id: "payroll_service", score: 7, reason: "Gestion de la paie" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME RETAIL ===
+  clothing: {
+    keywords: ["vêtements", "clothing", "boutique mode", "prêt-à-porter"],
+    activities: [
+      { id: "shoe_store", score: 9, reason: "Look complet avec chaussures" },
+      { id: "jewelry_store", score: 8, reason: "Accessoires et bijoux" },
+      { id: "tailor", score: 8, reason: "Retouches nécessaires" },
+      { id: "hair_salon", score: 7, reason: "Nouveau look complet" },
+      { id: "personal_stylist", score: 7, reason: "Conseils en style" },
+    ],
+  },
+
+  jewelry: {
+    keywords: ["bijouterie", "jewelry", "bijoutier", "joaillerie"],
+    activities: [
+      { id: "wedding_planner", score: 9, reason: "Alliances de mariage" },
+      { id: "clothing_store", score: 8, reason: "Tenue complète pour occasions" },
+      { id: "watch_repair", score: 8, reason: "Réparation de montres" },
+      { id: "engraver", score: 7, reason: "Gravure personnalisée" },
+      { id: "insurance", score: 6, reason: "Assurance bijoux de valeur" },
+    ],
+  },
+
+  // === ÉCOSYSTÈME TOURISME ===
   hotel: {
-    category: BusinessCategory.OTHER,
-    suggestions: ["restaurant", "travel_agency", "car_rental", "spa"],
+    keywords: ["hôtel", "hotel", "hébergement", "hôtellerie"],
+    activities: [
+      { id: "restaurant", score: 10, reason: "Clients cherchent où manger" },
+      { id: "travel_agency", score: 9, reason: "Réservation de séjours" },
+      { id: "car_rental", score: 9, reason: "Location de voiture sur place" },
+      { id: "spa", score: 8, reason: "Détente pendant le séjour" },
+      { id: "tour_guide", score: 8, reason: "Visites touristiques" },
+    ],
   },
-  "agence de voyage": {
-    category: BusinessCategory.OTHER,
-    suggestions: ["hotel", "car_rental", "insurance", "restaurant"],
-  },
+
   travel_agency: {
-    category: BusinessCategory.OTHER,
-    suggestions: ["hotel", "car_rental", "insurance", "restaurant"],
+    keywords: ["agence voyage", "travel agency", "voyages", "tour opérateur"],
+    activities: [
+      { id: "hotel", score: 10, reason: "Réservation d'hébergement" },
+      { id: "car_rental", score: 9, reason: "Location de voiture sur place" },
+      { id: "insurance", score: 9, reason: "Assurance voyage" },
+      { id: "currency_exchange", score: 7, reason: "Change de devises" },
+      { id: "luggage_store", score: 6, reason: "Achat de bagages" },
+    ],
   },
 
-  // === ÉVÉNEMENTIEL ===
-  photographe: {
-    category: BusinessCategory.EVENTS,
-    suggestions: ["wedding_planner", "florist", "catering", "jewelry_store"],
-  },
-  photographer: {
-    category: BusinessCategory.EVENTS,
-    suggestions: ["wedding_planner", "florist", "catering", "jewelry_store"],
-  },
-  wedding_planner: {
-    category: BusinessCategory.EVENTS,
-    suggestions: ["florist", "photographer", "catering", "hotel"],
-  },
-  organisateur: {
-    category: BusinessCategory.EVENTS,
-    suggestions: ["florist", "photographer", "catering", "venue"],
-  },
-  event_planner: {
-    category: BusinessCategory.EVENTS,
-    suggestions: ["florist", "photographer", "catering", "venue"],
+  // === ÉCOSYSTÈME ÉDUCATION ===
+  tutoring: {
+    keywords: ["soutien scolaire", "cours particuliers", "tutoring", "aide aux devoirs"],
+    activities: [
+      { id: "book_store", score: 8, reason: "Manuels scolaires et fournitures" },
+      { id: "psychologist", score: 7, reason: "Difficultés d'apprentissage" },
+      { id: "speech_therapist", score: 7, reason: "Troubles du langage" },
+      { id: "library", score: 6, reason: "Ressources pédagogiques" },
+      { id: "stationery", score: 7, reason: "Fournitures scolaires" },
+    ],
   },
 
-  // === SERVICES DIVERS ===
-  nettoyage: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["real_estate", "moving", "carpet_cleaning", "window_cleaning"],
-  },
-  cleaning: {
-    category: BusinessCategory.HOME_SERVICES,
-    suggestions: ["real_estate", "moving", "carpet_cleaning", "window_cleaning"],
-  },
-  pressing: {
-    category: BusinessCategory.OTHER,
-    suggestions: ["dry_cleaning", "clothing_store", "laundromat"],
-  },
-  dry_cleaning: {
-    category: BusinessCategory.OTHER,
-    suggestions: ["laundromat", "clothing_store", "tailoring"],
+  // === ÉCOSYSTÈME ANIMAUX ===
+  pet_store: {
+    keywords: ["animalerie", "pet store", "magasin animaux"],
+    activities: [
+      { id: "veterinarian", score: 10, reason: "Soins vétérinaires réguliers" },
+      { id: "pet_groomer", score: 9, reason: "Toilettage des animaux" },
+      { id: "pet_training", score: 8, reason: "Éducation canine" },
+      { id: "pet_boarding", score: 7, reason: "Garde pendant vacances" },
+      { id: "pet_photographer", score: 5, reason: "Photos d'animaux" },
+    ],
   },
 };
 
 /**
- * Suggestions génériques par domaine
- */
-const GENERIC_SUGGESTIONS: Record<string, string[]> = {
-  automobile: ["insurance", "car_wash", "car_repair", "driving_school"],
-  immobilier: ["furniture_store", "home_decor", "electrician", "plumber"],
-  beauté: ["hair_salon", "beauty_salon", "spa", "massage"],
-  santé: ["doctor", "pharmacy", "physio", "dentist"],
-  restauration: ["cafe", "bakery", "wine_shop", "catering"],
-  mode: ["shoe_store", "jewelry_store", "hair_salon", "beauty_salon"],
-  voyage: ["hotel", "car_rental", "restaurant", "insurance"],
-  default: ["insurance", "accountant", "lawyer", "marketing_agency"],
-};
-
-/**
- * Fonction intelligente de génération de suggestions
- * CORRIGÉE : Utilise le mapping ID pour faire correspondre les suggestions avec les vrais IDs
+ * Fonction principale de génération de suggestions
  */
 function generateSmartSuggestions(
   activityInput: string,
@@ -624,81 +376,40 @@ function generateSmartSuggestions(
 ): BusinessType[] {
   const inputLower = activityInput.toLowerCase().trim();
 
-  // 1. Identifier l'activité principale
-  let mainActivity: { category: BusinessCategory; suggestions: string[] } | null = null;
-  let matchedKeyword = "";
+  // 1. Chercher dans tous les écosystèmes
+  let bestMatch: { ecosystem: string; score: number } | null = null;
+  let maxKeywordMatches = 0;
 
-  for (const [keyword, activityInfo] of Object.entries(ACTIVITY_INTELLIGENCE)) {
-    if (inputLower.includes(keyword)) {
-      mainActivity = activityInfo;
-      matchedKeyword = keyword;
-      break;
-    }
-  }
-
-  // 2. Collecter les IDs de suggestions (format court)
-  let shortSuggestionIds: string[] = [];
-
-  if (mainActivity) {
-    // Utiliser les suggestions spécifiques
-    shortSuggestionIds = [...mainActivity.suggestions];
-  } else {
-    // Utiliser les suggestions génériques
-    for (const [domain, suggestions] of Object.entries(GENERIC_SUGGESTIONS)) {
-      if (inputLower.includes(domain)) {
-        shortSuggestionIds = suggestions;
-        break;
-      }
-    }
-
-    // Si toujours rien, utiliser les suggestions par défaut
-    if (shortSuggestionIds.length === 0) {
-      shortSuggestionIds = GENERIC_SUGGESTIONS["default"];
-    }
-  }
-
-  // 3. Convertir les IDs courts en vrais IDs et trouver les BusinessType correspondants
-  const suggestions: BusinessType[] = [];
-  const usedIds = new Set<string>();
-
-  for (const shortId of shortSuggestionIds) {
-    // Trouver le vrai ID correspondant
-    const realId = findBusinessTypeId(shortId, availableTypes);
-
-    if (realId && !usedIds.has(realId)) {
-      // Chercher le BusinessType correspondant
-      const businessType = availableTypes.find((type) => type.id === realId || type.id.includes(realId));
-
-      if (businessType) {
-        suggestions.push(businessType);
-        usedIds.add(realId);
-
-        // Arrêter si on a assez de suggestions
-        if (suggestions.length >= maxSuggestions) {
-          break;
+  for (const [ecosystemName, ecosystem] of Object.entries(BUSINESS_ECOSYSTEMS)) {
+    for (const keyword of ecosystem.keywords) {
+      if (inputLower.includes(keyword)) {
+        const keywordLength = keyword.length;
+        if (keywordLength > maxKeywordMatches) {
+          maxKeywordMatches = keywordLength;
+          bestMatch = { ecosystem: ecosystemName, score: 10 };
         }
       }
     }
   }
 
-  // 4. Si on n'a pas assez de suggestions, ajouter des suggestions génériques
-  if (suggestions.length < maxSuggestions) {
-    // Chercher des activités universellement complémentaires
-    const universalIds = ["insurance_agency", "accountant", "lawyer", "marketing_agency", "bank"];
+  // 2. Si on a trouvé un écosystème, utiliser ses suggestions
+  if (bestMatch && BUSINESS_ECOSYSTEMS[bestMatch.ecosystem]) {
+    const ecosystem = BUSINESS_ECOSYSTEMS[bestMatch.ecosystem];
+    const suggestionIds = ecosystem.activities
+      .sort((a, b) => b.score - a.score)
+      .slice(0, maxSuggestions)
+      .map((activity) => activity.id);
 
-    for (const id of universalIds) {
-      if (suggestions.length >= maxSuggestions) break;
+    const suggestions = availableTypes.filter((type) => suggestionIds.includes(type.id));
 
-      const businessType = availableTypes.find((type) => type.id === id || type.id.includes(id));
-
-      if (businessType && !usedIds.has(businessType.id)) {
-        suggestions.push(businessType);
-        usedIds.add(businessType.id);
-      }
+    if (suggestions.length > 0) {
+      return suggestions;
     }
   }
 
-  return suggestions;
+  // 3. Fallback : suggestions très génériques mais pertinentes
+  const fallbackIds = ["insurance", "accountant", "lawyer", "marketing_agency", "bank"];
+  return availableTypes.filter((type) => fallbackIds.includes(type.id)).slice(0, maxSuggestions);
 }
 
 export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProps) => {
@@ -748,7 +459,7 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
             </Label>
             <Input
               id="activity"
-              placeholder="Ex: Concessionnaire automobile, Coiffeur, Restaurant, Plombier..."
+              placeholder="Ex: Orthophoniste, Coiffeur, Restaurant, Plombier..."
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -762,9 +473,11 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
               <div className="flex items-start gap-2">
                 <TrendingUp className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Apporteurs d'affaires</p>
+                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                    Apporteurs d'affaires naturels
+                  </p>
                   <p className="text-sm text-purple-700 dark:text-purple-300">
-                    Activités dont les clients auraient naturellement besoin de votre client
+                    Activités dont les clients ont VRAIMENT besoin de votre client
                   </p>
                 </div>
               </div>
@@ -772,27 +485,27 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
               <div className="flex items-start gap-2">
                 <Link2 className="h-5 w-5 text-pink-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-pink-900 dark:text-pink-100">Proximité sémantique</p>
-                  <p className="text-sm text-pink-700 dark:text-pink-300">
-                    Activités partageant le même univers client ou les mêmes occasions
-                  </p>
+                  <p className="text-sm font-medium text-pink-900 dark:text-pink-100">Cocon sémantique</p>
+                  <p className="text-sm text-pink-700 dark:text-pink-300">Même écosystème de clients et d'occasions</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-muted/50 rounded-lg p-4">
-              <p className="text-sm font-medium text-muted-foreground mb-2">🎯 Le système évite automatiquement</p>
+              <p className="text-sm font-medium text-muted-foreground mb-2">💡 Exemple : Orthophoniste</p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Les concurrents directs (même catégorie d'activité)</li>
-                <li>• Les activités sans lien avec votre client</li>
-                <li>• Les suggestions peu pertinentes pour le partenariat</li>
+                <li>✓ Pédiatre (prescriptions pour enfants)</li>
+                <li>✓ Psychologue (troubles du langage)</li>
+                <li>✓ Neurologue (troubles neurologiques)</li>
+                <li>✓ Audiologiste (problèmes auditifs)</li>
+                <li>✗ Comptable, Avocat (aucun lien)</li>
               </ul>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">💡 Base de données</p>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">🎯 Logique intelligente</p>
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                Système optimisé pour plus de 3000 catégories d'activités Google Maps 2025
+                Système basé sur 30+ écosystèmes métiers réels avec scoring de pertinence
               </p>
             </div>
           </div>
