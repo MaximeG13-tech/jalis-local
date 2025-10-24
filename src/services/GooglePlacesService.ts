@@ -257,6 +257,66 @@ export class GooglePlacesService {
     return 'Autre';
   }
 
+  private static cleanBusinessName(name: string): string {
+    return name
+      .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+      .replace(/[\u{2600}-\u{26FF}]/gu, '')
+      .replace(/[\u{2700}-\u{27BF}]/gu, '')
+      .replace(/⭐|★|✨|🔥|💥|💫|❤️|💯|👍|✅|🎉|🎊/g, '')
+      .replace(/\b(PROMO|NOUVEAU|OFFRE|SOLDES|REDUCTION|-%|GRATUIT)\b/gi, '')
+      .replace(/\s-\s[\w\s]+\d{2,5}$/i, '')
+      .replace(/\s\d{5}$/i, '')
+      .replace(/\([^)]*\)/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+      .split(' ')
+      .map(word => {
+        if (word.length <= 2) return word.toUpperCase();
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+
+  private static async normalizeBusinessName(
+    business: { name: string; website?: string; address: string; phone?: string }
+  ): Promise<{
+    normalized_name: string;
+    confidence_score: number;
+    source: string;
+    should_exclude: boolean;
+  }> {
+    try {
+      const { data, error } = await supabase.functions.invoke('normalize-business-name', {
+        body: {
+          business_name: business.name,
+          website: business.website || null,
+          address: business.address,
+          phone: business.phone || null
+        }
+      });
+      
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error('Error normalizing business name:', error);
+      
+      // Fallback : nettoyage basique côté client
+      const cleanedName = this.cleanBusinessName(business.name);
+      const shouldExclude = 
+        cleanedName.length < 3 ||
+        /^\d+$/.test(cleanedName) ||
+        cleanedName.length < business.name.length * 0.3;
+      
+      return {
+        normalized_name: cleanedName,
+        confidence_score: shouldExclude ? 0 : 50,
+        source: 'gmb_cleaned_fallback',
+        should_exclude: shouldExclude
+      };
+    }
+  }
+
   static async searchBusinesses(
     companyName: string,
     placeId: string,
@@ -329,6 +389,7 @@ export class GooglePlacesService {
           
           // Get details for each place
           for (const place of filteredPlaces) {
+            // Continue until we have enough valid results
             if (allBusinesses.length >= maxResults) break;
             
             // Skip if we already have this place_id
@@ -353,11 +414,27 @@ export class GooglePlacesService {
             
             if (finalFiltered.length === 0) continue;
             
-            // Déterminer le type d'activité à afficher (utilise primaryTypeDisplayName de Google)
+            // 🆕 NORMALISATION DU NOM
+            const normalizationResult = await this.normalizeBusinessName({
+              name: details.name,
+              website: details.website,
+              address: details.formatted_address || '',
+              phone: details.formatted_phone_number
+            });
+            
+            // 🚫 EXCLUSION si le nom est suspect
+            if (normalizationResult.should_exclude) {
+              console.log(`❌ EXCLUDED (suspicious name): ${details.name} → cleaned: ${normalizationResult.normalized_name}`);
+              continue; // Ne pas compter cette entreprise, continuer la recherche
+            }
+            
+            console.log(`✅ Name normalized: "${details.name}" → "${normalizationResult.normalized_name}" (${normalizationResult.source}, confidence: ${normalizationResult.confidence_score}%)`);
+            
+            // Déterminer le type d'activité à afficher
             const activityType = this.getActivityType(details, selectedTypes);
             
             const business: Business = {
-              nom: details.name,
+              nom: normalizationResult.normalized_name, // 🆕 Utiliser le nom normalisé
               type_activite: activityType,
               adresse: details.formatted_address || '',
               telephone: details.formatted_phone_number || 'Non disponible',

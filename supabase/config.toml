@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.generate-partner-guide]
 verify_jwt = false
+
+[functions.normalize-business-name]
+verify_jwt = false
