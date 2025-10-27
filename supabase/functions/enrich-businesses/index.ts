@@ -229,11 +229,12 @@ EXEMPLES INCORRECTS :
 
 CHAMP 3 : "description"
 
-INSTRUCTION : Écris un texte de 110-130 mots en 3 paragraphes bien structurés.
+INSTRUCTION : Écris un texte de 110-130 mots en 3 paragraphes bien structurés et fluides.
 RÈGLE ABSOLUE : Tu DOIS mentionner "${companyName} recommande" OU "recommandé par ${companyName}".
 
 MOTS INTERDITS : partenaire, partenariat, collaboration, réseau
 EXPRESSIONS INTERDITES : "fait toute la différence" (trop familier), "Quand on habite à"
+**INTERDIT ABSOLU** : NE JAMAIS mentionner le site web dans la description.
 
 RÈGLES GRAMMATICALES STRICTES :
 
@@ -244,7 +245,7 @@ RÈGLES GRAMMATICALES STRICTES :
 
 2. DÉBUT DE PHRASE NATUREL :
    ✓ "À ${cityName}, l'étude ${business.nom}, recommandée par ${companyName}, se distingue..."
-   ✓ "Recommandé par ${companyName}, le cabinet ${business.nom} se distingue..."
+   ✓ "À ${cityName}, le cabinet ${business.nom}, recommandé par ${companyName}, se distingue..."
    ✗ "Quand on habite à ${cityName}, recommandé par..." → Construction ambiguë
 
 3. EXPRESSIONS PROFESSIONNELLES (pas familières) :
@@ -252,23 +253,27 @@ RÈGLES GRAMMATICALES STRICTES :
    ✓ "apporte une réelle valeur ajoutée"
    ✗ "fait toute la différence" → Trop familier
 
-4. PRÉSENTATION DES SERVICES :
+4. PRÉSENTATION DES SERVICES (éviter les répétitions) :
+   ✓ "[Nom] propose des solutions sur mesure, adaptées aux besoins..."
    ✓ "Parmi les services proposés figurent..."
-   ✓ "Les prestations comprennent..."
-   ✗ "Les services proposés incluent..." → Lourd
+   ✗ "s'engage à fournir" + "répondant aux besoins" → Répétition lourde
 
 5. ADRESSE CORRECTE :
+   ✓ "Situé(e) au [numéro] [type de voie] [nom de voie] à ${cityName}, le cabinet est facilement accessible..."
    ✓ "...située à l'immeuble Le Primavera, 114 boulevard Pinatel..."
-   ✓ "...située 114 boulevard Pinatel..."
    ✗ "...située au Le Primavera..." → Faute grammaticale ("au Le")
 
-STRUCTURE OBLIGATOIRE :
-1. Accroche (35-45 mots) : Présentation avec article défini + recommandation ${companyName}
-2. Services (35-45 mots) : Énumération fluide avec "Parmi les services figurent..." ou "Les prestations comprennent..."
-3. Coordonnées (30-40 mots) : Contact et adresse grammaticalement correcte
+6. COORDONNÉES FINALES (sans site web) :
+   ✓ "Pour tout renseignement ou pour prendre rendez-vous, contactez-les au ${business.telephone}."
+   ✗ "...contactez-les au ${business.telephone} ou consultez leur site web : [URL]" → INTERDIT
 
-EXEMPLE PARFAIT :
-"À ${cityName}, l'étude notariale ${business.nom}, recommandée par ${companyName}, se distingue par une expertise reconnue dans le domaine du droit immobilier et des successions. Leur approche personnalisée et leur écoute attentive constituent un véritable atout. Parmi les services proposés figurent la gestion des actes notariés, l'accompagnement des transactions immobilières et le conseil en planification successorale. Chaque client bénéficie d'un suivi rigoureux et de solutions adaptées à ses besoins spécifiques. Pour prendre rendez-vous, vous pouvez les contacter au ${business.telephone} ou vous rendre directement à leur étude, située 114 boulevard Pinatel, ${cityName}."
+STRUCTURE OBLIGATOIRE :
+1. Accroche (35-45 mots) : Présentation avec article défini + recommandation ${companyName} + expertise
+2. Services (40-50 mots) : Description fluide des prestations, éviter les répétitions comme "s'engage à" + "répondant aux"
+3. Coordonnées (25-35 mots) : Adresse + contact téléphonique UNIQUEMENT (pas de site web)
+
+EXEMPLE PARFAIT À SUIVRE :
+"À ${cityName}, le cabinet ${business.nom}, recommandé par ${companyName}, se distingue par son expertise en droit des affaires et son engagement envers l'excellence. Leur équipe d'avocats expérimentés propose des solutions juridiques sur mesure, adaptées aux besoins spécifiques de chaque client, qu'il s'agisse de conseil en droit commercial ou de gestion de litiges. Situé au 141 allée de Riottier à ${cityName}, le cabinet est facilement accessible pour l'ensemble de vos démarches juridiques. Pour tout renseignement ou pour prendre rendez-vous, contactez-les au ${business.telephone}."
 
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -279,7 +284,9 @@ AVANT DE RÉPONDRE, VÉRIFIE :
 4. Tu n'as PAS utilisé "Quand on habite à" ?
 5. Tu n'as PAS utilisé "fait toute la différence" ?
 6. L'adresse ne contient PAS "au Le" ?
-7. Ton JSON est valide ?
+7. Tu n'as PAS de répétitions lourdes comme "s'engage à" + "répondant aux" ?
+8. Tu n'as PAS mentionné le site web dans la description ?
+9. Ton JSON est valide ?
 
 RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
 {
@@ -300,7 +307,7 @@ RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
             {
               role: "system",
               content:
-                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'. (3) Tu utilises TOUJOURS un article défini devant les noms d'entreprises : 'l'étude', 'le cabinet', 'la société', 'les notaires' - JAMAIS le nom seul. (4) Tu évites les expressions familières et les constructions ambiguës comme 'Quand on habite à' ou 'fait toute la différence'. (5) Tu n'utilises JAMAIS 'au Le' mais 'à l'immeuble Le' ou simplement l'adresse sans article.",
+                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'. (3) Tu utilises TOUJOURS un article défini devant les noms d'entreprises : 'l'étude', 'le cabinet', 'la société', 'les notaires' - JAMAIS le nom seul. (4) Tu évites les expressions familières et les constructions ambiguës comme 'Quand on habite à' ou 'fait toute la différence'. (5) Tu n'utilises JAMAIS 'au Le' mais 'à l'immeuble Le' ou simplement l'adresse sans article. (6) Tu évites les répétitions lourdes comme 's'engage à fournir' + 'répondant aux besoins' - préfère 'propose des solutions sur mesure, adaptées aux besoins'. (7) INTERDIT ABSOLU : Ne JAMAIS mentionner le site web dans la description, seulement le téléphone et l'adresse.",
             },
             { role: "user", content: prompt },
           ],
