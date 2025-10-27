@@ -169,199 +169,88 @@ serve(async (req) => {
       
       // Extraire la ville de l'adresse pour un contexte géographique précis
       const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
-      const cityName = cityMatch ? cityMatch[1].trim() : '';
       
-      const prompt = `Tu es un rédacteur web talentueux qui écrit des contenus naturels et engageants.
+      const prompt = `Tu dois générer un JSON avec exactement 3 champs. Lis TOUTES les instructions avant de répondre.
 
-🎯 MISSION : ${companyName} présente et recommande ${business.nom}
-Tu rédiges comme si c'était ${companyName} qui parlait de ${business.nom} à ses clients.
+═══════════════════════════════════════════════════════════════════════════════
 
-CONTEXTE IMPORTANT :
-- ${companyName} est une ENTREPRISE (pas un lieu géographique)
-- ${business.nom} est situé à ${cityName}
-- Utilise le NOM DE LA VILLE (${cityName}) pour les références géographiques
-- IL S'AGIT D'UNE RECOMMANDATION, PAS D'UN PARTENARIAT COMMERCIAL
+DONNÉES DE L'ENTREPRISE :
+- Nom : ${business.nom}
+- Adresse : ${business.adresse}
+- Ville : ${cityName}
+- Téléphone : ${business.telephone}
+${business.site_web !== 'Non disponible' ? `- Site : ${business.site_web}` : ''}
 
-ENTREPRISE : ${business.nom}
-Adresse : ${business.adresse}
-Contact : ${business.telephone}
-${business.site_web !== 'Non disponible' ? `Site : ${business.site_web}` : ''}
+CONTEXTE : ${companyName} recommande cette entreprise à ses clients.
 
-STYLE DE RÉDACTION N°${styleVariant} - VARIE TON APPROCHE
+═══════════════════════════════════════════════════════════════════════════════
 
-${styleVariant === 1 ? `
-STYLE 1 - DIRECT ET DYNAMIQUE
-- Commence par une question percutante ou une affirmation forte
-- Utilise des phrases courtes et rythmées
-- Ton enjoué et moderne
-- Exemple : "Un problème de [service] ? Pas de panique ! Chez ${business.nom}..."
-` : ''}
+CHAMP 1 : "activity"
 
-${styleVariant === 2 ? `
-STYLE 2 - STORYTELLING LOCAL
-- Raconte une mini-histoire ou situation
-- Ancre dans le quotidien local
-- Ton chaleureux et proche
-- Exemple : "Dans le quartier, tout le monde connaît ${business.nom}. Et pour cause..."
-` : ''}
+INSTRUCTION : Écris une phrase de 10-15 mots décrivant le métier.
+RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" (sans rien après).
 
-${styleVariant === 3 ? `
-STYLE 3 - PRAGMATIQUE ET INFORMATIF
-- Va droit au but
-- Liste des avantages concrets
-- Ton professionnel mais accessible
-- Exemple : "${business.nom} vous propose trois choses essentielles : [1], [2], [3]."
-` : ''}
+EXEMPLES CORRECTS :
+✓ "Notaire accompagnant vos projets immobiliers et successions à"
+✓ "Kinésithérapeute spécialisé en rééducation sportive et bien-être à"
+✓ "Plombier professionnel pour dépannages et installations à"
 
-${styleVariant === 4 ? `
-STYLE 4 - CONVERSATIONNEL ET COMPLICE
-- Tutoiement possible
-- Ton de conseil entre amis
-- Exemples concrets du quotidien
-- Exemple : "Tu cherches un [métier] pas loin de ${companyName} ? On a ce qu'il te faut..."
-` : ''}
+EXEMPLES INCORRECTS :
+✗ "Notaire expérimenté à Marseille" → Le mot "Marseille" est interdit
+✗ "Kinésithérapeute à Lyon" → Le mot "Lyon" est interdit
 
-${styleVariant === 5 ? `
-STYLE 5 - DESCRIPTIF ET ÉVOCATEUR
-- Peint un tableau de l'ambiance/service
-- Utilise des détails sensoriels
-- Ton poétique mais terre-à-terre
-- Exemple : "Dès que vous poussez la porte de ${business.nom}, vous sentez..."
-` : ''}
+LE DERNIER MOT DOIT ÊTRE "à" (pas de ville après).
 
-📝 FORMAT JSON ATTENDU
+═══════════════════════════════════════════════════════════════════════════════
 
-1. **activity** (10-15 mots MAX)
+CHAMP 2 : "extract"
 
-🚨 RÈGLE ABSOLUE POUR LE CHAMP ACTIVITY 🚨
-LE CHAMP "activity" DOIT SE TERMINER PAR LE MOT "à" SEUL, SANS AUCUNE VILLE APRÈS !
+INSTRUCTION : Écris 40-60 mots présentant l'entreprise.
+RÈGLE ABSOLUE : Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}".
 
-❌ INTERDIT : "Kinésithérapeute spécialisé en rééducation sportive à Marseille"
-❌ INTERDIT : "Kinésithérapeute spécialisé en rééducation sportive à ${cityName}"
-✅ CORRECT : "Kinésithérapeute spécialisé en rééducation sportive à"
+MOTS INTERDITS : partenaire, partenariat, collaboration
 
-INSTRUCTIONS :
-- Commence par le métier suivi de sa spécialité
-- Termine TOUJOURS par la préposition "à" SEULE (dernier mot = "à")
-- Ne JAMAIS, JAMAIS inclure le nom d'une ville après le "à"
-- SANS le nom de l'entreprise
-- La ville sera ajoutée automatiquement dans un autre champ
+EXEMPLES CORRECTS :
+✓ "À ${cityName}, ${companyName} recommande ${business.nom} pour son expertise..."
+✓ "Recommandé par ${companyName}, ${business.nom} se distingue par..."
 
-EXEMPLES VALIDES :
-- "Plombier professionnel pour tous travaux de plomberie et dépannage d'urgence à"
-- "Expert-comptable accompagnant la gestion comptable et fiscale de votre entreprise à"
-- "Électricien qualifié réalisant l'installation et la mise aux normes électriques à"
+EXEMPLES INCORRECTS :
+✗ "${business.nom}, partenaire de ${companyName}..." → Le mot "partenaire" est interdit
 
-2. **extract** (40-60 mots)
+═══════════════════════════════════════════════════════════════════════════════
 
-🚨 RÈGLE ABSOLUE POUR LE CHAMP EXTRACT 🚨
-UTILISE UNIQUEMENT DES VERBES DE RECOMMANDATION, JAMAIS DE PARTENARIAT !
+CHAMP 3 : "description"
 
-❌ MOTS INTERDITS : partenaire, partenariat, collaboration, collabore, réseau, affaires
-❌ INTERDIT : "partenaire de JB Store"
-✅ CORRECT : "recommandé par ${companyName}"
-✅ CORRECT : "${companyName} recommande"
-✅ CORRECT : "${companyName} vous conseille"
+INSTRUCTION : Écris un texte de 110-130 mots en 3 parties.
+RÈGLE ABSOLUE : Tu DOIS mentionner "${companyName} recommande" OU "recommandé par ${companyName}".
 
-Mini-pitch unique qui donne envie. Varie les angles :
-- L'expertise particulière
-- L'ambiance du lieu
-- Les avantages clients
-- L'histoire locale
-- Les spécialités
+MOTS INTERDITS : partenaire, partenariat, collaboration, réseau
 
-VERBES DE RECOMMANDATION À UTILISER :
-- "recommande", "recommandé par"
-- "conseille", "conseillé par"
-- "suggère", "suggéré par"
-- "met en avant", "mis en avant par"
+STRUCTURE :
+1. Accroche (35-45 mots) mentionnant "${companyName}"
+2. Services (35-45 mots)
+3. Coordonnées (30-40 mots)
 
-3. **description** (110-130 mots en 3 paragraphes) - ${companyName} présente ${business.nom}
+EXEMPLE CORRECT pour le paragraphe 1 :
+"Quand on habite à ${cityName}, recommandé par ${companyName}, ${business.nom} se distingue par..."
 
-⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
+EXEMPLE INCORRECT :
+"Partenaire de confiance de ${companyName}..." → Le mot "partenaire" est interdit
 
-PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
+═══════════════════════════════════════════════════════════════════════════════
 
-🚨 RÈGLE ABSOLUE : VOCABULAIRE DE RECOMMANDATION UNIQUEMENT 🚨
-❌ MOTS INTERDITS DANS TOUT LE TEXTE : partenaire, partenariat, collaboration, réseau, affaires
-❌ INTERDIT : "partenaire de confiance", "partenaire de JB Store"
-✅ CORRECT : "recommandé par ${companyName}"
+AVANT DE RÉPONDRE, VÉRIFIE :
+1. Le champ "activity" se termine par "à" ? (sans ville)
+2. Tu as utilisé "recommande" ou "recommandé par" (pas "partenaire") ?
+3. Ton JSON est valide ?
 
-Selon le style choisi, commence différemment :
-- Question : "Besoin de..." / "Vous cherchez..." / "Un souci avec..."
-- Affirmation : "Chez ${business.nom}..." / "Depuis X ans..." / "Dans le quartier..."
-- Situation : "Quand on habite à ${cityName}..." / "Dans la région de ${cityName}..."
+RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
+{
+  "activity": "Description du métier se terminant par à",
+  "extract": "40-60 mots avec recommande ou recommandé par",
+  "description": "Texte de 110-130 mots avec recommandé par"
+}`;
 
-Intègre ${companyName} avec UNIQUEMENT ces formulations :
-✅ "recommandé par ${companyName}"
-✅ "conseillé par ${companyName}"
-✅ "${companyName} recommande"
-✅ "${companyName} vous conseille"
-
-PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
-Décris VRAIMENT ce que propose ${business.nom}. Varie les approches :
-- Liste des services/produits phares
-- Points forts uniques
-- Ce qui fait la différence
-- Exemples concrets d'intervention
-IMPORTANT : Reste FACTUEL et CONCRET, évite les formules creuses
-
-PARAGRAPHE 3 (30-40 mots) - COORDONNÉES
-Varie la formulation :
-- "Retrouvez ${business.nom} au..."
-- "Pour les joindre, c'est simple : ..."
-- "${business.nom} vous accueille au..."
-- "Rendez-vous chez eux : ..."
-Donne l'adresse ET le téléphone de façon fluide.
-
-🚨 RÈGLES CRITIQUES
-
-VARIATION OBLIGATOIRE :
-✓ Chaque texte doit être UNIQUE dans son approche
-✓ Varie les verbes, les structures, les accroches
-✓ Évite ABSOLUMENT les répétitions entre entreprises
-✓ Humanise : écris comme tu parlerais à un ami
-
-INTERDICTIONS :
-❌ "solutions adaptées à vos besoins"
-❌ "tout près de ${companyName}" (varie !)
-❌ "Vous cherchez un X de confiance" (trop vu)
-❌ "accompagnement personnalisé"
-❌ "expertise reconnue"
-❌ Structures répétitives
-❌ Vocabulaire de partenariat commercial ("partenaire", "collaboration", "réseau")
-
-PRÉPOSITIONS :
-✓ Dans le champ "activity", termine TOUJOURS par "à" (sans la ville)
-✓ La ville sera ajoutée automatiquement après
-
-🚨🚨🚨 VÉRIFICATION FINALE AVANT DE RÉPONDRE 🚨🚨🚨
-
-AVANT D'ENVOYER TA RÉPONSE JSON, VÉRIFIE :
-
-1. Le champ "activity" se termine-t-il par le mot "à" SANS ville après ?
-   ❌ Si tu vois "à Marseille" ou "à Paris" → CORRIGE !
-   ✅ Doit finir par "à" seul
-
-2. Le champ "extract" contient-il le mot "partenaire" ?
-   ❌ Si oui → REMPLACE par "recommandé par" ou "conseillé par"
-   ✅ Utilise uniquement des verbes de recommandation
-
-3. Le champ "description" contient-il "partenaire" ou "partenariat" ?
-   ❌ Si oui → REMPLACE par "recommandé par" ou "${companyName} recommande"
-   ✅ Utilise uniquement des verbes de recommandation
-
-Réponds UNIQUEMENT en JSON :
-{ "activity": "...", "extract": "...", "description": "..." }`;
-
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${OPEN_AI}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
           messages: [
             {
               role: "system",
