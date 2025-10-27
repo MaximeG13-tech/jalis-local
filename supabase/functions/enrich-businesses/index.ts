@@ -169,6 +169,7 @@ serve(async (req) => {
       
       // Extraire la ville de l'adresse pour un contexte géographique précis
       const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
+      const cityName = cityMatch ? cityMatch[1].trim() : business.adresse.split(',')[0].trim();
       
       const prompt = `Tu dois générer un JSON avec exactement 3 champs. Lis TOUTES les instructions avant de répondre.
 
@@ -251,6 +252,14 @@ RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
   "description": "Texte de 110-130 mots avec recommandé par"
 }`;
 
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPEN_AI}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
           messages: [
             {
               role: "system",

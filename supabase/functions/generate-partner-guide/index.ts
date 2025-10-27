@@ -391,21 +391,6 @@ RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
   "description": "<p>Paragraphe 1</p><p>Paragraphe 2</p><p>Paragraphe 3</p>"
 }`;
 
-
-1. Le champ "activity" se termine-t-il par le mot "à" SANS ville après ?
-   ❌ Si tu vois "à Marseille" ou toute autre ville → CORRIGE !
-   ✅ Doit finir par "à" seul (dernier mot)
-
-2. Le champ "extract" contient-il le mot "partenaire" ?
-   ❌ Si oui → REMPLACE par "recommandé par" ou "conseillé par"
-   ✅ Utilise uniquement des verbes de recommandation
-
-3. Le champ "description" contient-il "partenaire" ou "partenariat" ?
-   ❌ Si oui → REMPLACE par "recommandé par" ou "${companyName} recommande"
-   ✅ Utilise uniquement des verbes de recommandation
-
-Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
-
         const enrichResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
