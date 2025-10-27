@@ -414,27 +414,13 @@ export class GooglePlacesService {
             
             if (finalFiltered.length === 0) continue;
             
-            // 🆕 NORMALISATION DU NOM
-            const normalizationResult = await this.normalizeBusinessName({
-              name: details.name,
-              website: details.website,
-              address: details.formatted_address || '',
-              phone: details.formatted_phone_number
-            });
-            
-            // 🚫 EXCLUSION si le nom est suspect
-            if (normalizationResult.should_exclude) {
-              console.log(`❌ EXCLUDED (suspicious name): ${details.name} → cleaned: ${normalizationResult.normalized_name}`);
-              continue; // Ne pas compter cette entreprise, continuer la recherche
-            }
-            
-            console.log(`✅ Name normalized: "${details.name}" → "${normalizationResult.normalized_name}" (${normalizationResult.source}, confidence: ${normalizationResult.confidence_score}%)`);
+            console.log(`✅ Using exact name from Google Places: "${details.name}"`);
             
             // Déterminer le type d'activité à afficher
             const activityType = this.getActivityType(details, selectedTypes);
             
             const business: Business = {
-              nom: normalizationResult.normalized_name, // 🆕 Utiliser le nom normalisé
+              nom: details.name, // Utiliser le nom exact de Google Places
               type_activite: activityType,
               adresse: details.formatted_address || '',
               telephone: details.formatted_phone_number || 'Non disponible',
