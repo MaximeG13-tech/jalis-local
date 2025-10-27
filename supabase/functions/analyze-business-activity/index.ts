@@ -263,7 +263,31 @@ serve(async (req) => {
       throw new Error("Aucun établissement trouvé à cette adresse");
     }
 
-    const placeDetails = { result: searchResults.results[0] };
+    const firstResult = searchResults.results[0];
+    const placeId = firstResult.place_id?.replace('places/', '') || firstResult.place_id;
+    console.log('Found place_id from search:', placeId);
+
+    // Étape 3: Appeler google-place-details pour obtenir le primaryType
+    console.log('Calling google-place-details to get primaryType...');
+    const detailsResponse = await fetch(
+      `${SUPABASE_URL}/functions/v1/google-place-details`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ placeId }),
+      }
+    );
+
+    if (!detailsResponse.ok) {
+      const errorText = await detailsResponse.text();
+      console.error('Place Details error:', errorText);
+      throw new Error(`Erreur lors de la récupération des détails: ${detailsResponse.status}`);
+    }
+
+    const placeDetails = await detailsResponse.json();
     console.log('Place details received:', placeDetails);
 
     const detectedActivity = placeDetails.result?.name || 'Activité inconnue';
@@ -272,7 +296,11 @@ serve(async (req) => {
     console.log('Detected activity:', detectedActivity);
     console.log('Primary type:', primaryType);
 
-    // Étape 3: Appeler GPT-4o pour obtenir les suggestions
+    if (!primaryType) {
+      throw new Error("Impossible de déterminer le type d'activité de cet établissement");
+    }
+
+    // Étape 4: Appeler GPT-4o pour obtenir les suggestions
     console.log('Calling GPT-4o for suggestions...');
     
     const prompt = `Tu es un expert en développement d'affaires locales.
