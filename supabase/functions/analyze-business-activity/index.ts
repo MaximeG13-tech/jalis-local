@@ -172,7 +172,13 @@ const BUSINESS_TYPES_LIST = `
 - zoo - Zoo
 `;
 
-async function extractPlaceIdFromUrl(url: string): Promise<string> {
+interface BusinessInfo {
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+async function extractBusinessInfoFromUrl(url: string): Promise<BusinessInfo> {
   try {
     // Si lien court goo.gl ou maps.app.goo.gl, suivre la redirection
     if (url.includes('goo.gl')) {
@@ -182,19 +188,26 @@ async function extractPlaceIdFromUrl(url: string): Promise<string> {
       console.log('Redirected to:', url);
     }
     
-    // Chercher place_id dans l'URL (plusieurs formats possibles)
-    // Format 1: /place/NAME/data=...
-    // Format 2: query_place_id=PLACE_ID
-    const placeIdMatch = url.match(/place\/([^\/\?]+)/);
-    if (placeIdMatch) {
-      const placeId = decodeURIComponent(placeIdMatch[1]);
-      console.log('Extracted place_id:', placeId);
-      return placeId;
+    // Extraire le nom: /place/NAME/@coords
+    const nameMatch = url.match(/\/place\/([^\/\?@]+)/);
+    if (!nameMatch) {
+      throw new Error("Impossible d'extraire le nom de l'établissement");
     }
+    const name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+    console.log('Extracted name:', name);
     
-    throw new Error("Impossible d'extraire l'ID du lieu depuis l'URL");
+    // Extraire les coordonnées: /@lat,lng,zoom
+    const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+),/);
+    if (!coordsMatch) {
+      throw new Error("Impossible d'extraire les coordonnées");
+    }
+    const latitude = parseFloat(coordsMatch[1]);
+    const longitude = parseFloat(coordsMatch[2]);
+    console.log('Extracted coordinates:', { latitude, longitude });
+    
+    return { name, latitude, longitude };
   } catch (error) {
-    console.error('Error extracting place_id:', error);
+    console.error('Error extracting business info:', error);
     throw error;
   }
 }
@@ -213,35 +226,48 @@ serve(async (req) => {
       throw new Error('Le lien Google My Business est requis');
     }
 
-    // Étape 1: Extraire le place_id
-    const placeId = await extractPlaceIdFromUrl(gmbLink);
-    console.log('Place ID extracted:', placeId);
+    // Étape 1: Extraire le nom et les coordonnées
+    const businessInfo = await extractBusinessInfoFromUrl(gmbLink);
+    console.log('Business info extracted:', businessInfo);
 
-    // Étape 2: Appeler google-place-details pour obtenir les détails
-    console.log('Calling google-place-details function...');
-    const detailsResponse = await fetch(
-      `${SUPABASE_URL}/functions/v1/google-place-details`,
+    // Étape 2: Chercher l'établissement via Text Search pour obtenir le vrai place_id
+    console.log('Calling google-text-search function...');
+    const textSearchResponse = await fetch(
+      `${SUPABASE_URL}/functions/v1/google-text-search`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
         },
-        body: JSON.stringify({ placeId }),
+        body: JSON.stringify({
+          textQuery: businessInfo.name,
+          latitude: businessInfo.latitude,
+          longitude: businessInfo.longitude,
+          radius: 100,
+          maxResults: 1
+        }),
       }
     );
 
-    if (!detailsResponse.ok) {
-      const errorText = await detailsResponse.text();
-      console.error('Google Place Details error:', errorText);
-      throw new Error(`Erreur lors de la récupération des détails: ${detailsResponse.status}`);
+    if (!textSearchResponse.ok) {
+      const errorText = await textSearchResponse.text();
+      console.error('Text Search error:', errorText);
+      throw new Error(`Erreur lors de la recherche: ${textSearchResponse.status}`);
     }
 
-    const placeDetails = await detailsResponse.json();
+    const searchResults = await textSearchResponse.json();
+    console.log('Search results:', searchResults);
+
+    if (!searchResults.results || searchResults.results.length === 0) {
+      throw new Error("Aucun établissement trouvé à cette adresse");
+    }
+
+    const placeDetails = { result: searchResults.results[0] };
     console.log('Place details received:', placeDetails);
 
-    const detectedActivity = placeDetails.result?.displayName?.text || 'Activité inconnue';
-    const primaryType = placeDetails.result?.primaryType || '';
+    const detectedActivity = placeDetails.result?.name || 'Activité inconnue';
+    const primaryType = placeDetails.result?.primary_type || '';
     
     console.log('Detected activity:', detectedActivity);
     console.log('Primary type:', primaryType);
