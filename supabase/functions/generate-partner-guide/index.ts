@@ -306,137 +306,91 @@ Réponds avec un tableau JSON d'objets avec ces champs exacts :
       for (const business of businesses) {
         if (enrichedBusinesses.length >= maxResults) break;
 
-      const enrichPrompt = `🚫 INTERDICTIONS ABSOLUES 🚫
-❌ Ne JAMAIS mentionner l'URL du site web de ${business.nom} dans la description
-❌ Ne JAMAIS écrire le nom de domaine (ex: "wellmob.fr", "tvspro.com", etc.)
-❌ Mots interdits : partenariat, partenaire, collaborer, collaboration, s'associer, apporteur d'affaires
-❌ Cette entreprise est RECOMMANDÉE par ${companyName}, ce n'est PAS un partenariat commercial
+      const enrichPrompt = `Tu dois générer un JSON avec exactement 3 champs. Lis TOUTES les instructions avant de répondre.
 
----
+═══════════════════════════════════════════════════════════════════════════════
 
-PARAGRAPHE 2 - PHRASES D'ACCROCHE VARIÉES (choisis-en UNE au hasard) :
-
-STYLE 1 - Présentation locale :
-• "Situé à proximité, ${business.nom} accompagne les particuliers et professionnels dans leurs projets."
-• "Acteur de proximité reconnu, ${business.nom} met son expertise au service de ses clients."
-• "Établi localement, ${business.nom} offre un service personnalisé adapté à chaque besoin."
-
-STYLE 2 - Valorisation expertise :
-• "Forte d'une solide expérience, l'entreprise ${business.nom} se distingue par son savoir-faire."
-• "Spécialiste reconnu dans son domaine, ${business.nom} garantit des prestations de qualité."
-• "Grâce à son expertise avérée, ${business.nom} répond aux attentes les plus exigeantes."
-
-STYLE 3 - Approche client :
-• "À l'écoute de ses clients, ${business.nom} propose des solutions sur-mesure et durables."
-• "Privilégiant une approche personnalisée, ${business.nom} s'adapte à chaque situation."
-• "Soucieux de la satisfaction client, ${business.nom} assure un suivi rigoureux de chaque projet."
-
-STYLE 4 - Ancrage territorial :
-• "Implanté dans la région, ${business.nom} contribue au dynamisme économique local."
-• "Entreprise locale de confiance, ${business.nom} s'engage auprès de sa communauté."
-• "Fier de ses racines locales, ${business.nom} cultive la proximité avec sa clientèle."
-
-⚠️ IMPÉRATIF : Choisis UNE phrase AU HASARD parmi ces 12 options pour VARIER le contenu.
-
----
-
-Entreprise locale à présenter :
+DONNÉES DE L'ENTREPRISE :
 - Nom : ${business.nom}
 - Catégorie : ${category}
 - Activité : ${business.activite_reelle}
-- ⛔ NE PAS mentionner leur URL
-- ⛔ ${companyName} RECOMMANDE cette entreprise (pas de partenariat)
+- Adresse : ${business.adresse}
+- Téléphone : ${business.telephone}
 
-Instructions strictes pour un SEO optimal :
+CONTEXTE : ${companyName} recommande cette entreprise locale à ses clients.
+INTERDIT : Ne JAMAIS mentionner le site web ou l'URL de l'entreprise dans le texte.
 
-1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL, se terminant par "à"
+═══════════════════════════════════════════════════════════════════════════════
 
-🚨 RÈGLE ABSOLUE POUR LE CHAMP ACTIVITY 🚨
-LE CHAMP "activity" DOIT SE TERMINER PAR LE MOT "à" SEUL, SANS AUCUNE VILLE APRÈS !
+CHAMP 1 : "activity"
 
-❌ INTERDIT : "Kinésithérapeute spécialisé en rééducation sportive à Marseille"
-❌ INTERDIT : Toute mention de ville après le "à"
-✅ CORRECT : "Kinésithérapeute spécialisé en rééducation sportive à"
-✅ CORRECT : "Plombier professionnel pour tous travaux de plomberie et dépannage à"
+INSTRUCTION : Écris une phrase SEO de 10-15 mots décrivant le métier.
+RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" SEUL (sans ville après).
 
-EXEMPLES de formats à suivre STRICTEMENT :
-- "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
-- "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
-- "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
-- "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
+EXEMPLES CORRECTS :
+✓ "Notaire accompagnant vos projets immobiliers et successions à"
+✓ "Kinésithérapeute spécialisé en rééducation sportive à"
+✓ "Plombier professionnel assurant dépannages et installations à"
 
-RÈGLES IMPÉRATIVES :
-- Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
-- JAMAIS de pronoms personnels (ils, elle, nous) - forme nominale uniquement
-- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise
-- Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
-- La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
-- Compte exactement entre 10 et 15 mots (vérifie bien)
-- NE JAMAIS inclure le nom de la ville
+EXEMPLES INCORRECTS :
+✗ "Notaire expérimenté à Marseille" → INTERDIT (ville mentionnée)
+✗ "Kinésithérapeute à Lyon" → INTERDIT (ville mentionnée)
 
-2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. 
+LE DERNIER MOT DOIT ÊTRE "à" sans rien après.
 
-🚨 RÈGLE ABSOLUE POUR LE CHAMP EXTRACT 🚨
-VOCABULAIRE DE RECOMMANDATION UNIQUEMENT, JAMAIS DE PARTENARIAT !
+═══════════════════════════════════════════════════════════════════════════════
 
-❌ MOTS INTERDITS : partenaire, partenariat, collaboration, réseau, affaires
-❌ INTERDIT : "partenaire de ${companyName}"
-✅ CORRECT : "recommandé par ${companyName}"
-✅ CORRECT : "${companyName} recommande"
+CHAMP 2 : "extract"
 
-RÈGLES POUR L'EXTRACT :
-- Mentionne ${companyName} avec UNIQUEMENT des verbes de RECOMMANDATION :
-  ✅ "recommande", "recommandé par"
-  ✅ "conseille", "conseillé par"
-  ✅ "suggère", "suggéré par"
-  ✅ "met en avant", "mis en avant par"
-- Doit donner envie de contacter l'entreprise en mettant en avant ses points forts
+INSTRUCTION : Écris 40-60 mots présentant l'entreprise.
+RÈGLE ABSOLUE : Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}".
 
-3. **description** : Description de 100 à 150 MOTS en HTML avec des balises <p>.
+MOTS STRICTEMENT INTERDITS : partenaire, partenariat, collaboration, réseau
 
-⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
+EXEMPLES CORRECTS :
+✓ "${companyName} recommande ${business.nom} pour son expertise et son professionnalisme..."
+✓ "Recommandé par ${companyName}, ${business.nom} se distingue..."
 
-• Paragraphe 1 (40-60 mots) : Présentation détaillée de l'activité et des services
-  
-  🚨 RÈGLE ABSOLUE : VOCABULAIRE DE RECOMMANDATION UNIQUEMENT 🚨
-  ❌ MOTS INTERDITS : partenaire, partenariat, collaboration, réseau, affaires
-  ❌ INTERDIT : "partenaire de confiance de ${companyName}"
-  ❌ INTERDIT : "partenaire de ${companyName}"
-  
-  Intègre ${companyName} avec UNIQUEMENT ces formulations :
-  ✅ "recommandé par ${companyName}"
-  ✅ "conseillé par ${companyName}"
-  ✅ "${companyName} recommande"
-  ✅ "${companyName} vous conseille"
+EXEMPLES INCORRECTS :
+✗ "${business.nom}, partenaire de ${companyName}" → Le mot "partenaire" est INTERDIT
 
-• Paragraphe 2 (20-30 mots) : UNE des 12 phrases d'accroche listées ci-dessus (varie !)
+═══════════════════════════════════════════════════════════════════════════════
 
-• Paragraphe 3 (30-40 mots) : Coordonnées et appel à l'action
+CHAMP 3 : "description"
 
-⛔ INTERDICTIONS dans la description :
-- NE JAMAIS mentionner l'URL ou le nom de domaine du site web de ${business.nom}
-- NE JAMAIS écrire "wellmob.fr", "tvspro.com" ou tout autre domaine
-- NE JAMAIS utiliser le vocabulaire de partenariat commercial
-- Si site web disponible : "Rendez-vous sur leur site web" ou "Consultez leur site pour plus d'informations"
-- Si téléphone disponible : "Contactez-les au ${business.telephone}"
+INSTRUCTION : Écris un texte HTML de 100-150 mots avec des balises <p>.
+RÈGLE ABSOLUE : Tu DOIS mentionner "recommandé par ${companyName}" OU "${companyName} recommande".
 
-Format JSON attendu :
+MOTS STRICTEMENT INTERDITS : partenaire, partenariat, collaboration, réseau
+INTERDIT : Ne JAMAIS mentionner l'URL du site web (ex: "wellmob.fr", "example.com")
+
+STRUCTURE EN 3 PARAGRAPHES :
+
+<p>Paragraphe 1 (40-60 mots) : Présentation avec "recommandé par ${companyName}"</p>
+<p>Paragraphe 2 (20-30 mots) : Services concrets proposés</p>
+<p>Paragraphe 3 (30-40 mots) : Coordonnées (adresse + téléphone, SANS URL)</p>
+
+EXEMPLE CORRECT pour paragraphe 1 :
+<p>À proximité, recommandé par ${companyName}, ${business.nom} accompagne ses clients...</p>
+
+EXEMPLE INCORRECT :
+<p>Partenaire de ${companyName}...</p> → Le mot "partenaire" est INTERDIT
+
+═══════════════════════════════════════════════════════════════════════════════
+
+AVANT DE RÉPONDRE, VÉRIFIE :
+1. Le champ "activity" se termine par "à" sans ville ?
+2. Tu as écrit "recommande" ou "recommandé par" (JAMAIS "partenaire") ?
+3. Tu n'as PAS mentionné d'URL dans la description ?
+4. Ton JSON est valide ?
+
+RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
 {
-  "activity": "titre SEO 10-15 mots se terminant par 'à' SANS la ville",
-  "extract": "résumé 40-60 mots avec RECOMMANDATION (pas partenariat)",
-  "description": "<p>Paragraphe 1 avec RECOMMANDATION</p><p>Paragraphe 2 : phrase d'accroche</p><p>Paragraphe 3 avec coordonnées SANS URL</p>"
-}
+  "activity": "Description métier 10-15 mots se terminant par à",
+  "extract": "40-60 mots avec recommande/recommandé par",
+  "description": "<p>Paragraphe 1</p><p>Paragraphe 2</p><p>Paragraphe 3</p>"
+}`;
 
-CONSIGNES DE TON :
-- Parle TOUJOURS à la 3ème personne de l'entreprise
-- Utilise "leur", "ils", "cette entreprise", "${business.nom}"
-- ${companyName} RECOMMANDE cette entreprise (vocabulaire de recommandation uniquement)
-- ⛔ JAMAIS d'URL dans le texte - remplace par "leur site web" ou "leur site"
-- ⛔ JAMAIS de vocabulaire de partenariat commercial
-
-🚨🚨🚨 VÉRIFICATION FINALE AVANT DE RÉPONDRE 🚨🚨🚨
-
-AVANT D'ENVOYER TA RÉPONSE JSON, VÉRIFIE :
 
 1. Le champ "activity" se termine-t-il par le mot "à" SANS ville après ?
    ❌ Si tu vois "à Marseille" ou toute autre ville → CORRIGE !
