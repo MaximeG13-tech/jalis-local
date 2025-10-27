@@ -19,7 +19,7 @@ serve(async (req) => {
     console.log("Nearby search params:", { latitude, longitude, radius, includedType });
 
     // Build included types array - only valid Google Places API types
-    const includedTypes = includedType
+    const includedTypes = includedType && includedType !== 'all'
       ? [includedType]
       : [
           // Services juridiques et professionnels
@@ -47,6 +47,8 @@ serve(async (req) => {
           // Hébergement
           'hotel', 'bed_and_breakfast', 'guest_house', 'campground', 'rv_park',
         ];
+
+    console.log('Included types for search:', includedType ? `[${includedType}]` : 'default list');
 
     // Call new Places API (New) Nearby Search
     const response = await fetch("https://places.googleapis.com/v1/places:searchNearby", {

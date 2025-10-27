@@ -13,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const { textQuery, latitude, longitude, radius = 5000, maxResults = 20 } = await req.json();
+    const { textQuery, latitude, longitude, radius = 5000, maxResults = 20, includedType } = await req.json();
 
-    console.log('Text Search request:', { textQuery, latitude, longitude, radius, maxResults });
+    console.log('Text Search request:', { textQuery, latitude, longitude, radius, maxResults, includedType });
 
     if (!textQuery || !latitude || !longitude) {
       return new Response(
@@ -26,7 +26,7 @@ serve(async (req) => {
 
     const url = 'https://places.googleapis.com/v1/places:searchText';
     
-    const requestBody = {
+    const requestBody: any = {
       textQuery,
       locationBias: {
         circle: {
@@ -41,6 +41,12 @@ serve(async (req) => {
       rankPreference: "DISTANCE",
       languageCode: "fr"
     };
+
+    // Add includedTypes filter if provided
+    if (includedType && includedType !== 'all') {
+      requestBody.includedTypes = [includedType];
+      console.log('Filtering by type:', includedType);
+    }
 
     console.log('Calling Google Text Search API with body:', JSON.stringify(requestBody));
 

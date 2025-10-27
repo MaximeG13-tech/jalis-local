@@ -21,9 +21,10 @@ export class GooglePlacesService {
     textQuery: string,
     location: { lat: number; lng: number },
     radius: number,
-    maxResults: number = 20
+    maxResults: number = 20,
+    includedType?: string
   ): Promise<{ results: GooglePlace[] }> {
-    console.log('Calling google-text-search with:', { textQuery, location, radius, maxResults });
+    console.log('Calling google-text-search with:', { textQuery, location, radius, maxResults, includedType });
     
     const { data, error } = await supabase.functions.invoke('google-text-search', {
       body: { 
@@ -31,7 +32,8 @@ export class GooglePlacesService {
         latitude: location.lat, 
         longitude: location.lng, 
         radius,
-        maxResults
+        maxResults,
+        includedType
       }
     });
 
@@ -347,6 +349,13 @@ export class GooglePlacesService {
     const maxRadius = 20000; // Max 20km
     const radiusIncrement = 5000; // Increase by 5km each time
     
+    // Extract the Google Places type ID and remove 'gcid:' prefix if present
+    let includedType: string | undefined = undefined;
+    if (selectedTypes.length > 0 && selectedTypes[0].id !== 'all') {
+      // Remove 'gcid:' prefix to get the real Google Places API type
+      includedType = selectedTypes[0].id.replace(/^gcid:/, '');
+    }
+
     // Build search queries based on selected types
     const searchQueries = selectedTypes.length === 0 || 
                          selectedTypes.some(t => t.id === 'all')
@@ -354,6 +363,7 @@ export class GooglePlacesService {
       : selectedTypes.map(t => `${t.googleSearchKeyword} ${city || address}`);
 
     console.log('Search queries:', searchQueries);
+    console.log('Included type for Google API:', includedType);
 
     // Try increasing radius until we have enough results
     while (allBusinesses.length < maxResults && currentRadius <= maxRadius) {
@@ -362,14 +372,15 @@ export class GooglePlacesService {
       for (const query of searchQueries) {
         if (allBusinesses.length >= maxResults) break;
         
-        console.log(`Text search query: "${query}"`);
+        console.log(`Text search query: "${query}" with type filter: ${includedType || 'none'}`);
         
         try {
           const searchResults = await this.textSearch(
             query,
             location, 
             currentRadius,
-            Math.min(20, maxResults - allBusinesses.length + 10) // Request a few extra for filtering
+            Math.min(20, maxResults - allBusinesses.length + 10), // Request a few extra for filtering
+            includedType
           );
           const places = searchResults.results || [];
           
