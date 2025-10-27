@@ -237,15 +237,16 @@ export class GooglePlacesService {
     place: GooglePlace,
     selectedTypes: BusinessType[]
   ): string {
-    // NOUVELLE PRIORITÉ 1 : Mapping intelligent basé sur types[]
+    // PRIORITÉ 1 : Utiliser primaryTypeDisplayName de Google (en français)
+    if (place.primary_type_display_name) {
+      console.log(`✅ Using Google's French display name: ${place.primary_type_display_name}`);
+      return place.primary_type_display_name;
+    }
+
+    // PRIORITÉ 2 : Mapping intelligent basé sur types[]
     const mappedCategory = this.mapBusinessCategoryFromTypes(place, place.name);
     if (mappedCategory !== 'Autre') {
       return mappedCategory;
-    }
-
-    // PRIORITÉ 2 : Utiliser primaryTypeDisplayName de Google
-    if (place.primary_type_display_name) {
-      return place.primary_type_display_name;
     }
 
     // PRIORITÉ 3 : Utiliser le type sélectionné par l'utilisateur
