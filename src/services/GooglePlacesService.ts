@@ -378,7 +378,7 @@ export class GooglePlacesService {
             query,
             location, 
             currentRadius,
-            Math.min(20, maxResults - allBusinesses.length + 10), // Request a few extra for filtering
+            Math.min(100, (maxResults - allBusinesses.length + 10) * 5), // Request 5x more results for client-side filtering
             includedType
           );
           const places = searchResults.results || [];

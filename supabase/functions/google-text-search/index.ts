@@ -42,10 +42,10 @@ serve(async (req) => {
       languageCode: "fr"
     };
 
-    // Add includedTypes filter if provided
+    // Note: includedTypes is NOT supported by Text Search API (only Nearby Search)
+    // Filtering will be done client-side in GooglePlacesService.ts filterPlaces()
     if (includedType && includedType !== 'all') {
-      requestBody.includedTypes = [includedType];
-      console.log('Filtering by type:', includedType);
+      console.log('Type filter requested (will be applied client-side):', includedType);
     }
 
     console.log('Calling Google Text Search API with body:', JSON.stringify(requestBody));
