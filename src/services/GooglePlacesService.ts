@@ -349,11 +349,10 @@ export class GooglePlacesService {
     const maxRadius = 20000; // Max 20km
     const radiusIncrement = 5000; // Increase by 5km each time
     
-    // Extract the Google Places type ID and remove 'gcid:' prefix if present
+    // Extract the Google Places type ID (no prefix needed anymore)
     let includedType: string | undefined = undefined;
     if (selectedTypes.length > 0 && selectedTypes[0].id !== 'all') {
-      // Remove 'gcid:' prefix to get the real Google Places API type
-      includedType = selectedTypes[0].id.replace(/^gcid:/, '');
+      includedType = selectedTypes[0].id;
     }
 
     // Build search queries based on selected types
