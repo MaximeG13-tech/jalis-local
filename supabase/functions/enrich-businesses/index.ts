@@ -180,6 +180,7 @@ CONTEXTE IMPORTANT :
 - ${companyName} est une ENTREPRISE (pas un lieu géographique)
 - ${business.nom} est situé à ${cityName}
 - Utilise le NOM DE LA VILLE (${cityName}) pour les références géographiques
+- IL S'AGIT D'UNE RECOMMANDATION, PAS D'UN PARTENARIAT COMMERCIAL
 
 ENTREPRISE : ${business.nom}
 Adresse : ${business.adresse}
@@ -231,10 +232,11 @@ STYLE 5 - DESCRIPTIF ET ÉVOCATEUR
 📝 FORMAT JSON ATTENDU
 
 1. **activity** (10-15 mots MAX)
-Description du métier + préposition adaptée à la ville (au/à la/aux/à l')
+Description du métier SANS la ville, se terminant obligatoirement par "à"
 - Commence par le métier : "Kinésithérapeute spécialisé en rééducation sportive à"
-- Analyse la ville dans l'adresse pour la préposition finale
+- IMPORTANT : Ne JAMAIS inclure le nom de la ville, seulement la préposition "à" à la fin
 - SANS le nom de l'entreprise
+- La ville sera ajoutée automatiquement par le système
 
 2. **extract** (40-60 mots)
 Mini-pitch unique qui donne envie. Varie les angles :
@@ -243,22 +245,35 @@ Mini-pitch unique qui donne envie. Varie les angles :
 - Les avantages clients
 - L'histoire locale
 - Les spécialités
-IMPORTANT : Mentionne ${companyName} de façon NATURELLE (pas forcément "à deux pas de")
-Utilise les prépositions correctes (au/à la/aux/à l')
+IMPORTANT : Mentionne ${companyName} de façon NATURELLE en utilisant des verbes de RECOMMANDATION :
+- "recommande"
+- "vous conseille"
+- "vous suggère"
+- "met en avant"
+ÉVITE ABSOLUMENT :
+- "partenaire" ou "partenariat"
+- "collaboration" ou "collabore"
+- Tout vocabulaire lié aux affaires ou au commerce
 
 3. **description** (110-130 mots en 3 paragraphes) - ${companyName} présente ${business.nom}
+
+⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
 
 PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
 Selon le style choisi, commence différemment :
 - Question : "Besoin de..." / "Vous cherchez..." / "Un souci avec..."
 - Affirmation : "Chez ${business.nom}..." / "Depuis X ans..." / "Dans le quartier..."
 - Situation : "Quand on habite à ${cityName}..." / "Dans la région de ${cityName}..."
-Intègre ${companyName} NATURELLEMENT avec des formulations LOGIQUES :
+Intègre ${companyName} NATURELLEMENT avec des formulations DE RECOMMANDATION :
 - "recommandé par ${companyName}"
+- "conseillé par ${companyName}"
+- "mis en avant par ${companyName}"
+- "${companyName} recommande"
+ÉVITE ABSOLUMENT : 
 - "partenaire de confiance de ${companyName}"
 - "dans le réseau de ${companyName}"
-- "à proximité de chez ${companyName}"
-ÉVITE ABSOLUMENT : "dans le secteur de ${companyName}" (illogique car ${companyName} n'est pas un lieu)
+- "partenaire commercial"
+- Tout vocabulaire de partenariat commercial
 
 PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
 Décris VRAIMENT ce que propose ${business.nom}. Varie les approches :
@@ -291,10 +306,11 @@ INTERDICTIONS :
 ❌ "accompagnement personnalisé"
 ❌ "expertise reconnue"
 ❌ Structures répétitives
+❌ Vocabulaire de partenariat commercial ("partenaire", "collaboration", "réseau")
 
 PRÉPOSITIONS :
-✓ Analyse la ville (Le/La/Les/L') pour choisir (au/à la/aux/à l')
-✓ Applique partout : activity, extract, description
+✓ Dans le champ "activity", termine TOUJOURS par "à" (sans la ville)
+✓ La ville sera ajoutée automatiquement après
 
 Réponds UNIQUEMENT en JSON :
 { "activity": "...", "extract": "...", "description": "..." }`;
