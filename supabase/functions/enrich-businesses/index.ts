@@ -192,7 +192,7 @@ INSTRUCTION : Écris une phrase de 10-15 mots décrivant le métier.
 RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" (sans rien après).
 
 EXEMPLES CORRECTS :
-✓ "Notaire accompagnant vos projets immobiliers et successions à"
+✓ "Cabinet notarial accompagnant vos projets immobiliers et successions à"
 ✓ "Kinésithérapeute spécialisé en rééducation sportive et bien-être à"
 ✓ "Plombier professionnel pour dépannages et installations à"
 
@@ -207,49 +207,85 @@ LE DERNIER MOT DOIT ÊTRE "à" (pas de ville après).
 CHAMP 2 : "extract"
 
 INSTRUCTION : Écris 40-60 mots présentant l'entreprise.
-RÈGLE ABSOLUE : Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}".
 
+RÈGLES GRAMMATICALES STRICTES :
+- TOUJOURS utiliser un article défini : "l'étude", "le cabinet", "la société", "les notaires"
+- JAMAIS commencer par le nom seul : "Dupont & Associés" ❌
+- Formulations correctes : "L'étude Dupont", "Le cabinet Martin", "La société XYZ"
+
+RÈGLE ABSOLUE : Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}".
 MOTS INTERDITS : partenaire, partenariat, collaboration
 
 EXEMPLES CORRECTS :
-✓ "À ${cityName}, ${companyName} recommande ${business.nom} pour son expertise..."
-✓ "Recommandé par ${companyName}, ${business.nom} se distingue par..."
+✓ "À ${cityName}, ${companyName} recommande l'étude ${business.nom} pour son expertise..."
+✓ "Recommandé par ${companyName}, le cabinet ${business.nom} se distingue par..."
+✓ "${companyName} recommande les notaires ${business.nom} pour leur approche..."
 
 EXEMPLES INCORRECTS :
 ✗ "${business.nom}, partenaire de ${companyName}..." → Le mot "partenaire" est interdit
+✗ "${business.nom} se distingue par..." → Manque l'article défini ("L'étude ${business.nom}")
 
 ═══════════════════════════════════════════════════════════════════════════════
 
 CHAMP 3 : "description"
 
-INSTRUCTION : Écris un texte de 110-130 mots en 3 parties.
+INSTRUCTION : Écris un texte de 110-130 mots en 3 paragraphes bien structurés.
 RÈGLE ABSOLUE : Tu DOIS mentionner "${companyName} recommande" OU "recommandé par ${companyName}".
 
 MOTS INTERDITS : partenaire, partenariat, collaboration, réseau
+EXPRESSIONS INTERDITES : "fait toute la différence" (trop familier), "Quand on habite à"
 
-STRUCTURE :
-1. Accroche (35-45 mots) mentionnant "${companyName}"
-2. Services (35-45 mots)
-3. Coordonnées (30-40 mots)
+RÈGLES GRAMMATICALES STRICTES :
 
-EXEMPLE CORRECT pour le paragraphe 1 :
-"Quand on habite à ${cityName}, recommandé par ${companyName}, ${business.nom} se distingue par..."
+1. ARTICLE DÉFINI OBLIGATOIRE :
+   ✓ "L'étude notariale ${business.nom}, recommandée par ${companyName}, se distingue..."
+   ✓ "Le cabinet ${business.nom}, recommandé par ${companyName}, se distingue..."
+   ✗ "${business.nom}, recommandé par ${companyName}, se distingue..." → Manque l'article
 
-EXEMPLE INCORRECT :
-"Partenaire de confiance de ${companyName}..." → Le mot "partenaire" est interdit
+2. DÉBUT DE PHRASE NATUREL :
+   ✓ "À ${cityName}, l'étude ${business.nom}, recommandée par ${companyName}, se distingue..."
+   ✓ "Recommandé par ${companyName}, le cabinet ${business.nom} se distingue..."
+   ✗ "Quand on habite à ${cityName}, recommandé par..." → Construction ambiguë
+
+3. EXPRESSIONS PROFESSIONNELLES (pas familières) :
+   ✓ "constitue un véritable atout"
+   ✓ "apporte une réelle valeur ajoutée"
+   ✗ "fait toute la différence" → Trop familier
+
+4. PRÉSENTATION DES SERVICES :
+   ✓ "Parmi les services proposés figurent..."
+   ✓ "Les prestations comprennent..."
+   ✗ "Les services proposés incluent..." → Lourd
+
+5. ADRESSE CORRECTE :
+   ✓ "...située à l'immeuble Le Primavera, 114 boulevard Pinatel..."
+   ✓ "...située 114 boulevard Pinatel..."
+   ✗ "...située au Le Primavera..." → Faute grammaticale ("au Le")
+
+STRUCTURE OBLIGATOIRE :
+1. Accroche (35-45 mots) : Présentation avec article défini + recommandation ${companyName}
+2. Services (35-45 mots) : Énumération fluide avec "Parmi les services figurent..." ou "Les prestations comprennent..."
+3. Coordonnées (30-40 mots) : Contact et adresse grammaticalement correcte
+
+EXEMPLE PARFAIT :
+"À ${cityName}, l'étude notariale ${business.nom}, recommandée par ${companyName}, se distingue par une expertise reconnue dans le domaine du droit immobilier et des successions. Leur approche personnalisée et leur écoute attentive constituent un véritable atout. Parmi les services proposés figurent la gestion des actes notariés, l'accompagnement des transactions immobilières et le conseil en planification successorale. Chaque client bénéficie d'un suivi rigoureux et de solutions adaptées à ses besoins spécifiques. Pour prendre rendez-vous, vous pouvez les contacter au ${business.telephone} ou vous rendre directement à leur étude, située 114 boulevard Pinatel, ${cityName}."
 
 ═══════════════════════════════════════════════════════════════════════════════
 
 AVANT DE RÉPONDRE, VÉRIFIE :
 1. Le champ "activity" se termine par "à" ? (sans ville)
-2. Tu as utilisé "recommande" ou "recommandé par" (pas "partenaire") ?
-3. Ton JSON est valide ?
+2. Tu as utilisé un ARTICLE DÉFINI dans "extract" et "description" ? (l'étude, le cabinet, la société)
+3. Tu as utilisé "recommande" ou "recommandé par" (pas "partenaire") ?
+4. Tu n'as PAS utilisé "Quand on habite à" ?
+5. Tu n'as PAS utilisé "fait toute la différence" ?
+6. L'adresse ne contient PAS "au Le" ?
+7. Ton JSON est valide ?
 
 RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
 {
   "activity": "Description du métier se terminant par à",
-  "extract": "40-60 mots avec recommande ou recommandé par",
-  "description": "Texte de 110-130 mots avec recommandé par"
+  "extract": "40-60 mots avec article défini + recommandé par",
+  "description": "110-130 mots avec article défini, style professionnel, grammaire parfaite"
 }`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -264,7 +300,7 @@ RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
             {
               role: "system",
               content:
-                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'.",
+                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'. (3) Tu utilises TOUJOURS un article défini devant les noms d'entreprises : 'l'étude', 'le cabinet', 'la société', 'les notaires' - JAMAIS le nom seul. (4) Tu évites les expressions familières et les constructions ambiguës comme 'Quand on habite à' ou 'fait toute la différence'. (5) Tu n'utilises JAMAIS 'au Le' mais 'à l'immeuble Le' ou simplement l'adresse sans article.",
             },
             { role: "user", content: prompt },
           ],
