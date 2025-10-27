@@ -2,14 +2,37 @@ import { Business } from '@/types/business';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Phone, Globe, X, MapPin, Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ExternalLink, Phone, Globe, X, MapPin, Building2, Pencil, Check } from 'lucide-react';
+import { useState } from 'react';
 
 interface ResultsTableProps {
   businesses: Business[];
   onRemove: (index: number) => void;
+  onUpdate: (index: number, updatedBusiness: Business) => void;
 }
 
-export const ResultsTable = ({ businesses, onRemove }: ResultsTableProps) => {
+export const ResultsTable = ({ businesses, onRemove, onUpdate }: ResultsTableProps) => {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedName, setEditedName] = useState<string>('');
+
+  const handleStartEdit = (index: number, currentName: string) => {
+    setEditingIndex(index);
+    setEditedName(currentName);
+  };
+
+  const handleSaveEdit = (index: number, business: Business) => {
+    if (editedName.trim() && editedName !== business.nom) {
+      onUpdate(index, { ...business, nom: editedName.trim() });
+    }
+    setEditingIndex(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditedName('');
+  };
+
   if (businesses.length === 0) return null;
 
   return (
@@ -24,7 +47,49 @@ export const ResultsTable = ({ businesses, onRemove }: ResultsTableProps) => {
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                  <CardTitle className="text-xl">{business.nom}</CardTitle>
+                  {editingIndex === index ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit(index, business);
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                        className="text-xl font-semibold h-auto py-1"
+                        autoFocus
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleSaveEdit(index, business)}
+                        className="h-8 w-8 text-success hover:text-success"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleCancelEdit}
+                        className="h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <CardTitle className="text-xl">{business.nom}</CardTitle>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleStartEdit(index, business.nom)}
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Modifier le nom"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
                 <Badge variant="secondary" className="w-fit text-xs font-medium">
                   {business.type_activite}

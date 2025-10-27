@@ -125,6 +125,14 @@ const Index = () => {
     });
   };
 
+  const handleUpdateBusiness = (index: number, updatedBusiness: Business) => {
+    setBusinesses(prev => prev.map((business, i) => i === index ? updatedBusiness : business));
+    toast({
+      title: "Nom modifié",
+      description: "Le nom de l'entreprise a été mis à jour",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 py-16 max-w-6xl">
@@ -197,7 +205,11 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <ResultsTable businesses={businesses} onRemove={handleRemoveBusiness} />
+              <ResultsTable 
+                businesses={businesses} 
+                onRemove={handleRemoveBusiness}
+                onUpdate={handleUpdateBusiness}
+              />
             </div>
           )}
         </div>
