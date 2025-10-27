@@ -172,46 +172,6 @@ const BUSINESS_TYPES_LIST = `
 - zoo - Zoo
 `;
 
-interface BusinessInfo {
-  name: string;
-  latitude: number;
-  longitude: number;
-}
-
-async function extractBusinessInfoFromUrl(url: string): Promise<BusinessInfo> {
-  try {
-    // Si lien court goo.gl ou maps.app.goo.gl, suivre la redirection
-    if (url.includes('goo.gl')) {
-      console.log('Following redirect for short URL:', url);
-      const response = await fetch(url, { redirect: 'follow' });
-      url = response.url;
-      console.log('Redirected to:', url);
-    }
-    
-    // Extraire le nom: /place/NAME/@coords
-    const nameMatch = url.match(/\/place\/([^\/\?@]+)/);
-    if (!nameMatch) {
-      throw new Error("Impossible d'extraire le nom de l'établissement");
-    }
-    const name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
-    console.log('Extracted name:', name);
-    
-    // Extraire les coordonnées: /@lat,lng,zoom
-    const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+),/);
-    if (!coordsMatch) {
-      throw new Error("Impossible d'extraire les coordonnées");
-    }
-    const latitude = parseFloat(coordsMatch[1]);
-    const longitude = parseFloat(coordsMatch[2]);
-    console.log('Extracted coordinates:', { latitude, longitude });
-    
-    return { name, latitude, longitude };
-  } catch (error) {
-    console.error('Error extracting business info:', error);
-    throw error;
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -219,131 +179,41 @@ serve(async (req) => {
   }
 
   try {
-    const { gmbLink } = await req.json();
-    console.log('Processing GMB link:', gmbLink);
+    const { businessActivity } = await req.json();
+    console.log('Processing business activity:', businessActivity);
 
-    if (!gmbLink) {
-      throw new Error('Le lien Google My Business est requis');
+    if (!businessActivity) {
+      throw new Error('L\'activité est requise');
     }
 
-    // Étape 1: Extraire le nom et les coordonnées
-    const businessInfo = await extractBusinessInfoFromUrl(gmbLink);
-    console.log('Business info extracted:', businessInfo);
-
-    // Étape 2: Chercher l'établissement via Text Search pour obtenir le vrai place_id
-    console.log('Calling google-text-search function...');
-    const textSearchResponse = await fetch(
-      `${SUPABASE_URL}/functions/v1/google-text-search`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({
-          textQuery: businessInfo.name,
-          latitude: businessInfo.latitude,
-          longitude: businessInfo.longitude,
-          radius: 100,
-          maxResults: 1
-        }),
-      }
-    );
-
-    if (!textSearchResponse.ok) {
-      const errorText = await textSearchResponse.text();
-      console.error('Text Search error:', errorText);
-      throw new Error(`Erreur lors de la recherche: ${textSearchResponse.status}`);
-    }
-
-    const searchResults = await textSearchResponse.json();
-    console.log('Search results:', searchResults);
-
-    if (!searchResults.results || searchResults.results.length === 0) {
-      throw new Error("Aucun établissement trouvé à cette adresse");
-    }
-
-    const firstResult = searchResults.results[0];
-    const placeId = firstResult.place_id?.replace('places/', '') || firstResult.place_id;
-    console.log('Found place_id from search:', placeId);
-
-    // Étape 3: Appeler google-place-details pour obtenir le primaryType
-    console.log('Calling google-place-details to get primaryType...');
-    const detailsResponse = await fetch(
-      `${SUPABASE_URL}/functions/v1/google-place-details`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({ placeId }),
-      }
-    );
-
-    if (!detailsResponse.ok) {
-      const errorText = await detailsResponse.text();
-      console.error('Place Details error:', errorText);
-      throw new Error(`Erreur lors de la récupération des détails: ${detailsResponse.status}`);
-    }
-
-    const placeDetails = await detailsResponse.json();
-    console.log('Place details received:', placeDetails);
-
-    const detectedActivity = placeDetails.result?.name || 'Activité inconnue';
-    let primaryType = placeDetails.result?.primary_type || '';
-    
-    // Fallback: utiliser le premier type disponible si primaryType est vide
-    if (!primaryType && placeDetails.result?.types && placeDetails.result.types.length > 0) {
-      // Ignorer les types trop génériques
-      const genericTypes = ['point_of_interest', 'establishment'];
-      const specificTypes = placeDetails.result.types.filter((t: string) => !genericTypes.includes(t));
-      if (specificTypes.length > 0) {
-        primaryType = specificTypes[0];
-        console.log('Using fallback type from types array:', primaryType);
-      }
-    }
-    
-    console.log('Detected activity:', detectedActivity);
-    console.log('Primary type:', primaryType);
-
-    // Si toujours pas de type, demander à l'IA de deviner à partir du nom
-    if (!primaryType) {
-      console.log('No primary type found, asking AI to guess from business name...');
-      primaryType = 'unknown_business_type';
-    }
-
-    // Étape 4: Appeler GPT-4o pour obtenir les suggestions
+    // Appeler GPT-4o pour obtenir les suggestions
     console.log('Calling GPT-4o for suggestions...');
     
     const prompt = `Tu es un expert en développement d'affaires locales.
 
-Activité analysée : "${detectedActivity}"
-Type Google détecté : "${primaryType}"
-${primaryType === 'unknown_business_type' ? `\nATTENTION : Le type Google n'est pas disponible. Devine l'activité à partir du nom "${detectedActivity}".` : ''}
+Activité de l'utilisateur : "${businessActivity}"
 
-⚠️ RÈGLE CRITIQUE : Ne suggère JAMAIS "${primaryType}" car ce serait un CONCURRENT, pas un partenaire.
+⚠️ RÈGLE CRITIQUE : Ne suggère JAMAIS cette activité elle-même, ni des concurrents directs.
 
 Voici les 158 types d'activités disponibles (format: id - label) :
 ${BUSINESS_TYPES_LIST}
 
 Mission :
-Sélectionne 3-5 types d'activités qui seraient les meilleurs APPORTEURS D'AFFAIRES pour cette activité.
-Ce sont des activités dont les clients auraient naturellement besoin des services de l'activité analysée.
+Sélectionne 3-5 types d'activités qui seraient les meilleurs APPORTEURS D'AFFAIRES.
+Ce sont des activités dont les clients auraient naturellement besoin des services de "${businessActivity}".
 
 Réponds UNIQUEMENT avec un JSON dans ce format exact :
 {
   "suggestions": ["type_id_1", "type_id_2", "type_id_3"]
 }
 
-Exemple pour "Orthophoniste" (primary_type = "speech_pathologist") :
+Exemple pour "Orthophoniste" :
 {
   "suggestions": ["doctor", "physiotherapist", "hospital", "pharmacy"]
 }
 
 Règles absolues :
 - Maximum 5 suggestions
-- Ne suggère JAMAIS le type détecté ("${primaryType}")
 - Ne suggère JAMAIS des concurrents directs
 - Privilégie les synergies métier réelles (clients partagés)`;
 
@@ -383,20 +253,13 @@ Règles absolues :
     
     // Parser le JSON de la réponse GPT
     const suggestions = JSON.parse(cleanedContent);
-    
-    // Filtre de sécurité : Exclure le type détecté
-    const filteredSuggestions = suggestions.suggestions.filter(
-      (typeId: string) => typeId !== primaryType
-    );
-
-    console.log('Filtered suggestions:', filteredSuggestions);
 
     // Limiter à 5 suggestions max
-    const finalSuggestions = filteredSuggestions.slice(0, 5);
+    const finalSuggestions = suggestions.suggestions.slice(0, 5);
 
     const result = {
-      detected_activity: detectedActivity,
-      primary_type: primaryType,
+      detected_activity: businessActivity,
+      primary_type: businessActivity,
       suggestions: finalSuggestions
     };
 

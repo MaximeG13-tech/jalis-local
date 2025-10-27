@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { BusinessType, BUSINESS_TYPES } from "@/constants/businessTypes";
-import { Loader2, Sparkles, Link2, CheckCircle2 } from "lucide-react";
+import { Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,16 +21,16 @@ interface AnalysisResult {
 }
 
 export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProps) => {
-  const [gmbLink, setGmbLink] = useState("");
+  const [businessActivity, setBusinessActivity] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const { toast } = useToast();
 
   const handleAnalyze = async () => {
-    if (!gmbLink.trim()) {
+    if (!businessActivity.trim()) {
       toast({
-        title: "Lien manquant",
-        description: "Veuillez coller votre lien Google My Business",
+        title: "Activité manquante",
+        description: "Veuillez indiquer votre activité",
         variant: "destructive",
       });
       return;
@@ -41,7 +41,7 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
 
     try {
       const { data, error } = await supabase.functions.invoke('analyze-business-activity', {
-        body: { gmbLink: gmbLink.trim() }
+        body: { businessActivity: businessActivity.trim() }
       });
 
       if (error) {
@@ -82,14 +82,14 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
     onOpenChange(false);
     
     // Reset pour la prochaine fois
-    setGmbLink("");
+    setBusinessActivity("");
     setAnalysisResult(null);
   };
 
   const handleClose = () => {
     onOpenChange(false);
     // Reset
-    setGmbLink("");
+    setBusinessActivity("");
     setAnalysisResult(null);
   };
 
@@ -102,7 +102,7 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
             <DialogTitle>Genius - Trouvez vos partenaires</DialogTitle>
           </div>
           <DialogDescription className="text-base">
-            Collez votre lien Google My Business pour une analyse automatique
+            Indiquez votre activité pour une analyse automatique
           </DialogDescription>
         </DialogHeader>
 
@@ -110,27 +110,26 @@ export const GeniusDialog = ({ open, onOpenChange, onSuggest }: GeniusDialogProp
           {!analysisResult ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="gmbLink" className="flex items-center gap-2">
-                  <Link2 className="h-4 w-4" />
-                  Lien de votre fiche Google My Business
+                <Label htmlFor="businessActivity" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Quelle est votre activité ?
                 </Label>
                 <Input
-                  id="gmbLink"
+                  id="businessActivity"
                   type="text"
-                  placeholder="Ex: https://maps.app.goo.gl/abc123..."
-                  value={gmbLink}
-                  onChange={(e) => setGmbLink(e.target.value)}
+                  placeholder="Ex: Entreprise de logiciels, Restaurant italien, Coiffeur..."
+                  value={businessActivity}
+                  onChange={(e) => setBusinessActivity(e.target.value)}
                   disabled={isAnalyzing}
-                  className="font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Vous pouvez copier le lien depuis votre profil Google Business ou Google Maps
+                  Saisissez votre activité telle qu'elle apparaît sur Google Maps
                 </p>
               </div>
 
               <Button
                 onClick={handleAnalyze}
-                disabled={isAnalyzing || !gmbLink.trim()}
+                disabled={isAnalyzing || !businessActivity.trim()}
                 className="w-full h-11 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
               >
                 {isAnalyzing ? (
