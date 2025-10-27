@@ -232,48 +232,71 @@ STYLE 5 - DESCRIPTIF ET ÉVOCATEUR
 📝 FORMAT JSON ATTENDU
 
 1. **activity** (10-15 mots MAX)
-Description du métier SANS la ville, se terminant obligatoirement par "à"
-- Commence par le métier : "Kinésithérapeute spécialisé en rééducation sportive à"
-- IMPORTANT : Ne JAMAIS inclure le nom de la ville, seulement la préposition "à" à la fin
+
+🚨 RÈGLE ABSOLUE POUR LE CHAMP ACTIVITY 🚨
+LE CHAMP "activity" DOIT SE TERMINER PAR LE MOT "à" SEUL, SANS AUCUNE VILLE APRÈS !
+
+❌ INTERDIT : "Kinésithérapeute spécialisé en rééducation sportive à Marseille"
+❌ INTERDIT : "Kinésithérapeute spécialisé en rééducation sportive à ${cityName}"
+✅ CORRECT : "Kinésithérapeute spécialisé en rééducation sportive à"
+
+INSTRUCTIONS :
+- Commence par le métier suivi de sa spécialité
+- Termine TOUJOURS par la préposition "à" SEULE (dernier mot = "à")
+- Ne JAMAIS, JAMAIS inclure le nom d'une ville après le "à"
 - SANS le nom de l'entreprise
-- La ville sera ajoutée automatiquement par le système
+- La ville sera ajoutée automatiquement dans un autre champ
+
+EXEMPLES VALIDES :
+- "Plombier professionnel pour tous travaux de plomberie et dépannage d'urgence à"
+- "Expert-comptable accompagnant la gestion comptable et fiscale de votre entreprise à"
+- "Électricien qualifié réalisant l'installation et la mise aux normes électriques à"
 
 2. **extract** (40-60 mots)
+
+🚨 RÈGLE ABSOLUE POUR LE CHAMP EXTRACT 🚨
+UTILISE UNIQUEMENT DES VERBES DE RECOMMANDATION, JAMAIS DE PARTENARIAT !
+
+❌ MOTS INTERDITS : partenaire, partenariat, collaboration, collabore, réseau, affaires
+❌ INTERDIT : "partenaire de JB Store"
+✅ CORRECT : "recommandé par ${companyName}"
+✅ CORRECT : "${companyName} recommande"
+✅ CORRECT : "${companyName} vous conseille"
+
 Mini-pitch unique qui donne envie. Varie les angles :
 - L'expertise particulière
 - L'ambiance du lieu
 - Les avantages clients
 - L'histoire locale
 - Les spécialités
-IMPORTANT : Mentionne ${companyName} de façon NATURELLE en utilisant des verbes de RECOMMANDATION :
-- "recommande"
-- "vous conseille"
-- "vous suggère"
-- "met en avant"
-ÉVITE ABSOLUMENT :
-- "partenaire" ou "partenariat"
-- "collaboration" ou "collabore"
-- Tout vocabulaire lié aux affaires ou au commerce
+
+VERBES DE RECOMMANDATION À UTILISER :
+- "recommande", "recommandé par"
+- "conseille", "conseillé par"
+- "suggère", "suggéré par"
+- "met en avant", "mis en avant par"
 
 3. **description** (110-130 mots en 3 paragraphes) - ${companyName} présente ${business.nom}
 
 ⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
 
 PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
+
+🚨 RÈGLE ABSOLUE : VOCABULAIRE DE RECOMMANDATION UNIQUEMENT 🚨
+❌ MOTS INTERDITS DANS TOUT LE TEXTE : partenaire, partenariat, collaboration, réseau, affaires
+❌ INTERDIT : "partenaire de confiance", "partenaire de JB Store"
+✅ CORRECT : "recommandé par ${companyName}"
+
 Selon le style choisi, commence différemment :
 - Question : "Besoin de..." / "Vous cherchez..." / "Un souci avec..."
 - Affirmation : "Chez ${business.nom}..." / "Depuis X ans..." / "Dans le quartier..."
 - Situation : "Quand on habite à ${cityName}..." / "Dans la région de ${cityName}..."
-Intègre ${companyName} NATURELLEMENT avec des formulations DE RECOMMANDATION :
-- "recommandé par ${companyName}"
-- "conseillé par ${companyName}"
-- "mis en avant par ${companyName}"
-- "${companyName} recommande"
-ÉVITE ABSOLUMENT : 
-- "partenaire de confiance de ${companyName}"
-- "dans le réseau de ${companyName}"
-- "partenaire commercial"
-- Tout vocabulaire de partenariat commercial
+
+Intègre ${companyName} avec UNIQUEMENT ces formulations :
+✅ "recommandé par ${companyName}"
+✅ "conseillé par ${companyName}"
+✅ "${companyName} recommande"
+✅ "${companyName} vous conseille"
 
 PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
 Décris VRAIMENT ce que propose ${business.nom}. Varie les approches :
@@ -312,6 +335,22 @@ PRÉPOSITIONS :
 ✓ Dans le champ "activity", termine TOUJOURS par "à" (sans la ville)
 ✓ La ville sera ajoutée automatiquement après
 
+🚨🚨🚨 VÉRIFICATION FINALE AVANT DE RÉPONDRE 🚨🚨🚨
+
+AVANT D'ENVOYER TA RÉPONSE JSON, VÉRIFIE :
+
+1. Le champ "activity" se termine-t-il par le mot "à" SANS ville après ?
+   ❌ Si tu vois "à Marseille" ou "à Paris" → CORRIGE !
+   ✅ Doit finir par "à" seul
+
+2. Le champ "extract" contient-il le mot "partenaire" ?
+   ❌ Si oui → REMPLACE par "recommandé par" ou "conseillé par"
+   ✅ Utilise uniquement des verbes de recommandation
+
+3. Le champ "description" contient-il "partenaire" ou "partenariat" ?
+   ❌ Si oui → REMPLACE par "recommandé par" ou "${companyName} recommande"
+   ✅ Utilise uniquement des verbes de recommandation
+
 Réponds UNIQUEMENT en JSON :
 { "activity": "...", "extract": "...", "description": "..." }`;
 
@@ -327,7 +366,7 @@ Réponds UNIQUEMENT en JSON :
             {
               role: "system",
               content:
-                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire.",
+                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'.",
             },
             { role: "user", content: prompt },
           ],
