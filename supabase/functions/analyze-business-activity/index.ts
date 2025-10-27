@@ -374,8 +374,15 @@ Règles absolues :
     const gptContent = openAIData.choices[0].message.content;
     console.log('GPT-4o content:', gptContent);
     
+    // Nettoyer la réponse GPT-4o (supprimer les backticks markdown)
+    const cleanedContent = gptContent
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+    console.log('Cleaned GPT-4o content:', cleanedContent);
+    
     // Parser le JSON de la réponse GPT
-    const suggestions = JSON.parse(gptContent);
+    const suggestions = JSON.parse(cleanedContent);
     
     // Filtre de sécurité : Exclure le type détecté
     const filteredSuggestions = suggestions.suggestions.filter(
