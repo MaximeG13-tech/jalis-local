@@ -18,8 +18,12 @@ serve(async (req) => {
 
     console.log('Fetching place details for:', placeId);
 
+    // Ensure placeId has "places/" prefix for the new API
+    const formattedPlaceId = placeId.startsWith('places/') ? placeId : `places/${placeId}`;
+    console.log('Formatted place ID:', formattedPlaceId);
+
     // Call new Places API (New) Place Details
-    const response = await fetch(`https://places.googleapis.com/v1/${placeId}?languageCode=fr`, {
+    const response = await fetch(`https://places.googleapis.com/v1/${formattedPlaceId}?languageCode=fr`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
