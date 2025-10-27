@@ -115,15 +115,6 @@ function extractPostalCode(address: string): string | null {
   return match ? match[1] : null;
 }
 
-function correctPrepositionContractions(text: string): string {
-  // Règles de contraction obligatoires en français
-  return text
-    .replace(/\bà Le\b/g, "au")
-    .replace(/\bà Les\b/g, "aux")
-    .replace(/\bà La\b/g, "à la")
-    .replace(/\bà L'/g, "à l'");
-}
-
 function formatCity(address: string): string {
   // Extract postal code from the address
   const postalCode = extractPostalCode(address);
@@ -131,15 +122,7 @@ function formatCity(address: string): string {
 
   // Extract city name (after postal code)
   const cityMatch = address.match(/\d{5}\s+([^,]+)/);
-  let cityName = cityMatch ? cityMatch[1].trim() : address;
-
-  // Remove the article from the beginning of the city name
-  // because the preposition will be in the activity field
-  cityName = cityName
-    .replace(/^Le\s+/i, '')
-    .replace(/^La\s+/i, '')
-    .replace(/^Les\s+/i, '')
-    .replace(/^L'/i, '');
+  const cityName = cityMatch ? cityMatch[1].trim() : address;
 
   // Use postal code from the address (not from a different location)
   const deptCode = postalCode.substring(0, 2);
@@ -154,247 +137,377 @@ serve(async (req) => {
   }
 
   try {
-    const { businesses, companyName } = await req.json();
-    const OPEN_AI = Deno.env.get("OPEN_AI");
+    const { companyName, activityDescription, address, maxResults } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!OPEN_AI) {
-      throw new Error("OPEN_AI is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    console.log("Starting partner guide generation for:", companyName, activityDescription);
+
+    // Étape 1: Génération des catégories d'entreprises locales
+    const categoriesPrompt = `Tu es un expert en commerces et services locaux.
+
+Entreprise : ${companyName}
+Activité de l'entreprise : ${activityDescription}
+Localisation : ${address}
+
+Mission : Génère une liste de 8 à 12 catégories d'entreprises locales variées à présenter sur le site de ${companyName}.
+
+OBJECTIF SIMPLE : Présenter des commerces et services locaux dans la région, SANS notion de partenariat ou d'affaires.
+
+RÈGLES STRICTES :
+- NE JAMAIS proposer d'entreprises qui font la MÊME activité que ${companyName}
+- NE JAMAIS proposer d'entreprises qui offrent des services identiques ou similaires
+- Exclure TOUS les métiers qui pourraient être perçus comme concurrents
+- Privilégier la DIVERSITÉ des catégories (commerces, services, artisans, professions libérales, etc.)
+
+Exemples pour une agence web comme Jalis :
+✅ Comptables, experts-comptables
+✅ Avocats
+✅ Agents immobiliers
+✅ Photographes
+✅ Restaurants
+✅ Coiffeurs
+✅ Garagistes
+✅ Plombiers
+✅ Électriciens
+❌ Autres agences web (concurrent direct)
+❌ Graphistes (concurrent partiel)
+❌ Consultants SEO (concurrent partiel)
+
+Réponds UNIQUEMENT avec un tableau JSON de catégories (chaînes de caractères courtes et précises).
+Format attendu : ["catégorie 1", "catégorie 2", ...]`;
+
+    const categoriesResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "Tu es un expert en analyse commerciale. Tu réponds toujours avec du JSON valide uniquement.",
+          },
+          { role: "user", content: categoriesPrompt },
+        ],
+      }),
+    });
+
+    if (!categoriesResponse.ok) {
+      throw new Error(`Categories generation failed: ${categoriesResponse.status}`);
+    }
+
+    const categoriesData = await categoriesResponse.json();
+    let categories: string[];
+
+    try {
+      const content = categoriesData.choices[0].message.content;
+      const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+      const parsed = JSON.parse(cleanContent);
+      
+      // Handle both array and object responses
+      if (Array.isArray(parsed)) {
+        categories = parsed;
+      } else if (typeof parsed === 'object') {
+        // If it's an object, try to find the array inside
+        const firstKey = Object.keys(parsed)[0];
+        if (Array.isArray(parsed[firstKey])) {
+          categories = parsed[firstKey];
+        } else {
+          throw new Error("No array found in categories response");
+        }
+      } else {
+        throw new Error("Categories response is not an array or object");
+      }
+    } catch (e) {
+      console.error("Failed to parse categories:", categoriesData.choices[0].message.content);
+      throw new Error("Invalid JSON from categories generation");
+    }
+
+    console.log("Generated categories:", categories);
+
+    // Étape 2 & 3: Recherche et enrichissement pour chaque catégorie
     const enrichedBusinesses = [];
+    const businessesPerCategory = Math.ceil(maxResults / categories.length);
 
-    for (const business of businesses) {
-      // Générer un numéro aléatoire pour varier les styles de rédaction
-      const styleVariant = Math.floor(Math.random() * 5) + 1;
-      
-      // Extraire la ville de l'adresse pour un contexte géographique précis
-      const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
-      const cityName = cityMatch ? cityMatch[1].trim() : '';
-      
-      const prompt = `Tu es un rédacteur web talentueux qui écrit des contenus naturels et engageants.
+    for (const category of categories) {
+      if (enrichedBusinesses.length >= maxResults) break;
 
-🎯 MISSION : ${companyName} présente et recommande ${business.nom}
-Tu rédiges comme si c'était ${companyName} qui parlait de ${business.nom} à ses clients.
+      console.log(`Searching for category: ${category}`);
 
-CONTEXTE IMPORTANT :
-- ${companyName} est une ENTREPRISE (pas un lieu géographique)
-- ${business.nom} est situé à ${cityName}
-- Utilise le NOM DE LA VILLE (${cityName}) pour les références géographiques
-- IL S'AGIT D'UNE RECOMMANDATION, PAS D'UN PARTENARIAT COMMERCIAL
+      const searchPrompt = `Recherche web en temps réel pour : ${category} près de ${address}
 
-ENTREPRISE : ${business.nom}
-Adresse : ${business.adresse}
-Contact : ${business.telephone}
-${business.site_web !== 'Non disponible' ? `Site : ${business.site_web}` : ''}
+CONSIGNES STRICTES :
+1. Trouve ${businessesPerCategory} entreprises réelles qui correspondent exactement à la catégorie "${category}"
+2. Zone géographique : dans un rayon de 50km autour de ${address}
+3. Pour CHAQUE entreprise, tu DOIS vérifier et fournir :
+   - Le nom exact et complet de l'entreprise
+   - L'adresse postale complète avec code postal
+   - Le numéro de téléphone (si disponible, sinon "Non renseigné")
+   - Le site web (si disponible, sinon "Non renseigné")
+   - Une brève description de l'activité réelle de l'entreprise basée sur tes recherches
 
-STYLE DE RÉDACTION N°${styleVariant} - VARIE TON APPROCHE
+4. NE PAS inventer d'informations - tout doit être vérifié via la recherche web
+5. IMPÉRATIF : Sélectionner UNIQUEMENT des TPE, PME ou artisans locaux
+6. AUCUNE grande chaîne nationale ou franchise
+7. AUCUN concurrent de ${companyName}, même indirect
 
-${styleVariant === 1 ? `
-STYLE 1 - DIRECT ET DYNAMIQUE
-- Commence par une question percutante ou une affirmation forte
-- Utilise des phrases courtes et rythmées
-- Ton enjoué et moderne
-- Exemple : "Un problème de [service] ? Pas de panique ! Chez ${business.nom}..."
-` : ''}
+Réponds avec un tableau JSON d'objets avec ces champs exacts :
+{
+  "nom": "Nom de l'entreprise",
+  "adresse": "Adresse complète avec code postal",
+  "telephone": "Numéro ou 'Non renseigné'",
+  "site_web": "URL ou 'Non renseigné'",
+  "activite_reelle": "Description courte de l'activité réelle trouvée"
+}`;
 
-${styleVariant === 2 ? `
-STYLE 2 - STORYTELLING LOCAL
-- Raconte une mini-histoire ou situation
-- Ancre dans le quotidien local
-- Ton chaleureux et proche
-- Exemple : "Dans le quartier, tout le monde connaît ${business.nom}. Et pour cause..."
-` : ''}
-
-${styleVariant === 3 ? `
-STYLE 3 - PRAGMATIQUE ET INFORMATIF
-- Va droit au but
-- Liste des avantages concrets
-- Ton professionnel mais accessible
-- Exemple : "${business.nom} vous propose trois choses essentielles : [1], [2], [3]."
-` : ''}
-
-${styleVariant === 4 ? `
-STYLE 4 - CONVERSATIONNEL ET COMPLICE
-- Tutoiement possible
-- Ton de conseil entre amis
-- Exemples concrets du quotidien
-- Exemple : "Tu cherches un [métier] pas loin de ${companyName} ? On a ce qu'il te faut..."
-` : ''}
-
-${styleVariant === 5 ? `
-STYLE 5 - DESCRIPTIF ET ÉVOCATEUR
-- Peint un tableau de l'ambiance/service
-- Utilise des détails sensoriels
-- Ton poétique mais terre-à-terre
-- Exemple : "Dès que vous poussez la porte de ${business.nom}, vous sentez..."
-` : ''}
-
-📝 FORMAT JSON ATTENDU
-
-1. **activity** (10-15 mots MAX)
-Description du métier SANS la ville, se terminant obligatoirement par "à"
-- Commence par le métier : "Kinésithérapeute spécialisé en rééducation sportive à"
-- IMPORTANT : Ne JAMAIS inclure le nom de la ville, seulement la préposition "à" à la fin
-- SANS le nom de l'entreprise
-- La ville sera ajoutée automatiquement par le système
-
-2. **extract** (40-60 mots)
-Mini-pitch unique qui donne envie. Varie les angles :
-- L'expertise particulière
-- L'ambiance du lieu
-- Les avantages clients
-- L'histoire locale
-- Les spécialités
-IMPORTANT : Mentionne ${companyName} de façon NATURELLE en utilisant des verbes de RECOMMANDATION :
-- "recommande"
-- "vous conseille"
-- "vous suggère"
-- "met en avant"
-ÉVITE ABSOLUMENT :
-- "partenaire" ou "partenariat"
-- "collaboration" ou "collabore"
-- Tout vocabulaire lié aux affaires ou au commerce
-
-3. **description** (110-130 mots en 3 paragraphes) - ${companyName} présente ${business.nom}
-
-⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
-
-PARAGRAPHE 1 (35-45 mots) - ACCROCHE VARIÉE
-Selon le style choisi, commence différemment :
-- Question : "Besoin de..." / "Vous cherchez..." / "Un souci avec..."
-- Affirmation : "Chez ${business.nom}..." / "Depuis X ans..." / "Dans le quartier..."
-- Situation : "Quand on habite à ${cityName}..." / "Dans la région de ${cityName}..."
-Intègre ${companyName} NATURELLEMENT avec des formulations DE RECOMMANDATION :
-- "recommandé par ${companyName}"
-- "conseillé par ${companyName}"
-- "mis en avant par ${companyName}"
-- "${companyName} recommande"
-ÉVITE ABSOLUMENT : 
-- "partenaire de confiance de ${companyName}"
-- "dans le réseau de ${companyName}"
-- "partenaire commercial"
-- Tout vocabulaire de partenariat commercial
-
-PARAGRAPHE 2 (35-45 mots) - CONTENU CONCRET ET VARIÉ
-Décris VRAIMENT ce que propose ${business.nom}. Varie les approches :
-- Liste des services/produits phares
-- Points forts uniques
-- Ce qui fait la différence
-- Exemples concrets d'intervention
-IMPORTANT : Reste FACTUEL et CONCRET, évite les formules creuses
-
-PARAGRAPHE 3 (30-40 mots) - COORDONNÉES
-Varie la formulation :
-- "Retrouvez ${business.nom} au..."
-- "Pour les joindre, c'est simple : ..."
-- "${business.nom} vous accueille au..."
-- "Rendez-vous chez eux : ..."
-Donne l'adresse ET le téléphone de façon fluide.
-
-🚨 RÈGLES CRITIQUES
-
-VARIATION OBLIGATOIRE :
-✓ Chaque texte doit être UNIQUE dans son approche
-✓ Varie les verbes, les structures, les accroches
-✓ Évite ABSOLUMENT les répétitions entre entreprises
-✓ Humanise : écris comme tu parlerais à un ami
-
-INTERDICTIONS :
-❌ "solutions adaptées à vos besoins"
-❌ "tout près de ${companyName}" (varie !)
-❌ "Vous cherchez un X de confiance" (trop vu)
-❌ "accompagnement personnalisé"
-❌ "expertise reconnue"
-❌ Structures répétitives
-❌ Vocabulaire de partenariat commercial ("partenaire", "collaboration", "réseau")
-
-PRÉPOSITIONS :
-✓ Dans le champ "activity", termine TOUJOURS par "à" (sans la ville)
-✓ La ville sera ajoutée automatiquement après
-
-Réponds UNIQUEMENT en JSON :
-{ "activity": "...", "extract": "...", "description": "..." }`;
-
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      const searchResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${OPEN_AI}`,
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4o",
+          model: "google/gemini-2.5-flash",
           messages: [
             {
               role: "system",
               content:
-                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire.",
+                "Tu es un assistant de recherche web. Tu effectues des recherches en temps réel et réponds avec du JSON valide uniquement. Tu ne dois jamais inventer d'informations.",
             },
-            { role: "user", content: prompt },
+            { role: "user", content: searchPrompt },
           ],
-          max_tokens: 800,
-          temperature: 0.7,
         }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("AI API error:", response.status, errorText);
-        throw new Error(`AI API returned status ${response.status}: ${errorText}`);
+      if (!searchResponse.ok) {
+        console.error(`Search failed for category ${category}`);
+        continue;
       }
 
-      const data = await response.json();
-      console.log("OpenAI response:", JSON.stringify(data, null, 2));
+      const searchData = await searchResponse.json();
+      let businesses;
 
-      // Vérifier que la réponse contient les données attendues
-      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-        console.error("Invalid OpenAI response structure:", JSON.stringify(data));
-        throw new Error("OpenAI response missing expected data structure");
-      }
-
-      const content = data.choices[0].message.content;
-
-      // Vérifier que le contenu n'est pas vide
-      if (!content || content.trim() === "") {
-        console.error("Empty content from OpenAI");
-        throw new Error("OpenAI returned empty content");
-      }
-
-      // Parse the JSON response
-      let aiData;
       try {
-        // Remove markdown code blocks if present
+        const content = searchData.choices[0].message.content;
         const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-        console.log("Cleaned content for parsing:", cleanContent);
-        aiData = JSON.parse(cleanContent);
-        
-        // Vérifier que les champs requis sont présents
-        if (!aiData.activity || !aiData.extract || !aiData.description) {
-          console.error("Missing required fields in AI response:", aiData);
-          throw new Error("AI response missing required fields (activity, extract, or description)");
-        }
+        businesses = JSON.parse(cleanContent);
       } catch (e) {
-        console.error("Failed to parse AI response:", content);
-        console.error("Parse error:", e);
-        throw new Error(`Invalid JSON from AI: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        console.error(`Failed to parse businesses for ${category}:`, searchData.choices[0].message.content);
+        continue;
       }
 
-      enrichedBusinesses.push({
-        name: `- ${business.nom}`,
-        activity: aiData.activity,
-        city: formatCity(business.adresse),
-        extract: aiData.extract,
-        description: aiData.description,
-      });
+      // Étape 3: Enrichissement de chaque entreprise trouvée
+      for (const business of businesses) {
+        if (enrichedBusinesses.length >= maxResults) break;
 
-      // Small delay to avoid rate limits
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const enrichPrompt = `🚫 INTERDICTIONS ABSOLUES 🚫
+❌ Ne JAMAIS mentionner l'URL du site web de ${business.nom} dans la description
+❌ Ne JAMAIS écrire le nom de domaine (ex: "wellmob.fr", "tvspro.com", etc.)
+❌ Mots interdits : partenariat, partenaire, collaborer, collaboration, s'associer, apporteur d'affaires
+❌ Cette entreprise est RECOMMANDÉE par ${companyName}, ce n'est PAS un partenariat commercial
+
+---
+
+PARAGRAPHE 2 - PHRASES D'ACCROCHE VARIÉES (choisis-en UNE au hasard) :
+
+STYLE 1 - Présentation locale :
+• "Situé à proximité, ${business.nom} accompagne les particuliers et professionnels dans leurs projets."
+• "Acteur de proximité reconnu, ${business.nom} met son expertise au service de ses clients."
+• "Établi localement, ${business.nom} offre un service personnalisé adapté à chaque besoin."
+
+STYLE 2 - Valorisation expertise :
+• "Forte d'une solide expérience, l'entreprise ${business.nom} se distingue par son savoir-faire."
+• "Spécialiste reconnu dans son domaine, ${business.nom} garantit des prestations de qualité."
+• "Grâce à son expertise avérée, ${business.nom} répond aux attentes les plus exigeantes."
+
+STYLE 3 - Approche client :
+• "À l'écoute de ses clients, ${business.nom} propose des solutions sur-mesure et durables."
+• "Privilégiant une approche personnalisée, ${business.nom} s'adapte à chaque situation."
+• "Soucieux de la satisfaction client, ${business.nom} assure un suivi rigoureux de chaque projet."
+
+STYLE 4 - Ancrage territorial :
+• "Implanté dans la région, ${business.nom} contribue au dynamisme économique local."
+• "Entreprise locale de confiance, ${business.nom} s'engage auprès de sa communauté."
+• "Fier de ses racines locales, ${business.nom} cultive la proximité avec sa clientèle."
+
+⚠️ IMPÉRATIF : Choisis UNE phrase AU HASARD parmi ces 12 options pour VARIER le contenu.
+
+---
+
+Entreprise locale à présenter :
+- Nom : ${business.nom}
+- Catégorie : ${category}
+- Activité : ${business.activite_reelle}
+- ⛔ NE PAS mentionner leur URL
+- ⛔ ${companyName} RECOMMANDE cette entreprise (pas de partenariat)
+
+Instructions strictes pour un SEO optimal :
+
+1. **activity** : TITRE LONGUE TRAÎNE SEO de 10 à 15 mots obligatoirement, SANS PRONOM PERSONNEL, se terminant par "à"
+
+🚨 RÈGLE ABSOLUE POUR LE CHAMP ACTIVITY 🚨
+LE CHAMP "activity" DOIT SE TERMINER PAR LE MOT "à" SEUL, SANS AUCUNE VILLE APRÈS !
+
+❌ INTERDIT : "Kinésithérapeute spécialisé en rééducation sportive à Marseille"
+❌ INTERDIT : Toute mention de ville après le "à"
+✅ CORRECT : "Kinésithérapeute spécialisé en rééducation sportive à"
+✅ CORRECT : "Plombier professionnel pour tous travaux de plomberie et dépannage à"
+
+EXEMPLES de formats à suivre STRICTEMENT :
+- "Paysagiste spécialisé dans la création et l'aménagement de jardins et d'espaces verts avec des solutions sur-mesure à"
+- "Plombier professionnel assurant l'installation, la réparation et l'entretien de vos systèmes de plomberie à"
+- "Expert-comptable accompagnant la gestion comptable, fiscale et administrative de votre entreprise à"
+- "Électricien qualifié réalisant tous vos travaux d'installation et de mise aux normes électriques à"
+
+RÈGLES IMPÉRATIVES :
+- Commence par le NOM DU MÉTIER ou "Professionnel(s) de..." suivi d'un PARTICIPE PRÉSENT (proposant, assurant, spécialisé dans, offrant, réalisant, etc.)
+- JAMAIS de pronoms personnels (ils, elle, nous) - forme nominale uniquement
+- Mentionne EXPLICITEMENT la profession/le métier de l'entreprise
+- Intègre des qualificatifs pertinents (professionnel, qualifié, spécialisé, expérimenté, artisan)
+- La phrase DOIT se terminer par "à" (sans la ville). Elle sera suivie par le champ city.
+- Compte exactement entre 10 et 15 mots (vérifie bien)
+- NE JAMAIS inclure le nom de la ville
+
+2. **extract** : Résumé percutant de 40 à 60 mots enrichi de mots-clés SEO relatifs à l'activité. 
+
+🚨 RÈGLE ABSOLUE POUR LE CHAMP EXTRACT 🚨
+VOCABULAIRE DE RECOMMANDATION UNIQUEMENT, JAMAIS DE PARTENARIAT !
+
+❌ MOTS INTERDITS : partenaire, partenariat, collaboration, réseau, affaires
+❌ INTERDIT : "partenaire de ${companyName}"
+✅ CORRECT : "recommandé par ${companyName}"
+✅ CORRECT : "${companyName} recommande"
+
+RÈGLES POUR L'EXTRACT :
+- Mentionne ${companyName} avec UNIQUEMENT des verbes de RECOMMANDATION :
+  ✅ "recommande", "recommandé par"
+  ✅ "conseille", "conseillé par"
+  ✅ "suggère", "suggéré par"
+  ✅ "met en avant", "mis en avant par"
+- Doit donner envie de contacter l'entreprise en mettant en avant ses points forts
+
+3. **description** : Description de 100 à 150 MOTS en HTML avec des balises <p>.
+
+⚠️ STRUCTURE OBLIGATOIRE EN 3 PARAGRAPHES :
+
+• Paragraphe 1 (40-60 mots) : Présentation détaillée de l'activité et des services
+  
+  🚨 RÈGLE ABSOLUE : VOCABULAIRE DE RECOMMANDATION UNIQUEMENT 🚨
+  ❌ MOTS INTERDITS : partenaire, partenariat, collaboration, réseau, affaires
+  ❌ INTERDIT : "partenaire de confiance de ${companyName}"
+  ❌ INTERDIT : "partenaire de ${companyName}"
+  
+  Intègre ${companyName} avec UNIQUEMENT ces formulations :
+  ✅ "recommandé par ${companyName}"
+  ✅ "conseillé par ${companyName}"
+  ✅ "${companyName} recommande"
+  ✅ "${companyName} vous conseille"
+
+• Paragraphe 2 (20-30 mots) : UNE des 12 phrases d'accroche listées ci-dessus (varie !)
+
+• Paragraphe 3 (30-40 mots) : Coordonnées et appel à l'action
+
+⛔ INTERDICTIONS dans la description :
+- NE JAMAIS mentionner l'URL ou le nom de domaine du site web de ${business.nom}
+- NE JAMAIS écrire "wellmob.fr", "tvspro.com" ou tout autre domaine
+- NE JAMAIS utiliser le vocabulaire de partenariat commercial
+- Si site web disponible : "Rendez-vous sur leur site web" ou "Consultez leur site pour plus d'informations"
+- Si téléphone disponible : "Contactez-les au ${business.telephone}"
+
+Format JSON attendu :
+{
+  "activity": "titre SEO 10-15 mots se terminant par 'à' SANS la ville",
+  "extract": "résumé 40-60 mots avec RECOMMANDATION (pas partenariat)",
+  "description": "<p>Paragraphe 1 avec RECOMMANDATION</p><p>Paragraphe 2 : phrase d'accroche</p><p>Paragraphe 3 avec coordonnées SANS URL</p>"
+}
+
+CONSIGNES DE TON :
+- Parle TOUJOURS à la 3ème personne de l'entreprise
+- Utilise "leur", "ils", "cette entreprise", "${business.nom}"
+- ${companyName} RECOMMANDE cette entreprise (vocabulaire de recommandation uniquement)
+- ⛔ JAMAIS d'URL dans le texte - remplace par "leur site web" ou "leur site"
+- ⛔ JAMAIS de vocabulaire de partenariat commercial
+
+🚨🚨🚨 VÉRIFICATION FINALE AVANT DE RÉPONDRE 🚨🚨🚨
+
+AVANT D'ENVOYER TA RÉPONSE JSON, VÉRIFIE :
+
+1. Le champ "activity" se termine-t-il par le mot "à" SANS ville après ?
+   ❌ Si tu vois "à Marseille" ou toute autre ville → CORRIGE !
+   ✅ Doit finir par "à" seul (dernier mot)
+
+2. Le champ "extract" contient-il le mot "partenaire" ?
+   ❌ Si oui → REMPLACE par "recommandé par" ou "conseillé par"
+   ✅ Utilise uniquement des verbes de recommandation
+
+3. Le champ "description" contient-il "partenaire" ou "partenariat" ?
+   ❌ Si oui → REMPLACE par "recommandé par" ou "${companyName} recommande"
+   ✅ Utilise uniquement des verbes de recommandation
+
+Réponds UNIQUEMENT avec un objet JSON valide contenant les 3 champs : activity, extract, description. Pas de texte avant ou après.`;
+
+        const enrichResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'.",
+              },
+              { role: "user", content: enrichPrompt },
+            ],
+          }),
+        });
+
+        if (!enrichResponse.ok) {
+          console.error("Enrichment failed for business:", business.nom);
+          continue;
+        }
+
+        const enrichData = await enrichResponse.json();
+        let aiData;
+
+        try {
+          const content = enrichData.choices[0].message.content;
+          const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+          aiData = JSON.parse(cleanContent);
+        } catch (e) {
+          console.error("Failed to parse enrichment data:", enrichData.choices[0].message.content);
+          continue;
+        }
+
+        enrichedBusinesses.push({
+          name: `- ${business.nom}`,
+          activity: aiData.activity,
+          city: formatCity(business.adresse),
+          extract: aiData.extract,
+          description: aiData.description,
+        });
+
+        // Small delay to avoid rate limits
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
     }
+
+    console.log(`Generated ${enrichedBusinesses.length} partner businesses`);
 
     return new Response(JSON.stringify({ enrichedBusinesses }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in enrich-businesses function:", error);
+    console.error("Error in generate-partner-guide function:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
