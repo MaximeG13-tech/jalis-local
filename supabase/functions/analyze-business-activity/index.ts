@@ -291,13 +291,26 @@ serve(async (req) => {
     console.log('Place details received:', placeDetails);
 
     const detectedActivity = placeDetails.result?.name || 'Activité inconnue';
-    const primaryType = placeDetails.result?.primary_type || '';
+    let primaryType = placeDetails.result?.primary_type || '';
+    
+    // Fallback: utiliser le premier type disponible si primaryType est vide
+    if (!primaryType && placeDetails.result?.types && placeDetails.result.types.length > 0) {
+      // Ignorer les types trop génériques
+      const genericTypes = ['point_of_interest', 'establishment'];
+      const specificTypes = placeDetails.result.types.filter((t: string) => !genericTypes.includes(t));
+      if (specificTypes.length > 0) {
+        primaryType = specificTypes[0];
+        console.log('Using fallback type from types array:', primaryType);
+      }
+    }
     
     console.log('Detected activity:', detectedActivity);
     console.log('Primary type:', primaryType);
 
+    // Si toujours pas de type, demander à l'IA de deviner à partir du nom
     if (!primaryType) {
-      throw new Error("Impossible de déterminer le type d'activité de cet établissement");
+      console.log('No primary type found, asking AI to guess from business name...');
+      primaryType = 'unknown_business_type';
     }
 
     // Étape 4: Appeler GPT-4o pour obtenir les suggestions
@@ -307,6 +320,7 @@ serve(async (req) => {
 
 Activité analysée : "${detectedActivity}"
 Type Google détecté : "${primaryType}"
+${primaryType === 'unknown_business_type' ? `\nATTENTION : Le type Google n'est pas disponible. Devine l'activité à partir du nom "${detectedActivity}".` : ''}
 
 ⚠️ RÈGLE CRITIQUE : Ne suggère JAMAIS "${primaryType}" car ce serait un CONCURRENT, pas un partenaire.
 
