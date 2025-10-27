@@ -55,6 +55,25 @@ function cleanBusinessName(name: string): string {
     .join(' ');
 }
 
+function isLegalForm(name: string): boolean {
+  // Détecte si le nom ressemble à une forme juridique plutôt qu'à un nom commercial
+  const legalPatterns = [
+    /d'exercice\slibéral/i,
+    /responsabilit[ée]\slimit[ée]e/i,
+    /\bRCS\b/i,
+    /\bSIREN\b/i,
+    /\bSIRET\b/i,
+    /société\sen\snom\scollectif/i,
+    /société\scivile/i,
+    /entreprise\sunipersonnelle/i,
+    /capital\sde\s/i,
+    /immatricul[ée]e/i,
+    /registre\sdu\scommerce/i,
+  ];
+  
+  return legalPatterns.some(pattern => pattern.test(name));
+}
+
 function shouldExclude(originalName: string, cleanedName: string): boolean {
   // 1. Nom nettoyé trop court
   if (cleanedName.length < 3) {
@@ -245,6 +264,23 @@ serve(async (req) => {
       const websiteResult = await extractNameFromWebsite(website);
       
       if (websiteResult.name) {
+        // Vérifier si l'extraction web est une forme juridique
+        if (isLegalForm(websiteResult.name)) {
+          console.log(`⚠️ Website extraction looks like a legal form, preferring GMB name: "${websiteResult.name}"`);
+          console.log(`✅ Using cleaned GMB name instead: "${cleanedName}"`);
+          const response: NormalizeResponse = {
+            normalized_name: cleanedName,
+            confidence_score: 70, // Plus de confiance car on évite une forme juridique
+            source: 'gmb_cleaned',
+            should_exclude: false
+          };
+          
+          return new Response(JSON.stringify(response), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        // Si l'extraction web est un vrai nom commercial, l'utiliser
         const response: NormalizeResponse = {
           normalized_name: websiteResult.name,
           confidence_score: websiteResult.confidence,
