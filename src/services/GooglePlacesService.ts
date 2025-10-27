@@ -237,25 +237,22 @@ export class GooglePlacesService {
     place: GooglePlace,
     selectedTypes: BusinessType[]
   ): string {
-    // PRIORITÉ 1 : Utiliser primaryTypeDisplayName de Google (en français)
+    // PRIORITÉ ABSOLUE : Utiliser exactement le nom de Google Maps (primaryTypeDisplayName en français)
     if (place.primary_type_display_name) {
-      console.log(`✅ Using Google's French display name: ${place.primary_type_display_name}`);
+      console.log(`✅ Using exact Google Maps name: ${place.primary_type_display_name}`);
       return place.primary_type_display_name;
     }
 
-    // PRIORITÉ 2 : Mapping intelligent basé sur types[]
-    const mappedCategory = this.mapBusinessCategoryFromTypes(place, place.name);
-    if (mappedCategory !== 'Autre') {
-      return mappedCategory;
-    }
-
-    // PRIORITÉ 3 : Utiliser le type sélectionné par l'utilisateur
+    // Fallback : Type sélectionné par l'utilisateur
     if (selectedTypes.length > 0 && selectedTypes[0].id !== 'all') {
+      console.log(`⚠️ No Google name, using selected type: ${selectedTypes[0].label}`);
       return selectedTypes[0].label;
     }
 
-    // PRIORITÉ 4 : Fallback
-    return 'Autre';
+    // Dernier recours : Mapping basé sur types[]
+    const mappedCategory = this.mapBusinessCategoryFromTypes(place, place.name);
+    console.log(`⚠️ No Google name or selected type, using mapping: ${mappedCategory}`);
+    return mappedCategory;
   }
 
   private static cleanBusinessName(name: string): string {
