@@ -7,7 +7,7 @@ import { Search, Loader2, Sparkles } from 'lucide-react';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import { Slider } from '@/components/ui/slider';
 import { BusinessTypesSelector } from './BusinessTypesSelector';
-import { BusinessType } from '@/constants/businessTypes';
+import { BusinessType, BUSINESS_TYPES } from '@/constants/businessTypes';
 import { useToast } from '@/hooks/use-toast';
 import { GeniusDialog } from './GeniusDialog';
 
@@ -61,9 +61,15 @@ export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) =>
   const handleGeniusSuggestions = (types: BusinessType[]) => {
     setSelectedTypes(types);
     toast({
-      title: "✨ Suggestions Genius",
-      description: `${types.length} type${types.length > 1 ? 's' : ''} d'activités complémentaires suggéré${types.length > 1 ? 's' : ''}`,
+      title: "✨ Suggestions Genius appliquées",
+      description: `${types.length} type${types.length > 1 ? 's' : ''} d'activités sélectionné${types.length > 1 ? 's' : ''}`,
     });
+  };
+
+  // Méthode publique pour sélectionner des types depuis l'extérieur (ex: Genius)
+  const selectTypesFromGenius = (typeIds: string[]) => {
+    const matchingTypes = BUSINESS_TYPES.filter(t => typeIds.includes(t.id));
+    setSelectedTypes(matchingTypes);
   };
 
   return (

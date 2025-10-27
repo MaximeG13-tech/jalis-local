@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.normalize-business-name]
 verify_jwt = false
+
+[functions.analyze-business-activity]
+verify_jwt = false
