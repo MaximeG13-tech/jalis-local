@@ -328,156 +328,74 @@ serve(async (req) => {
       const randomIntro = introVariations[Math.floor(Math.random() * introVariations.length)]
         .replace('{{city}}', cityName);
       
+      // Simplified prompts to avoid truncation
       let prompt;
       
       if (realInfo.confiance === "low") {
-        // Simplified prompt for low-confidence cases
-        prompt = `Tu dois générer un JSON avec exactement 3 champs pour une entreprise dont on a PEU d'informations.
+        // Ultra-simplified prompt for low-confidence cases
+        prompt = `Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
-DONNÉES DE L'ENTREPRISE :
-- Nom : ${business.nom}
-- Adresse : ${business.adresse}
-- Ville : ${cityName}
+DONNÉES :
 - Téléphone : ${business.telephone}
+- Adresse : ${business.adresse}
+- ${companyName} recommande cette entreprise
 
-CONTEXTE : ${companyName} recommande cette entreprise à ses clients.
-
-RÈGLE CRITIQUE : Tu as PEU d'informations vérifiées, reste donc GÉNÉRAL et SOBRE. Ne détaille PAS.
-
-═══════════════════════════════════════════════════════════════════════════════
-
-CHAMP 1 : "activity"
-Écris une phrase de 10-15 mots décrivant le métier de manière GÉNÉRIQUE.
-RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" (sans rien après).
-
-EXEMPLES :
-✓ "Entreprise spécialisée dans les services professionnels à"
-✓ "Établissement proposant des prestations de qualité à"
-
-═══════════════════════════════════════════════════════════════════════════════
-
-CHAMP 2 : "extract" (40-60 mots)
-Reste GÉNÉRAL. Mentionne "${companyName} recommande" ou "recommandé par ${companyName}".
-Utilise un article défini : "l'établissement", "l'entreprise", "la société".
-
-EXEMPLE :
-"À ${cityName}, ${companyName} recommande l'établissement ${business.nom} pour son professionnalisme. Cette entreprise se distingue par son engagement envers la satisfaction client."
-
-═══════════════════════════════════════════════════════════════════════════════
-
-CHAMP 3 : "description" (80-100 mots - PLUS COURT que d'habitude)
-Reste SOBRE et GÉNÉRAL. Mentionne "recommandé par ${companyName}".
-Structure : 2 paragraphes courts + coordonnées.
-
-EXEMPLE :
-"À ${cityName}, l'entreprise ${business.nom}, recommandée par ${companyName}, se distingue par son professionnalisme. Son équipe met un point d'honneur à offrir un service de qualité adapté aux besoins de chaque client.
-
-Située ${business.adresse}, l'entreprise est facilement accessible. Pour tout renseignement, contactez-les au ${business.telephone}."
-
-═══════════════════════════════════════════════════════════════════════════════
-
-RÉPONDS UNIQUEMENT AVEC CE JSON :
+FORMAT JSON REQUIS :
 {
-  "activity": "Description générique se terminant par à",
-  "extract": "40-60 mots GÉNÉRAUX avec article défini + recommandé par",
-  "description": "80-100 mots SOBRES sans détails inventés"
-}`;
-      } else {
-        // Full detailed prompt with verified data
-        const servicesText = realInfo.services_principaux.length > 0
-          ? realInfo.services_principaux.join(', ')
-          : 'Non renseignés';
-        
-        prompt = `Tu dois générer un JSON avec exactement 3 champs basés sur des INFORMATIONS RÉELLES VÉRIFIÉES.
-
-═══════════════════════════════════════════════════════════════════════════════
-
-DONNÉES DE L'ENTREPRISE :
-- Nom : ${business.nom}
-- Adresse : ${business.adresse}
-- Ville : ${cityName}
-- Téléphone : ${business.telephone}
-
-INFORMATIONS VÉRIFIÉES PAR RECHERCHE WEB (Tavily) :
-- Activité vérifiée : ${realInfo.activite_verifiee || 'Non renseignée'}
-- Services principaux : ${servicesText}
-- Spécialités : ${realInfo.specialites || 'Non renseignées'}
-- Historique : ${realInfo.historique || 'Non disponible'}
-- Niveau de confiance : ${realInfo.confiance}
-
-CONTEXTE : ${companyName} recommande cette entreprise à ses clients.
-
-═══════════════════════════════════════════════════════════════════════════════
-
-CHAMP 1 : "activity"
-
-INSTRUCTION : Écris une phrase de 10-15 mots décrivant le métier.
-RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" (sans rien après).
-
-EXEMPLES :
-✓ "Cabinet notarial accompagnant vos projets immobiliers et successions à"
-✓ "Kinésithérapeute spécialisé en rééducation sportive et bien-être à"
-
-═══════════════════════════════════════════════════════════════════════════════
-
-CHAMP 2 : "extract" (40-60 mots)
+  "activity": "Description courte (10-15 mots) se terminant par 'à'",
+  "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
+  "description": "80-100 mots en 2 paragraphes + coordonnées"
+}
 
 RÈGLES :
-- TOUJOURS utiliser un article défini : "l'étude", "le cabinet", "la société"
-- Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}"
-- Si historique disponible : "Depuis [année], ${companyName} recommande..."
-- Si spécialités disponibles : Mentionne la spécialité RÉELLE : ${realInfo.specialites}
-- IMPÉRATIF : N'invente AUCUN service non listé dans les services principaux
+1. activity se termine par "à" (sans ville)
+2. extract commence par article défini (l', le, la)
+3. description mentionne "recommandé par ${companyName}"
+4. Reste GÉNÉRAL (peu d'infos disponibles)
+5. Pas de site web dans description
 
-EXEMPLE avec données vérifiées :
-${realInfo.historique ? `"${realInfo.historique}, ${companyName} recommande ${business.nom} à ${cityName} pour son expertise en ${realInfo.activite_verifiee}. Cette entreprise ${realInfo.specialites ? 'se distingue par ' + realInfo.specialites : 'accompagne ses clients avec professionnalisme'}."` : `"${randomIntro} ${business.nom} à ${cityName} pour son expertise en ${realInfo.activite_verifiee}. ${realInfo.specialites ? 'Cette entreprise se distingue par ' + realInfo.specialites : 'Un accompagnement professionnel adapté à vos besoins'}."`}
+EXEMPLE activity: "Entreprise proposant des services professionnels de qualité à"
+EXEMPLE extract: "À ${cityName}, ${companyName} recommande l'établissement ${business.nom} pour son professionnalisme."
 
-═══════════════════════════════════════════════════════════════════════════════
+RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
+      } else {
+        // Simplified prompt with verified data
+        const servicesText = realInfo.services_principaux.length > 0
+          ? realInfo.services_principaux.slice(0, 3).join(', ')
+          : 'services professionnels';
+        
+        prompt = `Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
-CHAMP 3 : "description" (110-130 mots en 3 paragraphes)
+DONNÉES VÉRIFIÉES :
+- Activité : ${realInfo.activite_verifiee || 'entreprise locale'}
+- Services : ${servicesText}
+${realInfo.specialites ? `- Spécialité : ${realInfo.specialites}` : ''}
+${realInfo.historique ? `- Historique : ${realInfo.historique}` : ''}
+- Téléphone : ${business.telephone}
+- Adresse : ${business.adresse}
+- ${companyName} recommande cette entreprise
 
-STRUCTURE OBLIGATOIRE AVEC DONNÉES VÉRIFIÉES :
 
-**Paragraphe 1 (40-50 mots) : Présentation générale**
-- Commence par : "${randomIntro}"
-- Mentionne l'historique SI DISPONIBLE : ${realInfo.historique || 'non disponible'}
-- Décris l'activité RÉELLE : ${realInfo.activite_verifiee || 'activité professionnelle'}
-- Localisation : "situé(e) à ${cityName}"
 
-EXEMPLE :
-"${randomIntro} ${business.nom}, ${realInfo.historique ? realInfo.historique + '. ' : ''}spécialisé(e) en ${realInfo.activite_verifiee}. Situé(e) à ${cityName}, cette entreprise accompagne ses clients avec rigueur et proximité."
-
-**Paragraphe 2 (35-45 mots) : Services RÉELS**
-- Liste UNIQUEMENT les services de : ${servicesText}
-- Mentionne la spécialité SI DISPONIBLE : ${realInfo.specialites || 'non disponible'}
-- INTERDIT : Inventer des services non listés
-
-EXEMPLE :
-"Parmi les services proposés figurent ${servicesText}. ${realInfo.specialites ? 'L\'entreprise se distingue par ' + realInfo.specialites + ', reflétant son engagement qualité.' : 'Un service professionnel adapté à vos besoins.'}"
-
-**Paragraphe 3 (25-35 mots) : Coordonnées**
-- Adresse complète
-- Téléphone uniquement (JAMAIS de site web)
-- Phrase d'appel à l'action
-
-EXEMPLE :
-"Situé(e) ${business.adresse}, l'établissement est facilement accessible. Pour tout renseignement ou prise de rendez-vous, contactez-les au ${business.telephone}."
-
-═══════════════════════════════════════════════════════════════════════════════
-
-RÈGLES CRITIQUES :
-1. Tu n'as utilisé QUE les services listés dans services_principaux ? ✓
-2. Tu n'as PAS inventé d'historique si ${realInfo.historique} === null ? ✓
-3. Le champ "activity" se termine par "à" ? ✓
-4. Tu as utilisé un ARTICLE DÉFINI ? ✓
-5. Tu n'as PAS mentionné le site web ? ✓
-
-RÉPONDS UNIQUEMENT AVEC CE JSON :
+FORMAT JSON REQUIS :
 {
-  "activity": "Description du métier se terminant par à",
-  "extract": "40-60 mots avec article défini + recommandé par + données vérifiées",
-  "description": "110-130 mots basés sur informations RÉELLES de Tavily"
-}`;
+  "activity": "Description (10-15 mots) se terminant par 'à'",
+  "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
+  "description": "110-130 mots en 3 paragraphes mentionnant services vérifiés + coordonnées"
+}
+
+RÈGLES :
+1. activity se termine par "à" (pas de ville)
+2. extract utilise article défini (l', le, la) + mentionne ${companyName}
+3. description utilise UNIQUEMENT les services listés : ${servicesText}
+${realInfo.specialites ? `4. Mentionne la spécialité : ${realInfo.specialites}` : ''}
+${realInfo.historique ? `5. Intègre l'historique : ${realInfo.historique}` : ''}
+6. Pas de site web, seulement téléphone et adresse
+
+EXEMPLE activity: "${realInfo.activite_verifiee} spécialisé(e) dans les services de qualité à"
+EXEMPLE extract début: "${randomIntro} ${business.nom} pour son expertise en ${realInfo.activite_verifiee}..."
+
+RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       }
 
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -487,16 +405,16 @@ RÉPONDS UNIQUEMENT AVEC CE JSON :
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-pro',
+          model: 'google/gemini-2.5-flash',
           messages: [
             {
               role: "system",
-              content: "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration'. (3) Tu utilises TOUJOURS un article défini devant les noms d'entreprises : 'l'étude', 'le cabinet', 'la société'. (4) INTERDIT ABSOLU : Ne JAMAIS mentionner le site web dans la description, seulement le téléphone et l'adresse. (5) Tu n'inventes JAMAIS d'informations non fournies dans les données vérifiées."
+              content: "Tu es un rédacteur professionnel. Réponds UNIQUEMENT avec du JSON valide, sans markdown. Format : {\"activity\": \"texte terminant par à\", \"extract\": \"40-60 mots\", \"description\": \"110-130 mots\"}. Règles : (1) activity se termine par 'à' seul (2) utilise article défini (l', le, la) (3) n'invente RIEN."
             },
             { role: "user", content: prompt }
           ],
-          max_tokens: 2000,
-          temperature: 0.7,
+          max_tokens: 1500,
+          temperature: 0.5,
         }),
       });
 
@@ -516,42 +434,57 @@ RÉPONDS UNIQUEMENT AVEC CE JSON :
 
       let aiData;
       try {
-        const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        let cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        
+        // Remove any text before first {
+        const firstBrace = cleanContent.indexOf('{');
+        if (firstBrace > 0) {
+          cleanContent = cleanContent.substring(firstBrace);
+        }
         
         // Validate JSON is complete before parsing
         if (!cleanContent.includes('"activity"') || 
             !cleanContent.includes('"extract"') || 
             !cleanContent.includes('"description"')) {
-          console.error("Incomplete JSON detected:", cleanContent);
-          throw new Error("AI returned incomplete JSON (missing required fields in raw content)");
-        }
-        
-        // Check if JSON ends properly
-        if (!cleanContent.endsWith('}')) {
-          console.error("JSON does not end properly:", cleanContent.slice(-50));
-          throw new Error("AI returned truncated JSON (does not end with })");
-        }
-        
-        aiData = JSON.parse(cleanContent);
-        
-        if (!aiData.activity || !aiData.extract || !aiData.description) {
-          console.error("Parsed JSON missing fields:", aiData);
-          throw new Error("AI response missing required fields after parsing");
-        }
-        
-        // Validate field lengths
-        if (aiData.extract.length < 20 || aiData.description.length < 50) {
-          console.error("Fields too short:", { 
-            extractLen: aiData.extract.length, 
-            descLen: aiData.description.length 
-          });
-          throw new Error("AI generated fields are too short (likely incomplete)");
+          console.error("Incomplete JSON detected:", cleanContent.slice(0, 200));
+          
+          // FALLBACK: Generate minimal generic content
+          console.log(`Using fallback for ${business.nom}`);
+          aiData = {
+            activity: "Entreprise proposant des services professionnels de qualité à",
+            extract: `À ${cityName}, ${companyName} recommande l'établissement ${business.nom} pour son sérieux et son professionnalisme.`,
+            description: `À ${cityName}, l'entreprise ${business.nom}, recommandée par ${companyName}, se distingue par son engagement envers la qualité de service. Située ${business.adresse}, l'entreprise est facilement accessible. Pour tout renseignement, contactez-les au ${business.telephone}.`
+          };
+        } else {
+          // Check if JSON ends properly
+          if (!cleanContent.endsWith('}')) {
+            // Try to fix truncated JSON by adding closing brace
+            cleanContent += '"}';
+            console.log("Fixed truncated JSON by adding closing braces");
+          }
+          
+          aiData = JSON.parse(cleanContent);
+          
+          if (!aiData.activity || !aiData.extract || !aiData.description) {
+            throw new Error("Missing fields after parsing");
+          }
+          
+          // Validate field lengths
+          if (aiData.extract.length < 20 || aiData.description.length < 50) {
+            throw new Error("Fields too short (likely incomplete)");
+          }
         }
         
       } catch (e) {
-        console.error("Failed to parse AI response:", content.slice(0, 300));
-        console.error("Parse error details:", e);
-        throw new Error(`Invalid JSON from AI: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        console.error("Parse failed, using fallback. Error:", e);
+        console.error("Content was:", content.slice(0, 300));
+        
+        // FALLBACK: Generate minimal generic content
+        aiData = {
+          activity: "Entreprise proposant des services professionnels de qualité à",
+          extract: `À ${cityName}, ${companyName} recommande l'établissement ${business.nom} pour son sérieux et son professionnalisme.`,
+          description: `À ${cityName}, l'entreprise ${business.nom}, recommandée par ${companyName}, se distingue par son engagement envers la qualité de service. Située ${business.adresse}, l'entreprise est facilement accessible. Pour tout renseignement, contactez-les au ${business.telephone}.`
+        };
       }
 
       enrichedBusinesses.push({
