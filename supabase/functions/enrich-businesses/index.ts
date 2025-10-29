@@ -642,9 +642,63 @@ RÈGLES DE RÉDACTION :
         ? `\n- TYPE D'ACTIVITÉ (GOOGLE MAPS - OBLIGATOIRE À UTILISER) : ${business.type_activite}`
         : '';
       
+      // QUALITY IMPROVEMENT: Select random structure template
+      const structureTemplates = [
+        { id: 1, name: "Expertise d'abord", p1Focus: "expertise et spécialité", p2Focus: "services avec bénéfices" },
+        { id: 2, name: "Historique d'abord", p1Focus: "parcours professionnel", p2Focus: "services et recommandation" },
+        { id: 3, name: "Différenciation d'abord", p1Focus: "ce qui distingue", p2Focus: "services détaillés" }
+      ];
+      const selectedTemplate = structureTemplates[Math.floor(Math.random() * structureTemplates.length)];
+      
+      // QUALITY IMPROVEMENT: Profession-specific action verbs
+      const getActionVerbs = () => {
+        if (/\b(Avocat|Avocate|Maître|Me)\b/i.test(business.nom)) {
+          return "défend, conseille, représente, plaide";
+        } else if (/\b(Médecin|Dr|Docteur)\b/i.test(business.nom)) {
+          return "diagnostique, soigne, suit, prescrit";
+        } else if (/\b(Kinésithérapeute|Kiné|Ostéopathe)\b/i.test(business.nom)) {
+          return "rééduque, traite, masse, accompagne";
+        } else if (/\b(Architecte)\b/i.test(business.nom)) {
+          return "conçoit, dessine, supervise, planifie";
+        } else if (/\b(Plombier|Électricien)\b/i.test(business.nom)) {
+          return "répare, installe, dépanne, entretient";
+        }
+        return "accompagne, conseille, assiste, soutient";
+      };
+      const actionVerbs = getActionVerbs();
+      
+      // QUALITY IMPROVEMENT: CTA templates by activity
+      const getCTA = () => {
+        if (/\b(Avocat|Avocate|Maître|Me)\b/i.test(business.nom)) {
+          return "Besoin de conseils juridiques ? Prenez rendez-vous pour une consultation";
+        } else if (/\b(Médecin|Dr|Docteur)\b/i.test(business.nom)) {
+          return "Pour un rendez-vous médical, contactez le cabinet dès aujourd'hui";
+        } else if (/\b(Kinésithérapeute|Kiné|Ostéopathe)\b/i.test(business.nom)) {
+          return "Souffrez de douleurs ? Réservez une séance de rééducation";
+        } else if (/\b(Plombier|Électricien)\b/i.test(business.nom)) {
+          return "Besoin d'un dépannage rapide ? Appelez pour une intervention";
+        }
+        return "Pour plus d'informations, contactez l'établissement";
+      };
+      const ctaText = getCTA();
+      
       if (realInfo.confiance === "low" && !tavilyRawSummary) {
         // Ultra-simplified prompt ONLY if we have NO data at all
         prompt = `${entityContext}
+
+EXPRESSIONS INTERDITES (utilise des alternatives concrètes) :
+❌ "offrant une expertise solide" → ✅ "spécialisé en [domaine précis]"
+❌ "met son savoir-faire à votre service" → ✅ "accompagne ses clients dans [action concrète]"
+❌ "sa réputation n'est plus à faire" → ✅ SUPPRIME (aucune preuve)
+❌ "de qualité", "reconnu", "réputé" sans preuve → ✅ SUPPRIME
+❌ "à votre écoute", "à votre disposition" → ✅ "${ctaText}"
+
+VERBES D'ACTION OBLIGATOIRES (choisis parmi) : ${actionVerbs}
+NE PAS UTILISER : "propose", "offre", "met à disposition"
+
+STRUCTURE SÉLECTIONNÉE : Template ${selectedTemplate.id} - ${selectedTemplate.name}
+- Paragraphe 1 : ${selectedTemplate.p1Focus}
+- Paragraphe 2 : ${selectedTemplate.p2Focus}
 
 Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
@@ -664,11 +718,11 @@ RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
 2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} expertise et qualités (utilise ${pronoun})${business.type_activite ? `, MENTIONNE QU'${pronoun} est "${business.type_activite}"` : ''}` : `Présente l\'établissement, son activité${business.type_activite ? ` (${business.type_activite})` : ''} et ses qualités`}
-   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? `Services proposés par ${pronoun}, spécialités` : 'Services de l\'établissement, équipements'}, mentionne "recommandé${agreement} par ${companyName}"
-   - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse)
-4. Reste GÉNÉRAL (peu d'infos disponibles)
-5. Pas de site web dans description
+   - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : ${entityType === 'practitioner' ? `présente l'expertise de ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''}` : 'présente les compétences clés'}` : selectedTemplate.id === 2 ? `Historique : ${entityType === 'practitioner' ? `parcours professionnel de ${business.nom.replace(/^-\s*/, '').trim()}` : 'historique de l\'établissement'}` : `Différenciation : ce qui distingue ${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() : 'l\'établissement'} à ${cityName}`}. AJOUTE UNE PHRASE expliquant ${entityType === 'practitioner' ? `ce qui distingue ${pronoun}` : `ce qui rend unique l'établissement`} (spécialité rare, approche unique, zone géographique, équipement).
+   - Paragraphe 2 (~45 mots) : Services concrets avec BÉNÉFICES CLIENT. Utilise UNIQUEMENT verbes d'action : ${actionVerbs}. Formule orientée bénéfice : "pour vous garantir [résultat]", "afin de vous accompagner dans [situation]", "vous bénéficiez de [avantage]". Mentionne "recommandé${agreement} par ${companyName}".
+   - Paragraphe 3 (~20 mots) : CTA personnalisé + coordonnées. STRUCTURE : "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : 'l\'établissement'} au ${business.telephone} ou rendez-vous au ${business.adresse}."
+4. Phrases COURTES : 15-20 mots maximum. Varie la longueur (alterne 8-12 mots et 15-20 mots).
+5. INTERDICTION : Ne dis PAS "reconnu", "réputé", "de qualité" sans preuve Tavily.
 6. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : utilise "${agreement}" pour tous les participes et adjectifs (recommandé${agreement}, spécialisé${agreement}, diplômé${agreement})` : 'Vocabulaire neutre et institutionnel'}
 
 EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + (business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement}` : ', praticien${agreement} diplômé${agreement}') + ' proposant des services personnalisés à' : (business.type_activite ? business.type_activite : 'Établissement') + ' proposant des services professionnels de qualité à'}"
@@ -678,6 +732,20 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       } else if (realInfo.confiance === "low" && tavilyRawSummary) {
         // LOW CONFIDENCE but we have Tavily summary - use it!
         prompt = `${entityContext}
+
+EXPRESSIONS INTERDITES (utilise des alternatives concrètes) :
+❌ "offrant une expertise solide" → ✅ "spécialisé en [domaine précis]"
+❌ "met son savoir-faire à votre service" → ✅ "accompagne ses clients dans [action concrète]"
+❌ "sa réputation n'est plus à faire" → ✅ utilise UNIQUEMENT données Tavily
+❌ "de qualité", "reconnu", "réputé" → ✅ UNIQUEMENT si Tavily le confirme
+❌ "à votre écoute", "à votre disposition" → ✅ "${ctaText}"
+
+VERBES D'ACTION OBLIGATOIRES (choisis parmi) : ${actionVerbs}
+NE PAS UTILISER : "propose", "offre", "met à disposition"
+
+STRUCTURE SÉLECTIONNÉE : Template ${selectedTemplate.id} - ${selectedTemplate.name}
+- Paragraphe 1 : ${selectedTemplate.p1Focus}
+- Paragraphe 2 : ${selectedTemplate.p2Focus}
 
 Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
@@ -703,11 +771,13 @@ RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION
 2. extract : ${entityType === 'practitioner' ? `utilise le nom "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini'}, ${business.type_activite ? `MENTIONNE "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} (${pronoun})${business.type_activite ? `, MENTIONNE QU'${pronoun} est "${business.type_activite}"` : ''}` : `Présente l\'établissement${business.type_activite ? ` (${business.type_activite})` : ''}`} - UTILISE les infos web
-   - Paragraphe 2 (45% = ~45 mots) : Services et spécialités - UTILISE les infos web, mentionne "recommandé${agreement} par ${companyName}"
-   - Paragraphe 3 (20% = ~20 mots) : coordonnées (téléphone et adresse)
-4. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : "${agreement}" pour participes/adjectifs` : 'Vocabulaire institutionnel'}
-5. UTILISE AU MAXIMUM les informations du résumé web ci-dessus
+   - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : présente ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''} avec expertise` : selectedTemplate.id === 2 ? `Historique : parcours de ${business.nom.replace(/^-\s*/, '').trim()}` : `Différenciation : ce qui distingue ${business.nom.replace(/^-\s*/, '').trim()} à ${cityName}`}. UTILISE données Tavily. AJOUTE phrase de différenciation basée sur infos web.
+   - Paragraphe 2 (~45 mots) : Services avec BÉNÉFICES CLIENT. Verbes d'action : ${actionVerbs}. Bénéfices : "pour vous garantir [résultat]", "afin de vous accompagner dans [situation]". UTILISE données Tavily. Mentionne "recommandé${agreement} par ${companyName}".
+   - Paragraphe 3 (~20 mots) : "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : 'l\'établissement'} au ${business.telephone} ou rendez-vous au ${business.adresse}."
+4. Phrases COURTES : 15-20 mots max. Varie longueur (8-12 et 15-20 mots).
+5. CRÉDIBILITÉ : INTERDICTION d'affirmer "reconnu", "réputé" SAUF si Tavily le confirme explicitement.
+6. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : "${agreement}" pour participes/adjectifs` : 'Vocabulaire institutionnel'}
+7. UTILISE AU MAXIMUM les informations du résumé web ci-dessus
 
 EXEMPLE activity: "${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement}` : ''} proposant des services à"
 
@@ -719,6 +789,20 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
           : 'services professionnels';
         
         prompt = `${entityContext}
+
+EXPRESSIONS INTERDITES (utilise des alternatives concrètes) :
+❌ "offrant une expertise solide" → ✅ "spécialisé en [domaine précis]"
+❌ "met son savoir-faire à votre service" → ✅ "accompagne ses clients dans [action concrète]"
+❌ "sa réputation n'est plus à faire" → ✅ utilise UNIQUEMENT données Tavily vérifiées
+❌ "de qualité", "reconnu", "réputé" → ✅ UNIQUEMENT si données Tavily le confirment
+❌ "à votre écoute", "à votre disposition" → ✅ "${ctaText}"
+
+VERBES D'ACTION OBLIGATOIRES (choisis parmi) : ${actionVerbs}
+NE PAS UTILISER : "propose", "offre", "met à disposition"
+
+STRUCTURE SÉLECTIONNÉE : Template ${selectedTemplate.id} - ${selectedTemplate.name}
+- Paragraphe 1 : ${selectedTemplate.p1Focus}
+- Paragraphe 2 : ${selectedTemplate.p2Focus}
 
 Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
@@ -746,14 +830,14 @@ RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
 2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la)'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} nom, ${possessive} expertise et qualités (utilise ${pronoun})${business.type_activite ? `, MENTIONNE QU'${pronoun} est "${business.type_activite}"` : ''}` : `Présente l\'établissement, son activité réelle${business.type_activite ? ` (${business.type_activite})` : ''} et ses qualités`} - UTILISE les données Tavily
-   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? `Services proposés par ${pronoun}, spécialités` : 'Services de l\'établissement, équipements'} - UTILISE services vérifiés Tavily, mentionne "recommandé${agreement} par ${companyName}"
-   - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse complète)
-4. MAXIMUM D'INFORMATIONS RÉELLES de Tavily dans paragraphes 1 et 2
-5. Pas de site web, seulement téléphone et adresse
+   - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : présente ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''}, ${possessive} expertise et qualités` : selectedTemplate.id === 2 ? `Historique : parcours professionnel${realInfo.historique ? ` (${realInfo.historique})` : ''} de ${business.nom.replace(/^-\s*/, '').trim()}` : `Différenciation : ce qui distingue ${business.nom.replace(/^-\s*/, '').trim()} à ${cityName}${realInfo.specialites ? ` (${realInfo.specialites})` : ''}`}. UTILISE données Tavily vérifiées. AJOUTE phrase expliquant spécialité/approche unique/équipement.
+   - Paragraphe 2 (~45 mots) : Services concrets : ${servicesText}. BÉNÉFICES CLIENT. Verbes d'action : ${actionVerbs}. Formule orientée bénéfice : "pour vous garantir [résultat concret]", "afin de vous accompagner dans [situation précise]", "vous bénéficiez de [avantage mesurable]". UTILISE données Tavily. Mentionne "recommandé${agreement} par ${companyName}".
+   - Paragraphe 3 (~20 mots) : CTA personnalisé + coordonnées. "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : 'l\'établissement'} au ${business.telephone} ou rendez-vous au ${business.adresse}."
+4. Phrases COURTES : 15-20 mots maximum. Varie longueur (alterne 8-12 mots et 15-20 mots).
+5. CRÉDIBILITÉ ABSOLUE : INTERDICTION d'affirmer "reconnu", "réputé", "de qualité", "excellence" SAUF si données Tavily le confirment EXPLICITEMENT. Remplace par faits vérifiables : "${realInfo.historique ? realInfo.historique : 'X ans d\'expérience'}", "diplômé de [école]", "certifié [certification]".
 6. ${entityType === 'practitioner' ? `TON PERSONNEL : utilise "${business.nom.replace(/^-\s*/, '').trim()}", "${pronoun}", "${possessive} ${vocab.clientele}", "${vocab.workplace}"` : 'TON PROFESSIONNEL : utilise "l\'établissement", "le centre", "la structure"'}
 7. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : utilise "${agreement}" pour tous les participes et adjectifs (recommandé${agreement}, spécialisé${agreement}, diplômé${agreement})` : 'VARIATION : adapte le vocabulaire'}
-8. VARIATION : adapte le vocabulaire pour éviter un ton robotique
+8. MAXIMUM D'INFORMATIONS RÉELLES de Tavily. Évite connecteurs superflus : "en effet", "de plus", "ainsi donc".
 
 EXEMPLES CONCRETS :
 
@@ -909,6 +993,20 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
           .replace(/l'établissement\s+/g, vocab.workplace + ' ')
           .replace(/\bla structure\b/gi, vocab.workplace)
           .replace(/\ble centre\b/gi, vocab.workplace);
+      }
+
+      // POST-PROCESSING: Check for duplicate information
+      const phone = business.telephone;
+      const address = business.adresse;
+      const phoneCount = (cleanDescription.match(new RegExp(phone.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      const addressPattern = address.split(',')[0].trim(); // First part of address
+      const addressCount = (cleanDescription.match(new RegExp(addressPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      
+      if (phoneCount > 1) {
+        console.warn(`⚠️ Phone number appears ${phoneCount} times for ${business.nom}`);
+      }
+      if (addressCount > 1) {
+        console.warn(`⚠️ Address appears ${addressCount} times for ${business.nom}`);
       }
 
       enrichedBusinesses.push({
