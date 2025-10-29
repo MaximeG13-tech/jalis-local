@@ -423,13 +423,16 @@ FORMAT JSON REQUIS :
 {
   "activity": "Description courte (10-15 mots) se terminant par 'à'",
   "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
-  "description": "80-100 mots en 2 paragraphes + coordonnées"
+  "description": "90-110 mots en 3 paragraphes + coordonnées (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
 }
 
 RÈGLES :
 1. activity se termine par "à" (sans ville)
 2. extract commence par article défini (l', le, la)
-3. description mentionne "recommandé par ${companyName}"
+3. description STRUCTURE STRICTE :
+   - Paragraphe 1 (35% = ~35 mots) : présentation générale et qualités principales
+   - Paragraphe 2 (45% = ~45 mots) : services et spécificités, mentionne "recommandé par ${companyName}"
+   - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse)
 4. Reste GÉNÉRAL (peu d'infos disponibles)
 5. Pas de site web dans description
 
@@ -445,7 +448,7 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
         
         prompt = `Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
-DONNÉES VÉRIFIÉES :
+DONNÉES VÉRIFIÉES (UTILISE AU MAXIMUM) :
 - Activité : ${realInfo.activite_verifiee || 'entreprise locale'}
 - Services : ${servicesText}
 ${realInfo.specialites ? `- Spécialité : ${realInfo.specialites}` : ''}
@@ -454,22 +457,26 @@ ${realInfo.historique ? `- Historique : ${realInfo.historique}` : ''}
 - Adresse : ${business.adresse}
 - ${companyName} recommande cette entreprise
 
-
+SOURCES TAVILY (UTILISE AU MAXIMUM) :
+${tavilyData.answer ? `Résumé: ${tavilyData.answer}` : ''}
+${tavilyData.results.slice(0, 3).map((r: any) => `- ${r.title}: ${r.content.substring(0, 150)}...`).join('\n')}
 
 FORMAT JSON REQUIS :
 {
   "activity": "Description (10-15 mots) se terminant par 'à'",
   "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
-  "description": "110-130 mots en 3 paragraphes mentionnant services vérifiés + coordonnées"
+  "description": "90-110 mots en 3 paragraphes (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
 }
 
-RÈGLES :
+RÈGLES STRICTES :
 1. activity se termine par "à" (pas de ville)
 2. extract utilise article défini (l', le, la) + mentionne ${companyName}
-3. description utilise UNIQUEMENT les services listés : ${servicesText}
-${realInfo.specialites ? `4. Mentionne la spécialité : ${realInfo.specialites}` : ''}
-${realInfo.historique ? `5. Intègre l'historique : ${realInfo.historique}` : ''}
-6. Pas de site web, seulement téléphone et adresse
+3. description STRUCTURE OBLIGATOIRE :
+   - Paragraphe 1 (35% = ~35 mots) : UTILISE les données Tavily pour présenter l'entreprise et son activité réelle
+   - Paragraphe 2 (45% = ~45 mots) : UTILISE les services vérifiés, spécialités et historique Tavily, mentionne "recommandé par ${companyName}"
+   - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse complète)
+4. MAXIMUM D'INFORMATIONS RÉELLES de Tavily dans paragraphes 1 et 2
+5. Pas de site web, seulement téléphone et adresse
 
 EXEMPLE activity: "${realInfo.activite_verifiee} spécialisé(e) dans les services de qualité à"
 EXEMPLE extract début: "${randomIntro} ${business.nom} pour son expertise en ${realInfo.activite_verifiee}..."
