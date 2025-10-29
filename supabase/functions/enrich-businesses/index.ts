@@ -633,13 +633,18 @@ RÈGLES DE RÉDACTION :
       // Simplified prompts to avoid truncation
       let prompt;
       
+      // CRITICAL: Always include the activity type from Google Maps
+      const activityTypeInfo = business.type_activite 
+        ? `\n- TYPE D'ACTIVITÉ (GOOGLE MAPS - OBLIGATOIRE À UTILISER) : ${business.type_activite}`
+        : '';
+      
       if (realInfo.confiance === "low") {
         // Ultra-simplified prompt for low-confidence cases
         prompt = `${entityContext}
 
 Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
-DONNÉES :
+DONNÉES :${activityTypeInfo}
 - Téléphone : ${business.telephone}
 - Adresse : ${business.adresse}
 - ${companyName} recommande cette entreprise
@@ -652,18 +657,18 @@ FORMAT JSON REQUIS :
 }
 
 RÈGLES STRICTES :
-1. activity : 10-15 mots, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
-2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, mentionne "recommandé${agreement} par ${companyName}"
+1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
+2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} expertise et qualités (utilise ${pronoun})` : 'Présente l\'établissement, son activité et ses qualités'}
+   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} expertise et qualités (utilise ${pronoun})${business.type_activite ? `, MENTIONNE QU'${pronoun} est "${business.type_activite}"` : ''}` : `Présente l\'établissement, son activité${business.type_activite ? ` (${business.type_activite})` : ''} et ses qualités`}
    - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? `Services proposés par ${pronoun}, spécialités` : 'Services de l\'établissement, équipements'}, mentionne "recommandé${agreement} par ${companyName}"
    - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse)
 4. Reste GÉNÉRAL (peu d'infos disponibles)
 5. Pas de site web dans description
 6. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : utilise "${agreement}" pour tous les participes et adjectifs (recommandé${agreement}, spécialisé${agreement}, diplômé${agreement})` : 'Vocabulaire neutre et institutionnel'}
 
-EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + ', praticien${agreement} diplômé${agreement} proposant des soins personnalisés à' : 'Établissement proposant des services professionnels de qualité à'}"
-EXEMPLE extract: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + ' est recommandé' + agreement + ' par ' + companyName + ' pour ' + possessive + ' expertise professionnelle' : 'À ' + cityName + ', ' + companyName + ' recommande l\'établissement ' + business.nom + ' pour son professionnalisme'}."
+EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + (business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement}` : ', praticien${agreement} diplômé${agreement}') + ' proposant des services personnalisés à' : (business.type_activite ? business.type_activite : 'Établissement') + ' proposant des services professionnels de qualité à'}"
+EXEMPLE extract: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + (business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement},` : '') + ' est recommandé' + agreement + ' par ' + companyName + ' pour ' + possessive + ' expertise professionnelle' : 'À ' + cityName + ', ' + companyName + ' recommande l\'établissement ' + business.nom + (business.type_activite ? ', spécialisé en ' + business.type_activite.toLowerCase() + ',' : '') + ' pour son professionnalisme'}."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       } else {
@@ -676,7 +681,7 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
 
 Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
-DONNÉES VÉRIFIÉES (UTILISE AU MAXIMUM) :
+DONNÉES VÉRIFIÉES (UTILISE AU MAXIMUM) :${activityTypeInfo}
 - Activité : ${realInfo.activite_verifiee || 'entreprise locale'}
 - Services : ${servicesText}
 ${realInfo.specialites ? `- Spécialité : ${realInfo.specialites}` : ''}
@@ -697,10 +702,10 @@ FORMAT JSON REQUIS :
 }
 
 RÈGLES STRICTES :
-1. activity : 10-15 mots, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
-2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la)'}, mentionne "recommandé${agreement} par ${companyName}"
+1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
+2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la)'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} nom, ${possessive} expertise et qualités (utilise ${pronoun})` : 'Présente l\'établissement, son activité réelle et ses qualités'} - UTILISE les données Tavily
+   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} nom, ${possessive} expertise et qualités (utilise ${pronoun})${business.type_activite ? `, MENTIONNE QU'${pronoun} est "${business.type_activite}"` : ''}` : `Présente l\'établissement, son activité réelle${business.type_activite ? ` (${business.type_activite})` : ''} et ses qualités`} - UTILISE les données Tavily
    - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? `Services proposés par ${pronoun}, spécialités` : 'Services de l\'établissement, équipements'} - UTILISE services vérifiés Tavily, mentionne "recommandé${agreement} par ${companyName}"
    - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse complète)
 4. MAXIMUM D'INFORMATIONS RÉELLES de Tavily dans paragraphes 1 et 2
@@ -721,8 +726,8 @@ activity: "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')}, 
 extract: "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')} est recommandée par ${companyName} pour ses compétences en rééducation fonctionnelle à ${cityName}. Elle accompagne ses patients dans la récupération post-opératoire et le traitement des douleurs chroniques."
 description: "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')} exerce en tant que kinésithérapeute diplômée d'État dans son cabinet situé à ${cityName}. Formée aux techniques de rééducation fonctionnelle et de thérapie manuelle, elle met son expertise au service de ses patients depuis 2015.\\n\\nElle propose des séances de rééducation post-traumatique, massage thérapeutique, drainage lymphatique et traitement des troubles musculo-squelettiques. Recommandée par ${companyName}, elle assure un suivi personnalisé et adapté aux besoins spécifiques de chaque patient avec une approche globale du soin.\\n\\nPour prendre rendez-vous, contactez le ${business.telephone} ou consultez le cabinet ${business.adresse}."` : ''}
 
-EXEMPLE activity: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + ', ' + (realInfo.activite_verifiee || 'professionnel${agreement}') + ' proposant des services personnalisés à' : realInfo.activite_verifiee + ' offrant des services complets à'}"
-EXEMPLE extract début: "${randomIntro} ${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() : 'l\'établissement ' + business.nom} pour ${entityType === 'practitioner' ? possessive + ' expertise' : 'ses services de qualité'} ${realInfo.activite_verifiee ? 'en ' + realInfo.activite_verifiee : ''}..."
+EXEMPLE activity: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + (business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement}` : ', ' + (realInfo.activite_verifiee || 'professionnel${agreement}')) + ' proposant des services personnalisés à' : (business.type_activite || realInfo.activite_verifiee) + ' offrant des services complets à'}"
+EXEMPLE extract début: "${randomIntro} ${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + (business.type_activite ? ', ' + business.type_activite.toLowerCase() + agreement + ',' : '') : 'l\'établissement ' + business.nom} pour ${entityType === 'practitioner' ? possessive + ' expertise' : 'ses services de qualité'} ${business.type_activite || realInfo.activite_verifiee ? 'en ' + (business.type_activite || realInfo.activite_verifiee) : ''}..."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       }
