@@ -495,7 +495,7 @@ RÉPONDS UNIQUEMENT AVEC CE JSON :
             },
             { role: "user", content: prompt }
           ],
-          max_tokens: 800,
+          max_tokens: 2000,
           temperature: 0.7,
         }),
       });
@@ -510,19 +510,47 @@ RÉPONDS UNIQUEMENT AVEC CE JSON :
       const content = data.choices[0].message.content;
 
       if (!content || content.trim() === "") {
+        console.error(`Empty response for ${business.nom}`);
         throw new Error("AI returned empty content");
       }
 
       let aiData;
       try {
         const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        
+        // Validate JSON is complete before parsing
+        if (!cleanContent.includes('"activity"') || 
+            !cleanContent.includes('"extract"') || 
+            !cleanContent.includes('"description"')) {
+          console.error("Incomplete JSON detected:", cleanContent);
+          throw new Error("AI returned incomplete JSON (missing required fields in raw content)");
+        }
+        
+        // Check if JSON ends properly
+        if (!cleanContent.endsWith('}')) {
+          console.error("JSON does not end properly:", cleanContent.slice(-50));
+          throw new Error("AI returned truncated JSON (does not end with })");
+        }
+        
         aiData = JSON.parse(cleanContent);
         
         if (!aiData.activity || !aiData.extract || !aiData.description) {
-          throw new Error("AI response missing required fields");
+          console.error("Parsed JSON missing fields:", aiData);
+          throw new Error("AI response missing required fields after parsing");
         }
+        
+        // Validate field lengths
+        if (aiData.extract.length < 20 || aiData.description.length < 50) {
+          console.error("Fields too short:", { 
+            extractLen: aiData.extract.length, 
+            descLen: aiData.description.length 
+          });
+          throw new Error("AI generated fields are too short (likely incomplete)");
+        }
+        
       } catch (e) {
-        console.error("Failed to parse AI response:", content);
+        console.error("Failed to parse AI response:", content.slice(0, 300));
+        console.error("Parse error details:", e);
         throw new Error(`Invalid JSON from AI: ${e instanceof Error ? e.message : 'Unknown error'}`);
       }
 
