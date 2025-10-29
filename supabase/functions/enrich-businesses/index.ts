@@ -315,6 +315,16 @@ function getProfessionVocabulary(businessName: string, activityType?: string, ge
     };
   }
   
+  // Comptables (detection par activityType également)
+  if (/\b(Comptable|Comptabilit[ée])\b/i.test(cleanName) || /\b(Comptable|Comptabilit[ée])\b/i.test(activityType || '')) {
+    return {
+      workplace: "cabinet",
+      verb: "exerce",
+      clientele: "clients",
+      intro: ""
+    };
+  }
+  
   // Autres professions libérales (default)
   return {
     workplace: "cabinet",
@@ -839,6 +849,8 @@ EXPRESSIONS STRICTEMENT INTERDITES - Alternatives concrètes (Recommandations #1
 ❌ "à votre écoute", "à votre disposition" → ✅ "${ctaText}"
 ❌ "est recommandé par Jalis" → ✅ "recommandé par ${companyName}"
 ❌ Connecteurs superflus : "en effet", "de plus", "ainsi donc", "par conséquent" → ✅ SUPPRIME
+❌ CAPITAL SOCIAL (ex: "créé avec un capital de X €", "capital de X euros") → ✅ INTERDICTION ABSOLUE - NE JAMAIS MENTIONNER
+❌ PHRASES INCOMPLÈTES (ex: "L'établissement ." sans suite) → ✅ Phrases COMPLÈTES et COHÉRENTES obligatoires
 
 VERBES D'ACTION OBLIGATOIRES (choisis parmi) : ${actionVerbs}
 NE PAS UTILISER : "propose", "offre", "met à disposition"
@@ -870,12 +882,12 @@ FORMAT JSON REQUIS :
 }
 
 RÈGLES STRICTES :
-1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
-2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la)'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
+1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à"). NE JAMAIS MENTIONNER l'adresse dans ce champ - l'adresse sera ajoutée automatiquement après "à".
+2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + "cabinet" pour comptables/professionnels libéraux, "établissement" pour structures'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}". ${/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'UTILISE "le cabinet" et NON "l\'établissement"' : ''}
 3. description STRUCTURE OBLIGATOIRE avec HUMANISATION et CRÉDIBILITÉ (Recommandations #2, #3, #5, #6) :
-   - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : présente ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''}, ${possessive} expertise et qualités` : selectedTemplate.id === 2 ? `Historique : parcours professionnel${realInfo.historique ? ` (${realInfo.historique})` : ''} de ${business.nom.replace(/^-\s*/, '').trim()}` : `Différenciation : ce qui distingue ${business.nom.replace(/^-\s*/, '').trim()} à ${cityName}${realInfo.specialites ? ` (${realInfo.specialites})` : ''}`}. UTILISE données Tavily vérifiées. PHRASE DE DIFFÉRENCIATION OBLIGATOIRE ET CONTEXTUELLE (spécialité rare, approche unique, zone géographique privilégiée, équipement de pointe). TON HUMAIN avec légère EMPATHIE ou ENGAGEMENT.
-   - Paragraphe 2 (~45 mots) : Services concrets : ${servicesText}. BÉNÉFICES CLIENT TRANSFORMÉS (Recommandation #5). Verbes : ${actionVerbs}. TRANSFORME chaque verbe en valeur d'usage : "conseille" → "vous aide à choisir les solutions adaptées", "accompagne" → "vous suit tout au long de votre parcours", "défend" → "protège efficacement vos intérêts". Formules : "pour vous garantir [résultat concret mesurable]", "afin d'assurer [qualité service]", "de manière à offrir [expérience]". Ajoute PHRASE DE TRANSITION fluide connectant expertise et services (ex: "Grâce à cette expertise,", "C'est pourquoi", "Afin d'assurer un suivi optimal,"). UTILISE Tavily. Mentionne "recommandé${agreement} par ${companyName}".
-   - Paragraphe 3 (~20 mots) : CTA personnalisé + coordonnées. "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : 'l\'établissement'} au ${business.telephone} ou rendez-vous au ${business.adresse}."
+   - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : présente ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''}, ${possessive} expertise et qualités` : selectedTemplate.id === 2 ? `Historique : parcours professionnel${realInfo.historique ? ` (${realInfo.historique})` : ''} de ${business.nom.replace(/^-\s*/, '').trim()}` : `Différenciation : ce qui distingue ${business.nom.replace(/^-\s*/, '').trim()} à ${cityName}${realInfo.specialites ? ` (${realInfo.specialites})` : ''}`}. UTILISE données Tavily vérifiées. PHRASE DE DIFFÉRENCIATION OBLIGATOIRE ET CONTEXTUELLE (spécialité rare, approche unique, zone géographique privilégiée, équipement de pointe). TON HUMAIN avec légère EMPATHIE ou ENGAGEMENT. INTERDICTION ABSOLUE de mentionner le capital social.
+   - Paragraphe 2 (~45 mots) : Services concrets : ${servicesText}. BÉNÉFICES CLIENT TRANSFORMÉS (Recommandation #5). Verbes : ${actionVerbs}. TRANSFORME chaque verbe en valeur d'usage : "conseille" → "vous aide à choisir les solutions adaptées", "accompagne" → "vous suit tout au long de votre parcours", "défend" → "protège efficacement vos intérêts". Formules : "pour vous garantir [résultat concret mesurable]", "afin d'assurer [qualité service]", "de manière à offrir [expérience]". Ajoute PHRASE DE TRANSITION fluide connectant expertise et services (ex: "Grâce à cette expertise,", "C'est pourquoi", "Afin d'assurer un suivi optimal,"). UTILISE Tavily. Mentionne "recommandé${agreement} par ${companyName}". ${/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'POUR COMPTABLES: Utilise "le cabinet" et NON "l\'établissement"' : ''}
+   - Paragraphe 3 (~20 mots) : CTA personnalisé + coordonnées COMPLÈTES. "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : (/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'le cabinet' : 'l\'établissement')} au ${business.telephone} ou rendez-vous au ${business.adresse}." PHRASE OBLIGATOIREMENT COMPLÈTE ET COHÉRENTE.
 4. Phrases COURTES avec RYTHME FLUIDE (Recommandation #4) : 15-20 mots max. ALTERNE longueurs : 8-12 mots (dynamisme) et 15-20 mots (détail) pour rythme NATUREL et VARIÉ. UNE IDÉE = UNE PHRASE. Évite phrases télégraphiques.
 5. CRÉDIBILITÉ MAXIMALE et VÉRIFIABLE (Recommandation #7) : INTERDICTION TOTALE "reconnu", "réputé", "de qualité", "excellence", "leader", "référence" SAUF si Tavily confirme avec SOURCE NOMMÉE. Remplace par FAITS CONCRETS : "${realInfo.historique ? realInfo.historique : 'diplômé en [année]'}", "certifié [certification précise]", "[X] ans d'expérience vérifiée".
 6. ${entityType === 'practitioner' ? `TON PERSONNEL : utilise "${business.nom.replace(/^-\s*/, '').trim()}", "${pronoun}", "${possessive} ${vocab.clientele}", "${vocab.workplace}"` : 'TON PROFESSIONNEL : utilise "l\'établissement", "le centre", "la structure"'}
@@ -1037,6 +1049,16 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
           .replace(/\bla structure\b/gi, vocab.workplace)
           .replace(/\ble centre\b/gi, vocab.workplace);
       }
+      
+      // Pour les comptables, forcer "le cabinet" au lieu de "l'établissement"
+      if (/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '')) {
+        cleanDescription = cleanDescription
+          .replace(/l'établissement/gi, 'le cabinet')
+          .replace(/L'établissement/g, 'Le cabinet');
+        cleanExtract = cleanExtract
+          .replace(/l'établissement/gi, 'le cabinet')
+          .replace(/L'établissement/g, 'Le cabinet');
+      }
 
       // POST-PROCESSING: Filtre anti-banalités et anti-doublons (Recommandations #4 et #9)
       const phone = business.telephone;
@@ -1049,7 +1071,11 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
         /\bmet son savoir-faire à votre service\b/gi,
         /\bmet son savoir-faire au service de\b/gi,
         /\bsa réputation n'est plus à faire\b/gi,
-        /\bde renommée internationale\b/gi
+        /\bde renommée internationale\b/gi,
+        /\ba été créée? avec un capital de\b/gi,
+        /\bcapital de \d+\s*(?:€|euros?)\b/gi,
+        /\bcapital social de\b/gi,
+        /\bfondée? avec un capital\b/gi
       ];
       
       for (const phrase of bannedPhrases) {
@@ -1057,9 +1083,13 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
         cleanExtract = cleanExtract.replace(phrase, '');
       }
       
-      // Nettoyer doubles espaces et phrases vides créées
+      // Nettoyer doubles espaces et phrases vides/incomplètes créées
       cleanDescription = cleanDescription.replace(/\s{2,}/g, ' ').replace(/\.\s*\./g, '.').trim();
       cleanExtract = cleanExtract.replace(/\s{2,}/g, ' ').replace(/\.\s*\./g, '.').trim();
+      
+      // Détecter et nettoyer phrases incomplètes (ex: "L'établissement ." ou "Le cabinet .")
+      cleanDescription = cleanDescription.replace(/\b(L'établissement|Le cabinet|La structure|Le centre)\s+\./g, '');
+      cleanDescription = cleanDescription.replace(/\s{2,}/g, ' ').trim();
       
       // Détecter et nettoyer doublons téléphone/adresse (Recommandation #9)
       const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
