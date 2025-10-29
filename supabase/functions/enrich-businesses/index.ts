@@ -148,6 +148,42 @@ function formatCity(address: string): string {
   return `${cityName} (${postalCode}) ${deptPhrase}`.trim();
 }
 
+// Detect if business name refers to an individual practitioner or an establishment
+function detectEntityType(businessName: string): 'practitioner' | 'establishment' {
+  // Patterns for individual practitioners
+  const practitionerPatterns = [
+    /^[A-Z]+\s+[A-Z][a-z]+/,           // "LAUNAY Manon"
+    /^[A-Z][a-z]+\s+[A-Z]+/,           // "Manon LAUNAY"
+    /^Dr\.?\s+/i,                       // "Dr. Dupont", "Dr Dupont"
+    /^Docteur\s+/i,                     // "Docteur Dupont"
+    /^M\.|Mme\.|Mlle\./,               // "M. Martin"
+    /^Monsieur\s+|^Madame\s+/i,        // "Monsieur Martin"
+    /\bM\.\s+[A-Z][a-z]+\s+[A-Z]/,     // "M. Jean MARTIN"
+    /\bMme\s+[A-Z][a-z]+\s+[A-Z]/      // "Mme Marie DUPONT"
+  ];
+  
+  // Patterns for establishments
+  const establishmentPatterns = [
+    /^(Clinique|Cabinet|Centre|Institut|Maison|Hôpital|Laboratoire|Pharmacie)\s/i,
+    /\b(SARL|SAS|EURL|SA|SNC|SASU)\b/,
+    /^(La|Le|Les|L')\s/i,               // "La Clinique", "Le Cabinet"
+    /^Chez\s/i                           // "Chez..."
+  ];
+  
+  // Check establishment patterns first (more specific)
+  if (establishmentPatterns.some(p => p.test(businessName))) {
+    return 'establishment';
+  }
+  
+  // Then check practitioner patterns
+  if (practitionerPatterns.some(p => p.test(businessName))) {
+    return 'practitioner';
+  }
+  
+  // Default to establishment if uncertain
+  return 'establishment';
+}
+
 // Fetch real business information from Tavily API with multi-level fallback strategy
 async function fetchTavilyInfo(businessName: string, city: string, website: string | null) {
   const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
@@ -383,6 +419,10 @@ serve(async (req) => {
     for (const business of businesses) {
       console.log(`\n=== Processing: ${business.nom} ===`);
       
+      // Detect entity type (practitioner vs establishment)
+      const entityType = detectEntityType(business.nom);
+      console.log(`Entity type detected: ${entityType}`);
+      
       // Extract city name
       const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
       const cityName = cityMatch ? cityMatch[1].trim() : business.adresse.split(',')[0].trim();
@@ -407,12 +447,19 @@ serve(async (req) => {
       const randomIntro = introVariations[Math.floor(Math.random() * introVariations.length)]
         .replace('{{city}}', cityName);
       
+      // Create entity-specific context for the prompt
+      const entityContext = entityType === 'practitioner'
+        ? `CONTEXTE : ${business.nom} est un(e) praticien(ne) individuel(le). Utilise des formulations personnelles (il/elle exerce, il/elle propose). Mets l'accent sur l'expertise personnelle du praticien.`
+        : `CONTEXTE : ${business.nom} est un établissement. Utilise des formulations neutres (l'établissement propose, le cabinet offre). Mets l'accent sur les services et équipements de la structure.`;
+      
       // Simplified prompts to avoid truncation
       let prompt;
       
       if (realInfo.confiance === "low") {
         // Ultra-simplified prompt for low-confidence cases
-        prompt = `Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
+        prompt = `${entityContext}
+
+Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
 DONNÉES :
 - Téléphone : ${business.telephone}
@@ -426,18 +473,19 @@ FORMAT JSON REQUIS :
   "description": "90-110 mots en 3 paragraphes + coordonnées (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
 }
 
-RÈGLES :
-1. activity se termine par "à" (sans ville)
-2. extract commence par article défini (l', le, la)
+RÈGLES STRICTES :
+1. activity : 10-15 mots, se termine par "à" SANS PONCTUATION (ni point, ni virgule, juste "à")
+2. extract : commence par article défini (l', le, la) ${entityType === 'practitioner' ? '+ utilise le nom du praticien' : '+ utilise le nom de l\'établissement'}
 3. description STRUCTURE STRICTE :
-   - Paragraphe 1 (35% = ~35 mots) : présentation générale et qualités principales
-   - Paragraphe 2 (45% = ~45 mots) : services et spécificités, mentionne "recommandé par ${companyName}"
+   - Paragraphe 1 (35% = ~35 mots) : présentation ${entityType === 'practitioner' ? 'du praticien et de son expertise' : 'de l\'établissement et de ses services'}
+   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? 'services proposés par le praticien' : 'détails des services de l\'établissement'}, mentionne "recommandé par ${companyName}"
    - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse)
 4. Reste GÉNÉRAL (peu d'infos disponibles)
 5. Pas de site web dans description
+6. ${entityType === 'practitioner' ? 'Utilise il/elle dans la description' : 'Utilise l\'établissement/le cabinet dans la description'}
 
-EXEMPLE activity: "Entreprise proposant des services professionnels de qualité à"
-EXEMPLE extract: "À ${cityName}, ${companyName} recommande l'établissement ${business.nom} pour son professionnalisme."
+EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? 'Praticien diplômé proposant des soins personnalisés à' : 'Établissement proposant des services professionnels de qualité à'}"
+EXEMPLE extract: "À ${cityName}, ${companyName} recommande ${entityType === 'practitioner' ? business.nom + ' pour son expertise professionnelle' : 'l\'établissement ' + business.nom + ' pour son professionnalisme'}."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       } else {
@@ -446,7 +494,9 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
           ? realInfo.services_principaux.slice(0, 3).join(', ')
           : 'services professionnels';
         
-        prompt = `Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
+        prompt = `${entityContext}
+
+Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
 
 DONNÉES VÉRIFIÉES (UTILISE AU MAXIMUM) :
 - Activité : ${realInfo.activite_verifiee || 'entreprise locale'}
@@ -469,17 +519,19 @@ FORMAT JSON REQUIS :
 }
 
 RÈGLES STRICTES :
-1. activity se termine par "à" (pas de ville)
-2. extract utilise article défini (l', le, la) + mentionne ${companyName}
+1. activity : 10-15 mots, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
+2. extract : utilise article défini (l', le, la) + mentionne ${companyName} ${entityType === 'practitioner' ? '+ utilise le nom du praticien' : ''}
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : UTILISE les données Tavily pour présenter l'entreprise et son activité réelle
-   - Paragraphe 2 (45% = ~45 mots) : UTILISE les services vérifiés, spécialités et historique Tavily, mentionne "recommandé par ${companyName}"
+   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? 'Présente le praticien avec son nom, son expertise et qualités principales (utilise il/elle)' : 'Présente l\'établissement, son activité réelle et ses qualités'} - UTILISE les données Tavily
+   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? 'Services proposés par le praticien, spécialités' : 'Services de l\'établissement, équipements, spécificités'} - UTILISE services vérifiés et historique Tavily, mentionne "recommandé par ${companyName}"
    - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse complète)
 4. MAXIMUM D'INFORMATIONS RÉELLES de Tavily dans paragraphes 1 et 2
 5. Pas de site web, seulement téléphone et adresse
+6. ${entityType === 'practitioner' ? 'TON PERSONNEL : utilise le prénom/nom du praticien, "il/elle", "son expertise"' : 'TON PROFESSIONNEL : utilise "l\'établissement", "le cabinet", "la structure"'}
+7. VARIATION : adapte le vocabulaire pour éviter un ton robotique
 
-EXEMPLE activity: "${realInfo.activite_verifiee} spécialisé(e) dans les services de qualité à"
-EXEMPLE extract début: "${randomIntro} ${business.nom} pour son expertise en ${realInfo.activite_verifiee}..."
+EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? realInfo.activite_verifiee + ' proposant des soins personnalisés à' : realInfo.activite_verifiee + ' offrant des services complets à'}"
+EXEMPLE extract début: "${randomIntro} ${business.nom} pour ${entityType === 'practitioner' ? 'son expertise en' : 'ses services de qualité en'} ${realInfo.activite_verifiee}..."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       }
@@ -573,9 +625,19 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
         };
       }
 
+      // Post-process activity to ensure no punctuation at the end
+      let cleanActivity = aiData.activity
+        .replace(/[.,;:!?]+$/, '')  // Remove any trailing punctuation
+        .trim();
+      
+      // Ensure it ends with "à" if it doesn't already
+      if (!cleanActivity.endsWith(' à')) {
+        cleanActivity += ' à';
+      }
+
       enrichedBusinesses.push({
         name: `- ${business.nom}`,
-        activity: aiData.activity,
+        activity: cleanActivity,
         city: formatCity(business.adresse),
         extract: aiData.extract,
         description: aiData.description,
