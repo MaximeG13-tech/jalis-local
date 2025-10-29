@@ -501,7 +501,7 @@ RÈGLES ABSOLUES :
         { role: 'user', content: extractionPrompt }
       ],
       temperature: 0.3,
-      max_tokens: 500
+      max_tokens: 800  // Increased to avoid truncation
     })
   });
 
@@ -591,6 +591,10 @@ serve(async (req) => {
       
       console.log('Extracted info confidence:', realInfo.confiance);
       
+      // CRITICAL: Always keep raw Tavily data as fallback
+      const tavilyRawSummary = tavilyData.answer || null;
+      const hasRealData = realInfo.confiance !== "low" || tavilyRawSummary !== null;
+      
       // Step 3: Generate paragraphs with Gemini Pro using verified data
       const randomIntro = introVariations[Math.floor(Math.random() * introVariations.length)]
         .replace('{{city}}', cityName);
@@ -638,8 +642,8 @@ RÈGLES DE RÉDACTION :
         ? `\n- TYPE D'ACTIVITÉ (GOOGLE MAPS - OBLIGATOIRE À UTILISER) : ${business.type_activite}`
         : '';
       
-      if (realInfo.confiance === "low") {
-        // Ultra-simplified prompt for low-confidence cases
+      if (realInfo.confiance === "low" && !tavilyRawSummary) {
+        // Ultra-simplified prompt ONLY if we have NO data at all
         prompt = `${entityContext}
 
 Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
@@ -671,8 +675,45 @@ EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement
 EXEMPLE extract: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + (business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement},` : '') + ' est recommandé' + agreement + ' par ' + companyName + ' pour ' + possessive + ' expertise professionnelle' : 'À ' + cityName + ', ' + companyName + ' recommande l\'établissement ' + business.nom + (business.type_activite ? ', spécialisé en ' + business.type_activite.toLowerCase() + ',' : '') + ' pour son professionnalisme'}."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
+      } else if (realInfo.confiance === "low" && tavilyRawSummary) {
+        // LOW CONFIDENCE but we have Tavily summary - use it!
+        prompt = `${entityContext}
+
+Génère un JSON avec 3 champs pour ${business.nom} à ${cityName}.
+
+DONNÉES :${activityTypeInfo}
+- Téléphone : ${business.telephone}
+- Adresse : ${business.adresse}
+- ${companyName} recommande cette entreprise
+
+INFORMATIONS TROUVÉES SUR LE WEB (UTILISE-LES) :
+${tavilyRawSummary}
+
+${tavilyData.results.length > 0 ? `Sources Web trouvées :
+${tavilyData.results.slice(0, 3).map((r: any) => `- ${r.title}: ${r.content.substring(0, 150)}...`).join('\n')}` : ''}
+
+FORMAT JSON REQUIS :
+{
+  "activity": "Description (10-15 mots) se terminant par 'à'",
+  "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
+  "description": "90-110 mots en 3 paragraphes (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
+}
+
+RÈGLES STRICTES :
+1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION
+2. extract : ${entityType === 'practitioner' ? `utilise le nom "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini'}, ${business.type_activite ? `MENTIONNE "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
+3. description STRUCTURE OBLIGATOIRE :
+   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} (${pronoun})${business.type_activite ? `, MENTIONNE QU'${pronoun} est "${business.type_activite}"` : ''}` : `Présente l\'établissement${business.type_activite ? ` (${business.type_activite})` : ''}`} - UTILISE les infos web
+   - Paragraphe 2 (45% = ~45 mots) : Services et spécialités - UTILISE les infos web, mentionne "recommandé${agreement} par ${companyName}"
+   - Paragraphe 3 (20% = ~20 mots) : coordonnées (téléphone et adresse)
+4. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : "${agreement}" pour participes/adjectifs` : 'Vocabulaire institutionnel'}
+5. UTILISE AU MAXIMUM les informations du résumé web ci-dessus
+
+EXEMPLE activity: "${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? `, ${business.type_activite.toLowerCase()}${agreement}` : ''} proposant des services à"
+
+RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       } else {
-        // Simplified prompt with verified data
+        // Simplified prompt with verified data (medium/high confidence)
         const servicesText = realInfo.services_principaux.length > 0
           ? realInfo.services_principaux.slice(0, 3).join(', ')
           : 'services professionnels';
