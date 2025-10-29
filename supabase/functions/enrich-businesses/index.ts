@@ -148,6 +148,136 @@ function formatCity(address: string): string {
   return `${cityName} (${postalCode}) ${deptPhrase}`.trim();
 }
 
+// Fetch real business information from Tavily API
+async function fetchTavilyInfo(businessName: string, city: string, website: string | null) {
+  const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
+  
+  if (!TAVILY_API_KEY) {
+    throw new Error("TAVILY_API_KEY is not configured");
+  }
+  
+  const query = website && website !== 'Non disponible'
+    ? `${businessName} ${city} services activités site:${website}`
+    : `${businessName} ${city} services activités avis`;
+  
+  console.log('Tavily search query:', query);
+  
+  const response = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      api_key: TAVILY_API_KEY,
+      query: query,
+      search_depth: "advanced",
+      include_answer: true,
+      include_raw_content: true,
+      max_results: 5
+    })
+  });
+  
+  if (!response.ok) {
+    console.error('Tavily API error:', response.status);
+    return { answer: null, results: [] };
+  }
+  
+  const data = await response.json();
+  console.log('Tavily results:', data.results?.length || 0, 'sources found');
+  
+  return {
+    answer: data.answer || null,
+    results: data.results || []
+  };
+}
+
+// Extract structured business info using Gemini 2.5 Pro
+async function extractBusinessInfo(tavilyData: any, businessName: string, city: string) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  
+  if (!LOVABLE_API_KEY) {
+    throw new Error("LOVABLE_API_KEY is not configured");
+  }
+  
+  const sourcesText = tavilyData.results
+    .map((r: any) => `- ${r.title}: ${r.content}`)
+    .join('\n');
+  
+  const extractionPrompt = `Tu es un expert en analyse de données d'entreprises. 
+
+DONNÉES BRUTES RÉCUPÉRÉES PAR RECHERCHE WEB :
+
+Résumé Tavily : ${tavilyData.answer || 'Aucun résumé disponible'}
+
+Sources Web :
+${sourcesText || 'Aucune source trouvée'}
+
+MISSION : Extrais les informations RÉELLES et VÉRIFIÉES sur ${businessName} à ${city}.
+
+RÉPONDS AVEC CE JSON UNIQUEMENT (sans texte avant ou après) :
+{
+  "activite_verifiee": "description courte de l'activité réelle (ex: 'banque mutualiste spécialisée en crédit agricole')",
+  "services_principaux": ["service 1", "service 2", "service 3", "service 4"],
+  "specialites": "ce qui rend l'entreprise unique (ou null si non trouvé)",
+  "historique": "bref historique si disponible (ex: 'Fondé en 1994') ou null",
+  "confiance": "high/medium/low"
+}
+
+RÈGLES ABSOLUES :
+- Si tu ne trouves PAS d'information, mets null (ne pas inventer)
+- Les services doivent être CONCRETS (pas "divers services")
+- L'historique doit être FACTUEL (date, événement précis)
+- Si les sources sont contradictoires, mets "medium" ou "low" en confiance
+- confiance "high" = beaucoup d'infos trouvées, "low" = peu d'infos`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-pro',
+      messages: [
+        {
+          role: 'system',
+          content: 'Tu es un expert en extraction de données structurées. Tu réponds UNIQUEMENT avec du JSON valide, sans texte supplémentaire. Tu ne dois JAMAIS inventer d\'informations non présentes dans les sources fournies.'
+        },
+        { role: 'user', content: extractionPrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 500
+    })
+  });
+
+  if (!response.ok) {
+    console.error('Lovable AI extraction error:', response.status);
+    return {
+      activite_verifiee: null,
+      services_principaux: [],
+      specialites: null,
+      historique: null,
+      confiance: "low"
+    };
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content.replace(/```json\n?|\n?```/g, "").trim();
+  
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    console.error('Failed to parse extraction JSON:', content);
+    return {
+      activite_verifiee: null,
+      services_principaux: [],
+      specialites: null,
+      historique: null,
+      confiance: "low"
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -155,23 +285,110 @@ serve(async (req) => {
 
   try {
     const { businesses, companyName } = await req.json();
-    const OPEN_AI = Deno.env.get("OPEN_AI");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!OPEN_AI) {
-      throw new Error("OPEN_AI is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const enrichedBusinesses = [];
 
+    // Style variations to avoid robotic tone
+    const introVariations = [
+      `À {{city}}, ${companyName} recommande`,
+      `Recommandé par ${companyName}, `,
+      `Parmi les adresses conseillées par ${companyName} figure`,
+      `${companyName} recommande à {{city}}`
+    ];
+
     for (const business of businesses) {
-      // Générer un numéro aléatoire pour varier les styles de rédaction
-      const styleVariant = Math.floor(Math.random() * 5) + 1;
+      console.log(`\n=== Processing: ${business.nom} ===`);
       
-      // Extraire la ville de l'adresse pour un contexte géographique précis
+      // Extract city name
       const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
       const cityName = cityMatch ? cityMatch[1].trim() : business.adresse.split(',')[0].trim();
       
-      const prompt = `Tu dois générer un JSON avec exactement 3 champs. Lis TOUTES les instructions avant de répondre.
+      // Step 1: Fetch real info from Tavily
+      const tavilyData = await fetchTavilyInfo(
+        business.nom,
+        cityName,
+        business.site_web
+      );
+      
+      // Step 2: Extract structured info with Gemini Pro
+      const realInfo = await extractBusinessInfo(
+        tavilyData,
+        business.nom,
+        cityName
+      );
+      
+      console.log('Extracted info confidence:', realInfo.confiance);
+      
+      // Step 3: Generate paragraphs with Gemini Pro using verified data
+      const randomIntro = introVariations[Math.floor(Math.random() * introVariations.length)]
+        .replace('{{city}}', cityName);
+      
+      let prompt;
+      
+      if (realInfo.confiance === "low") {
+        // Simplified prompt for low-confidence cases
+        prompt = `Tu dois générer un JSON avec exactement 3 champs pour une entreprise dont on a PEU d'informations.
+
+DONNÉES DE L'ENTREPRISE :
+- Nom : ${business.nom}
+- Adresse : ${business.adresse}
+- Ville : ${cityName}
+- Téléphone : ${business.telephone}
+
+CONTEXTE : ${companyName} recommande cette entreprise à ses clients.
+
+RÈGLE CRITIQUE : Tu as PEU d'informations vérifiées, reste donc GÉNÉRAL et SOBRE. Ne détaille PAS.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CHAMP 1 : "activity"
+Écris une phrase de 10-15 mots décrivant le métier de manière GÉNÉRIQUE.
+RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" (sans rien après).
+
+EXEMPLES :
+✓ "Entreprise spécialisée dans les services professionnels à"
+✓ "Établissement proposant des prestations de qualité à"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CHAMP 2 : "extract" (40-60 mots)
+Reste GÉNÉRAL. Mentionne "${companyName} recommande" ou "recommandé par ${companyName}".
+Utilise un article défini : "l'établissement", "l'entreprise", "la société".
+
+EXEMPLE :
+"À ${cityName}, ${companyName} recommande l'établissement ${business.nom} pour son professionnalisme. Cette entreprise se distingue par son engagement envers la satisfaction client."
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CHAMP 3 : "description" (80-100 mots - PLUS COURT que d'habitude)
+Reste SOBRE et GÉNÉRAL. Mentionne "recommandé par ${companyName}".
+Structure : 2 paragraphes courts + coordonnées.
+
+EXEMPLE :
+"À ${cityName}, l'entreprise ${business.nom}, recommandée par ${companyName}, se distingue par son professionnalisme. Son équipe met un point d'honneur à offrir un service de qualité adapté aux besoins de chaque client.
+
+Située ${business.adresse}, l'entreprise est facilement accessible. Pour tout renseignement, contactez-les au ${business.telephone}."
+
+═══════════════════════════════════════════════════════════════════════════════
+
+RÉPONDS UNIQUEMENT AVEC CE JSON :
+{
+  "activity": "Description générique se terminant par à",
+  "extract": "40-60 mots GÉNÉRAUX avec article défini + recommandé par",
+  "description": "80-100 mots SOBRES sans détails inventés"
+}`;
+      } else {
+        // Full detailed prompt with verified data
+        const servicesText = realInfo.services_principaux.length > 0
+          ? realInfo.services_principaux.join(', ')
+          : 'Non renseignés';
+        
+        prompt = `Tu dois générer un JSON avec exactement 3 champs basés sur des INFORMATIONS RÉELLES VÉRIFIÉES.
 
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -180,7 +397,13 @@ DONNÉES DE L'ENTREPRISE :
 - Adresse : ${business.adresse}
 - Ville : ${cityName}
 - Téléphone : ${business.telephone}
-${business.site_web !== 'Non disponible' ? `- Site : ${business.site_web}` : ''}
+
+INFORMATIONS VÉRIFIÉES PAR RECHERCHE WEB (Tavily) :
+- Activité vérifiée : ${realInfo.activite_verifiee || 'Non renseignée'}
+- Services principaux : ${servicesText}
+- Spécialités : ${realInfo.specialites || 'Non renseignées'}
+- Historique : ${realInfo.historique || 'Non disponible'}
+- Niveau de confiance : ${realInfo.confiance}
 
 CONTEXTE : ${companyName} recommande cette entreprise à ses clients.
 
@@ -191,125 +414,86 @@ CHAMP 1 : "activity"
 INSTRUCTION : Écris une phrase de 10-15 mots décrivant le métier.
 RÈGLE ABSOLUE : Cette phrase DOIT se terminer par le mot "à" (sans rien après).
 
-EXEMPLES CORRECTS :
+EXEMPLES :
 ✓ "Cabinet notarial accompagnant vos projets immobiliers et successions à"
 ✓ "Kinésithérapeute spécialisé en rééducation sportive et bien-être à"
-✓ "Plombier professionnel pour dépannages et installations à"
-
-EXEMPLES INCORRECTS :
-✗ "Notaire expérimenté à Marseille" → Le mot "Marseille" est interdit
-✗ "Kinésithérapeute à Lyon" → Le mot "Lyon" est interdit
-
-LE DERNIER MOT DOIT ÊTRE "à" (pas de ville après).
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-CHAMP 2 : "extract"
+CHAMP 2 : "extract" (40-60 mots)
 
-INSTRUCTION : Écris 40-60 mots présentant l'entreprise.
+RÈGLES :
+- TOUJOURS utiliser un article défini : "l'étude", "le cabinet", "la société"
+- Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}"
+- Si historique disponible : "Depuis [année], ${companyName} recommande..."
+- Si spécialités disponibles : Mentionne la spécialité RÉELLE : ${realInfo.specialites}
+- IMPÉRATIF : N'invente AUCUN service non listé dans les services principaux
 
-RÈGLES GRAMMATICALES STRICTES :
-- TOUJOURS utiliser un article défini : "l'étude", "le cabinet", "la société", "les notaires"
-- JAMAIS commencer par le nom seul : "Dupont & Associés" ❌
-- Formulations correctes : "L'étude Dupont", "Le cabinet Martin", "La société XYZ"
-
-RÈGLE ABSOLUE : Tu DOIS utiliser "${companyName} recommande" OU "recommandé par ${companyName}".
-MOTS INTERDITS : partenaire, partenariat, collaboration
-
-EXEMPLES CORRECTS :
-✓ "À ${cityName}, ${companyName} recommande l'étude ${business.nom} pour son expertise..."
-✓ "Recommandé par ${companyName}, le cabinet ${business.nom} se distingue par..."
-✓ "${companyName} recommande les notaires ${business.nom} pour leur approche..."
-
-EXEMPLES INCORRECTS :
-✗ "${business.nom}, partenaire de ${companyName}..." → Le mot "partenaire" est interdit
-✗ "${business.nom} se distingue par..." → Manque l'article défini ("L'étude ${business.nom}")
+EXEMPLE avec données vérifiées :
+${realInfo.historique ? `"${realInfo.historique}, ${companyName} recommande ${business.nom} à ${cityName} pour son expertise en ${realInfo.activite_verifiee}. Cette entreprise ${realInfo.specialites ? 'se distingue par ' + realInfo.specialites : 'accompagne ses clients avec professionnalisme'}."` : `"${randomIntro} ${business.nom} à ${cityName} pour son expertise en ${realInfo.activite_verifiee}. ${realInfo.specialites ? 'Cette entreprise se distingue par ' + realInfo.specialites : 'Un accompagnement professionnel adapté à vos besoins'}."`}
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-CHAMP 3 : "description"
+CHAMP 3 : "description" (110-130 mots en 3 paragraphes)
 
-INSTRUCTION : Écris un texte de 110-130 mots en 3 paragraphes bien structurés et fluides.
-RÈGLE ABSOLUE : Tu DOIS mentionner "${companyName} recommande" OU "recommandé par ${companyName}".
+STRUCTURE OBLIGATOIRE AVEC DONNÉES VÉRIFIÉES :
 
-MOTS INTERDITS : partenaire, partenariat, collaboration, réseau
-EXPRESSIONS INTERDITES : "fait toute la différence" (trop familier), "Quand on habite à"
-**INTERDIT ABSOLU** : NE JAMAIS mentionner le site web dans la description.
+**Paragraphe 1 (40-50 mots) : Présentation générale**
+- Commence par : "${randomIntro}"
+- Mentionne l'historique SI DISPONIBLE : ${realInfo.historique || 'non disponible'}
+- Décris l'activité RÉELLE : ${realInfo.activite_verifiee || 'activité professionnelle'}
+- Localisation : "situé(e) à ${cityName}"
 
-RÈGLES GRAMMATICALES STRICTES :
+EXEMPLE :
+"${randomIntro} ${business.nom}, ${realInfo.historique ? realInfo.historique + '. ' : ''}spécialisé(e) en ${realInfo.activite_verifiee}. Situé(e) à ${cityName}, cette entreprise accompagne ses clients avec rigueur et proximité."
 
-1. ARTICLE DÉFINI OBLIGATOIRE :
-   ✓ "L'étude notariale ${business.nom}, recommandée par ${companyName}, se distingue..."
-   ✓ "Le cabinet ${business.nom}, recommandé par ${companyName}, se distingue..."
-   ✗ "${business.nom}, recommandé par ${companyName}, se distingue..." → Manque l'article
+**Paragraphe 2 (35-45 mots) : Services RÉELS**
+- Liste UNIQUEMENT les services de : ${servicesText}
+- Mentionne la spécialité SI DISPONIBLE : ${realInfo.specialites || 'non disponible'}
+- INTERDIT : Inventer des services non listés
 
-2. DÉBUT DE PHRASE NATUREL :
-   ✓ "À ${cityName}, l'étude ${business.nom}, recommandée par ${companyName}, se distingue..."
-   ✓ "À ${cityName}, le cabinet ${business.nom}, recommandé par ${companyName}, se distingue..."
-   ✗ "Quand on habite à ${cityName}, recommandé par..." → Construction ambiguë
+EXEMPLE :
+"Parmi les services proposés figurent ${servicesText}. ${realInfo.specialites ? 'L\'entreprise se distingue par ' + realInfo.specialites + ', reflétant son engagement qualité.' : 'Un service professionnel adapté à vos besoins.'}"
 
-3. EXPRESSIONS PROFESSIONNELLES (pas familières) :
-   ✓ "constitue un véritable atout"
-   ✓ "apporte une réelle valeur ajoutée"
-   ✗ "fait toute la différence" → Trop familier
+**Paragraphe 3 (25-35 mots) : Coordonnées**
+- Adresse complète
+- Téléphone uniquement (JAMAIS de site web)
+- Phrase d'appel à l'action
 
-4. PRÉSENTATION DES SERVICES (éviter les répétitions) :
-   ✓ "[Nom] propose des solutions sur mesure, adaptées aux besoins..."
-   ✓ "Parmi les services proposés figurent..."
-   ✗ "s'engage à fournir" + "répondant aux besoins" → Répétition lourde
-
-5. ADRESSE CORRECTE :
-   ✓ "Situé(e) au [numéro] [type de voie] [nom de voie] à ${cityName}, le cabinet est facilement accessible..."
-   ✓ "...située à l'immeuble Le Primavera, 114 boulevard Pinatel..."
-   ✗ "...située au Le Primavera..." → Faute grammaticale ("au Le")
-
-6. COORDONNÉES FINALES (sans site web) :
-   ✓ "Pour tout renseignement ou pour prendre rendez-vous, contactez-les au ${business.telephone}."
-   ✗ "...contactez-les au ${business.telephone} ou consultez leur site web : [URL]" → INTERDIT
-
-STRUCTURE OBLIGATOIRE :
-1. Accroche (35-45 mots) : Présentation avec article défini + recommandation ${companyName} + expertise
-2. Services (40-50 mots) : Description fluide des prestations, éviter les répétitions comme "s'engage à" + "répondant aux"
-3. Coordonnées (25-35 mots) : Adresse + contact téléphonique UNIQUEMENT (pas de site web)
-
-EXEMPLE PARFAIT À SUIVRE :
-"À ${cityName}, le cabinet ${business.nom}, recommandé par ${companyName}, se distingue par son expertise en droit des affaires et son engagement envers l'excellence. Leur équipe d'avocats expérimentés propose des solutions juridiques sur mesure, adaptées aux besoins spécifiques de chaque client, qu'il s'agisse de conseil en droit commercial ou de gestion de litiges. Situé au 141 allée de Riottier à ${cityName}, le cabinet est facilement accessible pour l'ensemble de vos démarches juridiques. Pour tout renseignement ou pour prendre rendez-vous, contactez-les au ${business.telephone}."
+EXEMPLE :
+"Situé(e) ${business.adresse}, l'établissement est facilement accessible. Pour tout renseignement ou prise de rendez-vous, contactez-les au ${business.telephone}."
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-AVANT DE RÉPONDRE, VÉRIFIE :
-1. Le champ "activity" se termine par "à" ? (sans ville)
-2. Tu as utilisé un ARTICLE DÉFINI dans "extract" et "description" ? (l'étude, le cabinet, la société)
-3. Tu as utilisé "recommande" ou "recommandé par" (pas "partenaire") ?
-4. Tu n'as PAS utilisé "Quand on habite à" ?
-5. Tu n'as PAS utilisé "fait toute la différence" ?
-6. L'adresse ne contient PAS "au Le" ?
-7. Tu n'as PAS de répétitions lourdes comme "s'engage à" + "répondant aux" ?
-8. Tu n'as PAS mentionné le site web dans la description ?
-9. Ton JSON est valide ?
+RÈGLES CRITIQUES :
+1. Tu n'as utilisé QUE les services listés dans services_principaux ? ✓
+2. Tu n'as PAS inventé d'historique si ${realInfo.historique} === null ? ✓
+3. Le champ "activity" se termine par "à" ? ✓
+4. Tu as utilisé un ARTICLE DÉFINI ? ✓
+5. Tu n'as PAS mentionné le site web ? ✓
 
-RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
+RÉPONDS UNIQUEMENT AVEC CE JSON :
 {
   "activity": "Description du métier se terminant par à",
-  "extract": "40-60 mots avec article défini + recommandé par",
-  "description": "110-130 mots avec article défini, style professionnel, grammaire parfaite"
+  "extract": "40-60 mots avec article défini + recommandé par + données vérifiées",
+  "description": "110-130 mots basés sur informations RÉELLES de Tavily"
 }`;
+      }
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPEN_AI}`,
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'google/gemini-2.5-pro',
           messages: [
             {
               role: "system",
-              content:
-                "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable et aucune faute d'orthographe. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille, suggère) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration' ou 'réseau'. (3) Tu utilises TOUJOURS un article défini devant les noms d'entreprises : 'l'étude', 'le cabinet', 'la société', 'les notaires' - JAMAIS le nom seul. (4) Tu évites les expressions familières et les constructions ambiguës comme 'Quand on habite à' ou 'fait toute la différence'. (5) Tu n'utilises JAMAIS 'au Le' mais 'à l'immeuble Le' ou simplement l'adresse sans article. (6) Tu évites les répétitions lourdes comme 's'engage à fournir' + 'répondant aux besoins' - préfère 'propose des solutions sur mesure, adaptées aux besoins'. (7) INTERDIT ABSOLU : Ne JAMAIS mentionner le site web dans la description, seulement le téléphone et l'adresse.",
+              content: "Tu es un expert en rédaction de contenus pour annuaires professionnels. Tu rédiges uniquement en français avec une grammaire irréprochable. Tu réponds toujours avec du JSON valide uniquement, sans texte supplémentaire. RÈGLES CRITIQUES : (1) Le champ 'activity' doit TOUJOURS se terminer par le mot 'à' seul, SANS mention de ville après. (2) Tu utilises UNIQUEMENT le vocabulaire de RECOMMANDATION (recommande, conseille) et JAMAIS les mots 'partenaire', 'partenariat', 'collaboration'. (3) Tu utilises TOUJOURS un article défini devant les noms d'entreprises : 'l'étude', 'le cabinet', 'la société'. (4) INTERDIT ABSOLU : Ne JAMAIS mentionner le site web dans la description, seulement le téléphone et l'adresse. (5) Tu n'inventes JAMAIS d'informations non fournies dans les données vérifiées."
             },
-            { role: "user", content: prompt },
+            { role: "user", content: prompt }
           ],
           max_tokens: 800,
           temperature: 0.7,
@@ -318,43 +502,27 @@ RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("AI API error:", response.status, errorText);
+        console.error("Lovable AI error:", response.status, errorText);
         throw new Error(`AI API returned status ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("OpenAI response:", JSON.stringify(data, null, 2));
-
-      // Vérifier que la réponse contient les données attendues
-      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-        console.error("Invalid OpenAI response structure:", JSON.stringify(data));
-        throw new Error("OpenAI response missing expected data structure");
-      }
-
       const content = data.choices[0].message.content;
 
-      // Vérifier que le contenu n'est pas vide
       if (!content || content.trim() === "") {
-        console.error("Empty content from OpenAI");
-        throw new Error("OpenAI returned empty content");
+        throw new Error("AI returned empty content");
       }
 
-      // Parse the JSON response
       let aiData;
       try {
-        // Remove markdown code blocks if present
         const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-        console.log("Cleaned content for parsing:", cleanContent);
         aiData = JSON.parse(cleanContent);
         
-        // Vérifier que les champs requis sont présents
         if (!aiData.activity || !aiData.extract || !aiData.description) {
-          console.error("Missing required fields in AI response:", aiData);
-          throw new Error("AI response missing required fields (activity, extract, or description)");
+          throw new Error("AI response missing required fields");
         }
       } catch (e) {
         console.error("Failed to parse AI response:", content);
-        console.error("Parse error:", e);
         throw new Error(`Invalid JSON from AI: ${e instanceof Error ? e.message : 'Unknown error'}`);
       }
 
@@ -367,7 +535,7 @@ RÉPONDS UNIQUEMENT AVEC CE JSON (sans texte avant ou après) :
       });
 
       // Small delay to avoid rate limits
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     return new Response(JSON.stringify({ enrichedBusinesses }), {
