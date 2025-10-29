@@ -150,19 +150,41 @@ function formatCity(address: string): string {
 
 // Detect if business name refers to an individual practitioner or an establishment
 function detectEntityType(businessName: string): 'practitioner' | 'establishment' {
-  // Patterns for individual practitioners
-  const practitionerPatterns = [
+  // Clean name from prefix "- "
+  const cleanName = businessName.replace(/^-\s*/, '').trim();
+  
+  // Patterns for regulated liberal profession titles
+  const liberalProfessionTitles = [
+    /^Maître\s+/i,              // Avocats, notaires, huissiers
+    /^Me\s+/i,                  // Abréviation de Maître
+    /^Dr\.?\s+/i,               // Docteurs (médecins, vétérinaires)
+    /^Docteur\s+/i,
+    /^Pr\.?\s+/i,               // Professeurs (médecine)
+    /^Professeur\s+/i,
+    /^M\.|Mme\.|Mlle\./,        // Civilités
+    /^Monsieur\s+|^Madame\s+/i,
+  ];
+  
+  // Patterns for name combinations (first name + last name)
+  const namePatterns = [
     /^[A-Z]+\s+[A-Z][a-z]+/,           // "LAUNAY Manon"
     /^[A-Z][a-z]+\s+[A-Z]+/,           // "Manon LAUNAY"
-    /^Dr\.?\s+/i,                       // "Dr. Dupont", "Dr Dupont"
-    /^Docteur\s+/i,                     // "Docteur Dupont"
-    /^M\.|Mme\.|Mlle\./,               // "M. Martin"
-    /^Monsieur\s+|^Madame\s+/i,        // "Monsieur Martin"
+    /^[A-Z][a-z]+\s+[A-Z][a-z]+/,      // "Manon Launay"
+    /^[A-Z]+\s+[A-Z]+$/,               // "LAUNAY MANON"
     /\bM\.\s+[A-Z][a-z]+\s+[A-Z]/,     // "M. Jean MARTIN"
     /\bMme\s+[A-Z][a-z]+\s+[A-Z]/      // "Mme Marie DUPONT"
   ];
   
-  // Patterns for establishments
+  // Liberal profession suffixes
+  const professionSuffixes = [
+    /\b(Kinésithérapeute|Kiné|Ostéopathe|Infirmier|Infirmière)\b/i,
+    /\b(Avocat|Avocate|Notaire|Huissier)\b/i,
+    /\b(Médecin|Dentiste|Chirurgien|Vétérinaire|Sage[- ]femme)\b/i,
+    /\b(Architecte|Expert[- ]comptable|Psychologue|Diététicien|Diététicienne)\b/i,
+    /\b(Sophrologue|Naturopathe|Orthophoniste|Ergothérapeute)\b/i,
+  ];
+  
+  // Patterns for establishments (check first - more specific)
   const establishmentPatterns = [
     /^(Clinique|Cabinet|Centre|Institut|Maison|Hôpital|Laboratoire|Pharmacie)\s/i,
     /\b(SARL|SAS|EURL|SA|SNC|SASU)\b/,
@@ -170,18 +192,136 @@ function detectEntityType(businessName: string): 'practitioner' | 'establishment
     /^Chez\s/i                           // "Chez..."
   ];
   
-  // Check establishment patterns first (more specific)
-  if (establishmentPatterns.some(p => p.test(businessName))) {
+  // Check establishment patterns first (most specific)
+  if (establishmentPatterns.some(p => p.test(cleanName))) {
     return 'establishment';
   }
   
-  // Then check practitioner patterns
-  if (practitionerPatterns.some(p => p.test(businessName))) {
+  // Check liberal profession titles
+  if (liberalProfessionTitles.some(p => p.test(cleanName))) {
+    return 'practitioner';
+  }
+  
+  // Check name patterns
+  if (namePatterns.some(p => p.test(cleanName))) {
+    return 'practitioner';
+  }
+  
+  // Check profession suffixes
+  if (professionSuffixes.some(p => p.test(cleanName))) {
     return 'practitioner';
   }
   
   // Default to establishment if uncertain
   return 'establishment';
+}
+
+// Detect gender for proper pronoun usage
+function detectGender(businessName: string, activityType?: string): 'male' | 'female' | 'neutral' {
+  const cleanName = businessName.replace(/^-\s*/, '').trim();
+  
+  // 1. Detection by title
+  if (/^(Madame|Mme|Mlle|Maîtresse)\s+/i.test(cleanName)) return 'female';
+  if (/^(Monsieur|M\.)\s+/i.test(cleanName)) return 'male';
+  
+  // 2. Detection by common French first names
+  const femaleNames = [
+    'Marie', 'Anne', 'Sophie', 'Isabelle', 'Catherine', 'Nathalie', 'Christine',
+    'Françoise', 'Sylvie', 'Valérie', 'Patricia', 'Martine', 'Véronique', 'Sandrine',
+    'Céline', 'Julie', 'Caroline', 'Florence', 'Stéphanie', 'Laurence', 'Aurélie',
+    'Élodie', 'Delphine', 'Marion', 'Karine', 'Émilie', 'Virginie', 'Agnès',
+    'Brigitte', 'Jacqueline', 'Monique', 'Nicole', 'Dominique', 'Michèle', 'Danielle',
+    'Pauline', 'Claire', 'Laure', 'Hélène', 'Chantal', 'Manon', 'Camille', 'Sarah',
+    'Lucie', 'Laura', 'Léa', 'Emma', 'Clara', 'Jade', 'Inès', 'Zoé', 'Anaïs', 'Seyrine'
+  ];
+  
+  const maleNames = [
+    'Jean', 'Pierre', 'Michel', 'Philippe', 'Alain', 'Jacques', 'Bernard', 'André',
+    'Patrick', 'Christian', 'Daniel', 'Claude', 'Gérard', 'François', 'Paul',
+    'Nicolas', 'Laurent', 'Olivier', 'Éric', 'Stéphane', 'Pascal', 'Thierry',
+    'Christophe', 'Frédéric', 'David', 'Thomas', 'Julien', 'Sébastien', 'Alexandre',
+    'Vincent', 'Antoine', 'Maxime', 'Benjamin', 'Matthieu', 'Guillaume', 'Raphaël',
+    'Jérôme', 'Fabrice', 'Bruno', 'Denis', 'Marc', 'Didier', 'Serge', 'Georges'
+  ];
+  
+  // Check if name contains a female first name
+  for (const name of femaleNames) {
+    if (new RegExp(`\\b${name}\\b`, 'i').test(cleanName)) return 'female';
+  }
+  
+  // Check if name contains a male first name
+  for (const name of maleNames) {
+    if (new RegExp(`\\b${name}\\b`, 'i').test(cleanName)) return 'male';
+  }
+  
+  // 3. Detection by feminine profession title
+  if (/\b(Avocate|Infirmière|Diététicienne|Sage-femme|Maîtresse)\b/i.test(cleanName)) return 'female';
+  
+  // 4. Detection by explicit masculine profession title
+  if (/\b(Avocat|Infirmier|Diététicien)\b(?!e\b)/i.test(cleanName)) return 'male';
+  
+  return 'neutral';
+}
+
+// Get profession-specific vocabulary
+function getProfessionVocabulary(businessName: string, activityType?: string, gender: 'male' | 'female' | 'neutral' = 'neutral'): {
+  workplace: string;
+  verb: string;
+  clientele: string;
+  intro: string;
+} {
+  const cleanName = businessName.replace(/^-\s*/, '').trim();
+  
+  // Determine intro based on gender
+  const getDoctorIntro = () => gender === 'female' ? 'La Docteure' : 'Le Docteur';
+  
+  // Avocats, notaires, huissiers
+  if (/^(Maître|Me)\s+/i.test(cleanName)) {
+    return {
+      workplace: "cabinet",
+      verb: "exerce",
+      clientele: "clients",
+      intro: "Maître"
+    };
+  }
+  
+  // Médecins, vétérinaires
+  if (/^(Dr|Docteur|Pr|Professeur)\s+/i.test(cleanName) || /\b(Médecin|Dentiste|Vétérinaire)\b/i.test(cleanName)) {
+    return {
+      workplace: "cabinet médical",
+      verb: "exerce",
+      clientele: "patients",
+      intro: getDoctorIntro()
+    };
+  }
+  
+  // Kinés, ostéopathes, infirmiers
+  if (/\b(Kinésithérapeute|Kiné|Ostéopathe|Infirmier|Infirmière)\b/i.test(cleanName)) {
+    return {
+      workplace: "cabinet",
+      verb: "exerce en tant que",
+      clientele: "patients",
+      intro: ""
+    };
+  }
+  
+  // Architectes, experts-comptables, psychologues
+  if (/\b(Architecte|Expert[- ]comptable|Psychologue|Sophrologue|Naturopathe|Orthophoniste|Ergothérapeute)\b/i.test(cleanName)) {
+    return {
+      workplace: "cabinet",
+      verb: "exerce",
+      clientele: "clients",
+      intro: ""
+    };
+  }
+  
+  // Autres professions libérales (default)
+  return {
+    workplace: "cabinet",
+    verb: "exerce",
+    clientele: "clients",
+    intro: ""
+  };
 }
 
 // Fetch real business information from Tavily API with multi-level fallback strategy
@@ -423,6 +563,14 @@ serve(async (req) => {
       const entityType = detectEntityType(business.nom);
       console.log(`Entity type detected: ${entityType}`);
       
+      // Detect gender for proper pronoun usage
+      const gender = detectGender(business.nom, business.type_activite);
+      console.log(`Gender detected: ${gender}`);
+      
+      // Get profession-specific vocabulary
+      const vocab = getProfessionVocabulary(business.nom, business.type_activite, gender);
+      console.log(`Vocabulary: workplace=${vocab.workplace}, verb=${vocab.verb}, clientele=${vocab.clientele}`);
+      
       // Extract city name
       const cityMatch = business.adresse.match(/\d{5}\s+([^,]+)/);
       const cityName = cityMatch ? cityMatch[1].trim() : business.adresse.split(',')[0].trim();
@@ -447,10 +595,40 @@ serve(async (req) => {
       const randomIntro = introVariations[Math.floor(Math.random() * introVariations.length)]
         .replace('{{city}}', cityName);
       
-      // Create entity-specific context for the prompt
+      // Create entity-specific context with gender and vocabulary
+      const pronoun = gender === 'female' ? 'elle' : gender === 'male' ? 'il' : 'il/elle';
+      const possessive = gender === 'female' ? 'sa' : gender === 'male' ? 'son' : 'son/sa';
+      const agreement = gender === 'female' ? 'e' : '';
+      
       const entityContext = entityType === 'practitioner'
-        ? `CONTEXTE : ${business.nom} est un(e) praticien(ne) individuel(le). Utilise des formulations personnelles (il/elle exerce, il/elle propose). Mets l'accent sur l'expertise personnelle du praticien.`
-        : `CONTEXTE : ${business.nom} est un établissement. Utilise des formulations neutres (l'établissement propose, le cabinet offre). Mets l'accent sur les services et équipements de la structure.`;
+        ? `CONTEXTE ENTITÉ : ${business.nom} est un(e) praticien(ne) individuel(le) en profession libérale.
+
+VOCABULAIRE SPÉCIFIQUE :
+- Lieu de travail : ${vocab.workplace}
+- Verbe d'action : ${vocab.verb}
+- Clientèle : ${vocab.clientele}
+- Pronom personnel : ${pronoun}
+- Adjectif possessif : ${possessive}
+- Accord de genre : ajoute "${agreement}" aux participes passés et adjectifs
+
+RÈGLES DE RÉDACTION :
+- Utilise le nom complet : "${business.nom.replace(/^-\s*/, '').trim()}"
+- Ne dis JAMAIS "l'établissement" ou "la structure"
+- Utilise "${vocab.workplace}" pour parler du lieu d'exercice
+- Conjugue avec "${pronoun}" : "${pronoun} ${vocab.verb}", "${pronoun} accompagne ${possessive} ${vocab.clientele}"
+- Fais les accords de genre : "recommandé${agreement} par ${companyName}"
+- Mets l'accent sur l'expertise PERSONNELLE du praticien
+
+EXEMPLES SELON PROFESSION :
+- Avocat : "Maître Dupont${agreement}, avocat${agreement} spécialisé${agreement} en droit de la famille, accompagne ${possessive} clients dans les divorces et contentieux à"
+- Kiné : "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')}, kinésithérapeute diplômé${agreement} d'État, propose des séances de rééducation et traitement des douleurs chroniques à"
+- Médecin : "${vocab.intro} Martin, médecin généraliste, assure le suivi médical de ${possessive} patients et pratique la médecine préventive à"`
+        : `CONTEXTE ENTITÉ : ${business.nom} est un établissement commercial.
+
+RÈGLES DE RÉDACTION :
+- Utilise "l'établissement", "le centre", "la clinique"
+- Mets l'accent sur les SERVICES et ÉQUIPEMENTS
+- Vocabulaire neutre et institutionnel`;
       
       // Simplified prompts to avoid truncation
       let prompt;
@@ -474,18 +652,18 @@ FORMAT JSON REQUIS :
 }
 
 RÈGLES STRICTES :
-1. activity : 10-15 mots, se termine par "à" SANS PONCTUATION (ni point, ni virgule, juste "à")
-2. extract : commence par article défini (l', le, la) ${entityType === 'practitioner' ? '+ utilise le nom du praticien' : '+ utilise le nom de l\'établissement'}
-3. description STRUCTURE STRICTE :
-   - Paragraphe 1 (35% = ~35 mots) : présentation ${entityType === 'practitioner' ? 'du praticien et de son expertise' : 'de l\'établissement et de ses services'}
-   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? 'services proposés par le praticien' : 'détails des services de l\'établissement'}, mentionne "recommandé par ${companyName}"
+1. activity : 10-15 mots, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
+2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, mentionne "recommandé${agreement} par ${companyName}"
+3. description STRUCTURE OBLIGATOIRE :
+   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} expertise et qualités (utilise ${pronoun})` : 'Présente l\'établissement, son activité et ses qualités'}
+   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? `Services proposés par ${pronoun}, spécialités` : 'Services de l\'établissement, équipements'}, mentionne "recommandé${agreement} par ${companyName}"
    - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse)
 4. Reste GÉNÉRAL (peu d'infos disponibles)
 5. Pas de site web dans description
-6. ${entityType === 'practitioner' ? 'Utilise il/elle dans la description' : 'Utilise l\'établissement/le cabinet dans la description'}
+6. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : utilise "${agreement}" pour tous les participes et adjectifs (recommandé${agreement}, spécialisé${agreement}, diplômé${agreement})` : 'Vocabulaire neutre et institutionnel'}
 
-EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? 'Praticien diplômé proposant des soins personnalisés à' : 'Établissement proposant des services professionnels de qualité à'}"
-EXEMPLE extract: "À ${cityName}, ${companyName} recommande ${entityType === 'practitioner' ? business.nom + ' pour son expertise professionnelle' : 'l\'établissement ' + business.nom + ' pour son professionnalisme'}."
+EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + ', praticien${agreement} diplômé${agreement} proposant des soins personnalisés à' : 'Établissement proposant des services professionnels de qualité à'}"
+EXEMPLE extract: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + ' est recommandé' + agreement + ' par ' + companyName + ' pour ' + possessive + ' expertise professionnelle' : 'À ' + cityName + ', ' + companyName + ' recommande l\'établissement ' + business.nom + ' pour son professionnalisme'}."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       } else {
@@ -520,18 +698,31 @@ FORMAT JSON REQUIS :
 
 RÈGLES STRICTES :
 1. activity : 10-15 mots, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
-2. extract : utilise article défini (l', le, la) + mentionne ${companyName} ${entityType === 'practitioner' ? '+ utilise le nom du praticien' : ''}
+2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la)'}, mentionne "recommandé${agreement} par ${companyName}"
 3. description STRUCTURE OBLIGATOIRE :
-   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? 'Présente le praticien avec son nom, son expertise et qualités principales (utilise il/elle)' : 'Présente l\'établissement, son activité réelle et ses qualités'} - UTILISE les données Tavily
-   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? 'Services proposés par le praticien, spécialités' : 'Services de l\'établissement, équipements, spécificités'} - UTILISE services vérifiés et historique Tavily, mentionne "recommandé par ${companyName}"
+   - Paragraphe 1 (35% = ~35 mots) : ${entityType === 'practitioner' ? `Présente ${business.nom.replace(/^-\s*/, '').trim()} avec ${possessive} nom, ${possessive} expertise et qualités (utilise ${pronoun})` : 'Présente l\'établissement, son activité réelle et ses qualités'} - UTILISE les données Tavily
+   - Paragraphe 2 (45% = ~45 mots) : ${entityType === 'practitioner' ? `Services proposés par ${pronoun}, spécialités` : 'Services de l\'établissement, équipements'} - UTILISE services vérifiés Tavily, mentionne "recommandé${agreement} par ${companyName}"
    - Paragraphe 3 (20% = ~20 mots) : coordonnées uniquement (téléphone et adresse complète)
 4. MAXIMUM D'INFORMATIONS RÉELLES de Tavily dans paragraphes 1 et 2
 5. Pas de site web, seulement téléphone et adresse
-6. ${entityType === 'practitioner' ? 'TON PERSONNEL : utilise le prénom/nom du praticien, "il/elle", "son expertise"' : 'TON PROFESSIONNEL : utilise "l\'établissement", "le cabinet", "la structure"'}
-7. VARIATION : adapte le vocabulaire pour éviter un ton robotique
+6. ${entityType === 'practitioner' ? `TON PERSONNEL : utilise "${business.nom.replace(/^-\s*/, '').trim()}", "${pronoun}", "${possessive} ${vocab.clientele}", "${vocab.workplace}"` : 'TON PROFESSIONNEL : utilise "l\'établissement", "le centre", "la structure"'}
+7. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : utilise "${agreement}" pour tous les participes et adjectifs (recommandé${agreement}, spécialisé${agreement}, diplômé${agreement})` : 'VARIATION : adapte le vocabulaire'}
+8. VARIATION : adapte le vocabulaire pour éviter un ton robotique
 
-EXEMPLE activity ${entityType === 'practitioner' ? 'praticien' : 'établissement'}: "${entityType === 'practitioner' ? realInfo.activite_verifiee + ' proposant des soins personnalisés à' : realInfo.activite_verifiee + ' offrant des services complets à'}"
-EXEMPLE extract début: "${randomIntro} ${business.nom} pour ${entityType === 'practitioner' ? 'son expertise en' : 'ses services de qualité en'} ${realInfo.activite_verifiee}..."
+EXEMPLES CONCRETS :
+
+${vocab.intro === 'Maître' ? `AVOCAT (FEMME) :
+activity: "Maître Dupont, avocate spécialisée en droit de la famille et droit du travail à"
+extract: "Maître Sophie Dupont est recommandée par ${companyName} pour son expertise en droit de la famille à ${cityName}. Elle accompagne ses clients dans les divorces, garde d'enfants et contentieux prud'homaux avec professionnalisme et écoute."
+description: "Maître Sophie Dupont exerce au sein de son cabinet d'avocat situé au cœur de ${cityName}. Spécialisée en droit de la famille et droit du travail, elle met son expertise au service de sa clientèle depuis plus de 10 ans.\\n\\nElle propose un accompagnement personnalisé dans les procédures de divorce, garde d'enfants, pension alimentaire et contentieux prud'homaux. Recommandée par ${companyName}, elle assure une défense rigoureuse des intérêts de ses clients avec une approche humaine et professionnelle.\\n\\nPour toute consultation, contactez le cabinet au ${business.telephone} ou rendez-vous ${business.adresse}."` : ''}
+
+${vocab.workplace === 'cabinet' && vocab.clientele === 'patients' ? `KINÉSITHÉRAPEUTE (FEMME) :
+activity: "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')}, kinésithérapeute diplômée proposant rééducation et soins thérapeutiques à"
+extract: "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')} est recommandée par ${companyName} pour ses compétences en rééducation fonctionnelle à ${cityName}. Elle accompagne ses patients dans la récupération post-opératoire et le traitement des douleurs chroniques."
+description: "${business.nom.replace(/^-\s*/, '').split(' ').slice(-2).join(' ')} exerce en tant que kinésithérapeute diplômée d'État dans son cabinet situé à ${cityName}. Formée aux techniques de rééducation fonctionnelle et de thérapie manuelle, elle met son expertise au service de ses patients depuis 2015.\\n\\nElle propose des séances de rééducation post-traumatique, massage thérapeutique, drainage lymphatique et traitement des troubles musculo-squelettiques. Recommandée par ${companyName}, elle assure un suivi personnalisé et adapté aux besoins spécifiques de chaque patient avec une approche globale du soin.\\n\\nPour prendre rendez-vous, contactez le ${business.telephone} ou consultez le cabinet ${business.adresse}."` : ''}
+
+EXEMPLE activity: "${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() + ', ' + (realInfo.activite_verifiee || 'professionnel${agreement}') + ' proposant des services personnalisés à' : realInfo.activite_verifiee + ' offrant des services complets à'}"
+EXEMPLE extract début: "${randomIntro} ${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() : 'l\'établissement ' + business.nom} pour ${entityType === 'practitioner' ? possessive + ' expertise' : 'ses services de qualité'} ${realInfo.activite_verifiee ? 'en ' + realInfo.activite_verifiee : ''}..."
 
 RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       }
@@ -634,13 +825,52 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       if (!cleanActivity.endsWith(' à')) {
         cleanActivity += ' à';
       }
+      
+      // Clean name from prefix "- " if present
+      let cleanName = business.nom.replace(/^-\s*/, '').trim();
+      
+      // Post-process extract and description for practitioners
+      let cleanExtract = aiData.extract;
+      let cleanDescription = aiData.description;
+      
+      if (entityType === 'practitioner') {
+        // Verify gender agreements for practitioners
+        if (gender === 'female') {
+          cleanExtract = cleanExtract
+            .replace(/\brecommandé par\b/gi, 'recommandée par')
+            .replace(/\bspécialisé\b/gi, 'spécialisée')
+            .replace(/\bdiplômé\b/gi, 'diplômée')
+            .replace(/\bexpert\b/gi, 'experte')
+            .replace(/\brenommé\b/gi, 'renommée');
+          
+          cleanDescription = cleanDescription
+            .replace(/\brecommandé par\b/gi, 'recommandée par')
+            .replace(/\bspécialisé\b/gi, 'spécialisée')
+            .replace(/\bdiplômé\b/gi, 'diplômée')
+            .replace(/\bexpert\b/gi, 'experte')
+            .replace(/\brenommé\b/gi, 'renommée')
+            .replace(/\bformé\b/gi, 'formée')
+            .replace(/\bqualifié\b/gi, 'qualifiée');
+        }
+        
+        // Prevent "L'établissement" for practitioners
+        cleanExtract = cleanExtract
+          .replace(/L'établissement\s+/g, cleanName + ' ')
+          .replace(/l'établissement\s+/g, vocab.workplace + ' ');
+        
+        cleanDescription = cleanDescription
+          .replace(/L'établissement\s+/g, cleanName + ' ')
+          .replace(/l'établissement\s+/g, vocab.workplace + ' ')
+          .replace(/\bla structure\b/gi, vocab.workplace)
+          .replace(/\ble centre\b/gi, vocab.workplace);
+      }
 
       enrichedBusinesses.push({
-        name: `- ${business.nom}`,
+        name: `- ${cleanName}`,
         activity: cleanActivity,
         city: formatCity(business.adresse),
-        extract: aiData.extract,
-        description: aiData.description,
+        extract: cleanExtract,
+        description: cleanDescription,
       });
 
       // Small delay to avoid rate limits
