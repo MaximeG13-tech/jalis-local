@@ -148,7 +148,7 @@ function formatCity(address: string): string {
   return `${cityName} (${postalCode}) ${deptPhrase}`.trim();
 }
 
-// Fetch real business information from Tavily API
+// Fetch real business information from Tavily API with multi-level fallback strategy
 async function fetchTavilyInfo(businessName: string, city: string, website: string | null) {
   const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
   
@@ -156,24 +156,38 @@ async function fetchTavilyInfo(businessName: string, city: string, website: stri
     throw new Error("TAVILY_API_KEY is not configured");
   }
   
-  const query = website && website !== 'Non disponible'
-    ? `${businessName} ${city} services activités site:${website}`
-    : `${businessName} ${city} services activités avis`;
+  // Prepare domain filters for prioritization
+  const reliableDomains = [
+    "google.com/maps",
+    "pagesjaunes.fr",
+    "societe.com",
+    "linkedin.com",
+    "verif.com"
+  ];
   
-  console.log('Tavily search query:', query);
+  // Add business website to reliable domains if available
+  if (website && website !== 'Non disponible') {
+    const cleanWebsite = website.replace('https://', '').replace('http://', '').replace('www.', '');
+    reliableDomains.unshift(cleanWebsite);
+  }
   
-  const response = await fetch('https://api.tavily.com/search', {
+  // LEVEL 1: Broad search without site: restriction
+  const primaryQuery = `"${businessName}" ${city} services activités contact`;
+  console.log('Tavily Level 1 - Primary search:', primaryQuery);
+  
+  let response = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       api_key: TAVILY_API_KEY,
-      query: query,
+      query: primaryQuery,
       search_depth: "advanced",
       include_answer: true,
       include_raw_content: true,
-      max_results: 5
+      max_results: 8,
+      include_domains: reliableDomains
     })
   });
   
@@ -182,8 +196,73 @@ async function fetchTavilyInfo(businessName: string, city: string, website: stri
     return { answer: null, results: [] };
   }
   
-  const data = await response.json();
-  console.log('Tavily results:', data.results?.length || 0, 'sources found');
+  let data = await response.json();
+  let resultsCount = data.results?.length || 0;
+  console.log(`Tavily Level 1 results: ${resultsCount} sources found`);
+  
+  // LEVEL 2: If we have some results and a website, enrich with website-specific search
+  if (resultsCount > 0 && website && website !== 'Non disponible') {
+    const cleanWebsite = website.replace('https://', '').replace('http://', '');
+    const websiteQuery = `"${businessName}" site:${cleanWebsite}`;
+    console.log('Tavily Level 2 - Website enrichment:', websiteQuery);
+    
+    const websiteResponse = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: websiteQuery,
+        search_depth: "advanced",
+        include_answer: false,
+        include_raw_content: true,
+        max_results: 3
+      })
+    });
+    
+    if (websiteResponse.ok) {
+      const websiteData = await websiteResponse.json();
+      const websiteResults = websiteData.results || [];
+      console.log(`Tavily Level 2 results: ${websiteResults.length} additional sources from website`);
+      
+      // Merge results (avoid duplicates by URL)
+      const existingUrls = new Set(data.results.map((r: any) => r.url));
+      const newResults = websiteResults.filter((r: any) => !existingUrls.has(r.url));
+      data.results = [...data.results, ...newResults];
+      resultsCount = data.results.length;
+    }
+  }
+  
+  // LEVEL 3: If still no results, try reviews/avis fallback
+  if (resultsCount === 0) {
+    const reviewsQuery = `"${businessName}" ${city} avis clients google reviews`;
+    console.log('Tavily Level 3 - Reviews fallback:', reviewsQuery);
+    
+    response = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: reviewsQuery,
+        search_depth: "advanced",
+        include_answer: true,
+        include_raw_content: true,
+        max_results: 8,
+        include_domains: ["google.com/maps", "tripadvisor.fr", "trustpilot.fr"]
+      })
+    });
+    
+    if (response.ok) {
+      data = await response.json();
+      resultsCount = data.results?.length || 0;
+      console.log(`Tavily Level 3 results: ${resultsCount} sources found from reviews`);
+    }
+  }
+  
+  console.log(`Final Tavily results: ${resultsCount} total sources found`);
   
   return {
     answer: data.answer || null,
