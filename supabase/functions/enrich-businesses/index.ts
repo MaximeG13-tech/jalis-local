@@ -511,7 +511,7 @@ RÈGLES ABSOLUES :
         { role: 'user', content: extractionPrompt }
       ],
       temperature: 0.3,
-      max_tokens: 800  // Increased to avoid truncation
+      max_tokens: 2000  // Increased to avoid truncation for multiple businesses
     })
   });
 
@@ -530,9 +530,36 @@ RÈGLES ABSOLUES :
   const content = data.choices[0].message.content.replace(/```json\n?|\n?```/g, "").trim();
   
   try {
-    return JSON.parse(content);
+    // Check if response was truncated (missing closing brace)
+    if (!content.endsWith('}')) {
+      console.error('⚠️ JSON response was truncated (no closing brace):', content.substring(0, 100));
+      return {
+        activite_verifiee: null,
+        services_principaux: [],
+        specialites: null,
+        historique: null,
+        confiance: "low"
+      };
+    }
+    
+    const parsed = JSON.parse(content);
+    
+    // Validate all required fields are present
+    if (!parsed.activite_verifiee || !parsed.confiance) {
+      console.error('⚠️ Incomplete JSON structure:', content.substring(0, 100));
+      return {
+        activite_verifiee: null,
+        services_principaux: [],
+        specialites: null,
+        historique: null,
+        confiance: "low"
+      };
+    }
+    
+    return parsed;
   } catch (e) {
-    console.error('Failed to parse extraction JSON:', content);
+    console.error('❌ Failed to parse extraction JSON:', content.substring(0, 200));
+    console.error('Parse error:', e);
     return {
       activite_verifiee: null,
       services_principaux: [],
@@ -927,7 +954,7 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
             },
             { role: "user", content: prompt }
           ],
-          max_tokens: 1500,
+          max_tokens: 2500,  // Increased to handle complex prompts without truncation
           temperature: 0.5,
         }),
       });
@@ -1168,8 +1195,8 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
         description: cleanDescription,
       });
 
-      // Small delay to avoid rate limits
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Small delay to avoid rate limits (increased for 5+ businesses)
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     return new Response(JSON.stringify({ enrichedBusinesses }), {
