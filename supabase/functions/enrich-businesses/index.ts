@@ -456,6 +456,158 @@ async function fetchTavilyInfo(businessName: string, city: string, website: stri
   };
 }
 
+// Fetch company website via Google Place Details
+async function fetchCompanyWebsite(placeId: string): Promise<string | null> {
+  const GOOGLE_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
+  
+  if (!GOOGLE_API_KEY || !placeId) {
+    console.warn('⚠️ Cannot fetch company website: missing API key or placeId');
+    return null;
+  }
+
+  try {
+    const formattedPlaceId = placeId.startsWith('places/') ? placeId : `places/${placeId}`;
+    console.log(`🔍 Fetching website for placeId: ${formattedPlaceId}`);
+
+    const response = await fetch(
+      `https://places.googleapis.com/v1/${formattedPlaceId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': GOOGLE_API_KEY,
+          'X-Goog-FieldMask': 'websiteUri,displayName'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.error('❌ Google Place Details error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const website = data.websiteUri || null;
+    
+    console.log(`✅ Website found: ${website || 'N/A'}`);
+    return website;
+
+  } catch (error) {
+    console.error('❌ Error fetching company website:', error);
+    return null;
+  }
+}
+
+// Fetch company description via Tavily + AI
+async function fetchCompanyDescription(
+  companyName: string,
+  companyWebsite: string | null,
+  companyAddress?: string
+): Promise<string> {
+  const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  
+  if (!TAVILY_API_KEY) {
+    console.warn('⚠️ TAVILY_API_KEY not configured, using generic description');
+    return `spécialiste reconnu dans son domaine`;
+  }
+
+  try {
+    const city = companyAddress 
+      ? companyAddress.match(/\d{5}\s+([^,]+)/)?.[1]?.trim() || ""
+      : "";
+
+    // Build query with website if available
+    let query = `"${companyName}" ${city} activité services spécialité`;
+    if (companyWebsite) {
+      query += ` site:${companyWebsite}`;
+    }
+
+    console.log(`🔍 Fetching company description via Tavily: ${query}`);
+
+    const tavilyResponse = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: query,
+        search_depth: "basic",
+        include_answer: true,
+        max_results: companyWebsite ? 5 : 3
+      })
+    });
+
+    if (!tavilyResponse.ok) {
+      console.error('❌ Tavily API error:', tavilyResponse.status);
+      return `spécialiste reconnu dans son domaine`;
+    }
+
+    const tavilyData = await tavilyResponse.json();
+    const answer = tavilyData.answer || "";
+    const results = tavilyData.results || [];
+
+    if (!LOVABLE_API_KEY) {
+      console.warn('⚠️ LOVABLE_API_KEY not configured, using Tavily answer');
+      return answer.substring(0, 100) || `spécialiste reconnu dans son domaine`;
+    }
+
+    const extractionPrompt = `
+À partir des résultats de recherche suivants, génère UNE PHRASE COURTE (15-25 mots) décrivant l'activité de ${companyName}.
+
+FORMAT ATTENDU : "le/la [spécialiste|professionnel|expert] de/en [activité précise] sur [zone géographique]"
+
+EXEMPLES :
+- "le spécialiste de la construction, extension et aménagement bois sur Poussan"
+- "l'expert en plomberie et chauffage dans le Bassin de Thau"
+- "le cabinet d'avocats en droit des affaires à Montpellier"
+- "l'agence immobilière spécialisée dans les biens de prestige en Hérault"
+
+RÉSULTATS DE RECHERCHE :
+${results.map((r: any, i: number) => 
+  `[${i+1}] ${r.title}\n${r.content}\n`
+).join('\n')}
+
+${answer ? `RÉSUMÉ : ${answer}` : ''}
+
+RÉPONDS UNIQUEMENT AVEC LA PHRASE (sans guillemets, sans ponctuation finale).
+`;
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: 'system', content: 'Tu es un expert en rédaction de descriptions d\'entreprises courtes et précises.' },
+          { role: 'user', content: extractionPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 150
+      })
+    });
+
+    if (!aiResponse.ok) {
+      console.error('❌ AI API error:', aiResponse.status);
+      return answer.substring(0, 100) || `spécialiste reconnu dans son domaine`;
+    }
+
+    const aiData = await aiResponse.json();
+    const description = aiData.choices[0].message.content.trim()
+      .replace(/^["']|["']$/g, '')
+      .replace(/\.$/, '');
+
+    console.log(`✅ Company description generated: ${description}`);
+    return description;
+
+  } catch (error) {
+    console.error('❌ Error fetching company description:', error);
+    return `spécialiste reconnu dans son domaine`;
+  }
+}
+
 // Extract structured business info using Gemini 2.5 Pro
 async function extractBusinessInfo(tavilyData: any, businessName: string, city: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -576,12 +728,26 @@ serve(async (req) => {
   }
 
   try {
-    const { businesses, companyName } = await req.json();
+    const { businesses, companyName, companyPlaceId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    // Fetch company website and description ONCE at the beginning
+    console.log(`\n🏢 Fetching information for recommending company: ${companyName}`);
+    const companyWebsite = companyPlaceId 
+      ? await fetchCompanyWebsite(companyPlaceId)
+      : null;
+    
+    console.log(`🔍 Generating description for company: ${companyName}`);
+    const companyDescription = await fetchCompanyDescription(
+      companyName || "votre entreprise",
+      companyWebsite,
+      undefined
+    );
+    console.log(`✅ Company description: ${companyDescription}\n`);
 
     const enrichedBusinesses = [];
 
@@ -786,17 +952,18 @@ DONNÉES :${activityTypeInfo}
 FORMAT JSON REQUIS :
 {
   "activity": "Description courte (10-15 mots) se terminant par 'à'",
-  "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
-  "description": "90-110 mots en 3 paragraphes + coordonnées (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
+  "extract": "40-60 mots avec article défini",
+  "description": "110-135 mots en 4 paragraphes séparés par \\n\\n (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots, paragraphe 4: ~20-25 mots)"
 }
 
 RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
-2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
-3. description STRUCTURE OBLIGATOIRE avec HUMANISATION (Recommandations #2, #3, #5) :
+2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, PAS de mention de recommandation dans extract
+3. description STRUCTURE OBLIGATOIRE en 4 PARAGRAPHES séparés par \\n\\n (Recommandations #2, #3, #5) :
    - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : ${entityType === 'practitioner' ? `présente l'expertise de ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''}` : 'présente les compétences clés'}` : selectedTemplate.id === 2 ? `Historique : ${entityType === 'practitioner' ? `parcours professionnel de ${business.nom.replace(/^-\s*/, '').trim()}` : 'historique de l\'établissement'}` : `Différenciation : ce qui distingue ${entityType === 'practitioner' ? business.nom.replace(/^-\s*/, '').trim() : 'l\'établissement'} à ${cityName}`}. PHRASE DE DIFFÉRENCIATION OBLIGATOIRE : ${entityType === 'practitioner' ? `spécialité rare ? approche unique ? zone géographique ? équipement spécifique ?` : `ce qui rend unique l'établissement`}. TON HUMAIN ET FLUIDE.
-   - Paragraphe 2 (~45 mots) : Services CONCRETS avec BÉNÉFICES CLIENT (Recommandation #5). UNIQUEMENT verbes : ${actionVerbs}. TRANSFORME en bénéfice : "accompagne" → "vous aide à choisir les soins adaptés", "conseille" → "vous guide dans vos démarches", "défend" → "protège vos intérêts". Formule : "pour vous garantir [résultat concret]", "afin de vous accompagner dans [situation précise]", "vous bénéficiez de [avantage mesurable]". Ajoute phrase de TRANSITION fluide (ex: "Grâce à...", "C'est pourquoi...", "Afin d'assurer..."). Mentionne "recommandé${agreement} par ${companyName}".
+   - Paragraphe 2 (~45 mots) : Services CONCRETS avec BÉNÉFICES CLIENT (Recommandation #5). UNIQUEMENT verbes : ${actionVerbs}. TRANSFORME en bénéfice : "accompagne" → "vous aide à choisir les soins adaptés", "conseille" → "vous guide dans vos démarches", "défend" → "protège vos intérêts". Formule : "pour vous garantir [résultat concret]", "afin de vous accompagner dans [situation précise]", "vous bénéficiez de [avantage mesurable]". Ajoute phrase de TRANSITION fluide (ex: "Grâce à...", "C'est pourquoi...", "Afin d'assurer...").
    - Paragraphe 3 (~20 mots) : CTA personnalisé + coordonnées. "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : 'l\'établissement'} au ${business.telephone} ou rendez-vous au ${business.adresse}."
+   - Paragraphe 4 (~20-25 mots) : RECOMMANDATION PAR ${companyName}. "${business.nom} est d'ailleurs recommandé${agreement} par ${companyName}, ${companyDescription}."
 4. Phrases COURTES et VARIÉES (Recommandation #4) : 15-20 mots maximum. ALTERNE longueurs : phrases courtes (8-12 mots) et moyennes (15-20 mots) pour créer RYTHME NATUREL. UNE IDÉE = UNE PHRASE.
 5. CRÉDIBILITÉ ABSOLUE (Recommandation #7) : INTERDICTION TOTALE d'affirmer "reconnu", "réputé", "de qualité", "excellence", "leader", "de référence" SANS preuve Tavily EXPLICITE. Remplace par FAITS VÉRIFIABLES.
 6. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : utilise "${agreement}" pour tous les participes et adjectifs (recommandé${agreement}, spécialisé${agreement}, diplômé${agreement})` : 'Vocabulaire neutre et institutionnel'}
@@ -841,17 +1008,18 @@ ${tavilyData.results.slice(0, 3).map((r: any) => `- ${r.title}: ${r.content.subs
 FORMAT JSON REQUIS :
 {
   "activity": "Description (10-15 mots) se terminant par 'à'",
-  "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
-  "description": "90-110 mots en 3 paragraphes (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
+  "extract": "40-60 mots avec article défini",
+  "description": "110-135 mots en 4 paragraphes séparés par \\n\\n (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots, paragraphe 4: ~20-25 mots)"
 }
 
 RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION
-2. extract : ${entityType === 'practitioner' ? `utilise le nom "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini'}, ${business.type_activite ? `MENTIONNE "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}"
-3. description STRUCTURE OBLIGATOIRE avec TON HUMAIN (Recommandations #2, #3, #5) :
+2. extract : ${entityType === 'practitioner' ? `utilise le nom "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini'}, ${business.type_activite ? `MENTIONNE "${business.type_activite}"` : ''}, PAS de mention de recommandation dans extract
+3. description STRUCTURE OBLIGATOIRE en 4 PARAGRAPHES séparés par \\n\\n avec TON HUMAIN (Recommandations #2, #3, #5) :
    - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : présente ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''} avec expertise` : selectedTemplate.id === 2 ? `Historique : parcours de ${business.nom.replace(/^-\s*/, '').trim()}` : `Différenciation : ce qui distingue ${business.nom.replace(/^-\s*/, '').trim()} à ${cityName}`}. UTILISE données Tavily. PHRASE DE DIFFÉRENCIATION CONTEXTUELLE obligatoire (spécialité, approche, zone, équipement). TON FLUIDE et CRÉDIBLE.
-   - Paragraphe 2 (~45 mots) : Services CONCRETS avec BÉNÉFICES CLIENT orientés valeur d'usage (Recommandation #5). Verbes : ${actionVerbs}. TRANSFORME en bénéfice concret : "conseille" → "vous aide à choisir", "accompagne" → "vous suit tout au long de". Bénéfices : "pour vous garantir [résultat]", "afin d'assurer [qualité]", "de manière à offrir [service]". Ajoute TRANSITION fluide (ex: "Grâce à", "C'est pourquoi", "Afin de"). UTILISE Tavily. Mentionne "recommandé${agreement} par ${companyName}".
+   - Paragraphe 2 (~45 mots) : Services CONCRETS avec BÉNÉFICES CLIENT orientés valeur d'usage (Recommandation #5). Verbes : ${actionVerbs}. TRANSFORME en bénéfice concret : "conseille" → "vous aide à choisir", "accompagne" → "vous suit tout au long de". Bénéfices : "pour vous garantir [résultat]", "afin d'assurer [qualité]", "de manière à offrir [service]". Ajoute TRANSITION fluide (ex: "Grâce à", "C'est pourquoi", "Afin de"). UTILISE Tavily.
    - Paragraphe 3 (~20 mots) : "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : 'l\'établissement'} au ${business.telephone} ou rendez-vous au ${business.adresse}."
+   - Paragraphe 4 (~20-25 mots) : RECOMMANDATION PAR ${companyName}. "${business.nom} est d'ailleurs recommandé${agreement} par ${companyName}, ${companyDescription}."
 4. Phrases COURTES avec RYTHME NATUREL (Recommandation #4) : 15-20 mots max. ALTERNE phrases courtes (8-12) et moyennes (15-20) pour fluidité. UNE IDÉE = UNE PHRASE claire.
 5. CRÉDIBILITÉ MAXIMALE (Recommandation #7) : INTERDICTION ABSOLUE "reconnu", "réputé", "leader", "référence", "excellence" SAUF si Tavily confirme EXPLICITEMENT avec source nommée.
 6. ${entityType === 'practitioner' ? `ACCORDS DE GENRE : "${agreement}" pour participes/adjectifs` : 'Vocabulaire institutionnel'}
@@ -904,17 +1072,18 @@ ${tavilyData.results.slice(0, 3).map((r: any) => `- ${r.title}: ${r.content.subs
 FORMAT JSON REQUIS :
 {
   "activity": "Description (10-15 mots) se terminant par 'à'",
-  "extract": "40-60 mots avec 'recommandé par ${companyName}' et article défini",
-  "description": "90-110 mots en 3 paragraphes (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots)"
+  "extract": "40-60 mots avec article défini",
+  "description": "110-135 mots en 4 paragraphes séparés par \\n\\n (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots, paragraphe 4: ~20-25 mots)"
 }
 
 RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à"). NE JAMAIS MENTIONNER l'adresse dans ce champ - l'adresse sera ajoutée automatiquement après "à".
-2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + "cabinet" pour comptables/professionnels libéraux, "établissement" pour structures'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, mentionne "recommandé${agreement} par ${companyName}". ${/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'UTILISE "le cabinet" et NON "l\'établissement"' : ''}
-3. description STRUCTURE OBLIGATOIRE avec HUMANISATION et CRÉDIBILITÉ (Recommandations #2, #3, #5, #6) :
+2. extract : ${entityType === 'practitioner' ? `utilise le nom complet "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + "cabinet" pour comptables/professionnels libéraux, "établissement" pour structures'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, PAS de mention de recommandation dans extract. ${/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'UTILISE "le cabinet" et NON "l\'établissement"' : ''}
+3. description STRUCTURE OBLIGATOIRE en 4 PARAGRAPHES séparés par \\n\\n avec HUMANISATION et CRÉDIBILITÉ (Recommandations #2, #3, #5, #6) :
    - Paragraphe 1 (~35 mots) : ${selectedTemplate.id === 1 ? `Expertise : présente ${business.nom.replace(/^-\s*/, '').trim()}${business.type_activite ? ` en tant que ${business.type_activite}` : ''}, ${possessive} expertise et qualités` : selectedTemplate.id === 2 ? `Historique : parcours professionnel${realInfo.historique ? ` (${realInfo.historique})` : ''} de ${business.nom.replace(/^-\s*/, '').trim()}` : `Différenciation : ce qui distingue ${business.nom.replace(/^-\s*/, '').trim()} à ${cityName}${realInfo.specialites ? ` (${realInfo.specialites})` : ''}`}. UTILISE données Tavily vérifiées. PHRASE DE DIFFÉRENCIATION OBLIGATOIRE ET CONTEXTUELLE (spécialité rare, approche unique, zone géographique privilégiée, équipement de pointe). TON HUMAIN avec légère EMPATHIE ou ENGAGEMENT. INTERDICTION ABSOLUE de mentionner le capital social.
-   - Paragraphe 2 (~45 mots) : Services concrets : ${servicesText}. BÉNÉFICES CLIENT TRANSFORMÉS (Recommandation #5). Verbes : ${actionVerbs}. TRANSFORME chaque verbe en valeur d'usage : "conseille" → "vous aide à choisir les solutions adaptées", "accompagne" → "vous suit tout au long de votre parcours", "défend" → "protège efficacement vos intérêts". Formules : "pour vous garantir [résultat concret mesurable]", "afin d'assurer [qualité service]", "de manière à offrir [expérience]". Ajoute PHRASE DE TRANSITION fluide connectant expertise et services (ex: "Grâce à cette expertise,", "C'est pourquoi", "Afin d'assurer un suivi optimal,"). UTILISE Tavily. Mentionne "recommandé${agreement} par ${companyName}". ${/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'POUR COMPTABLES: Utilise "le cabinet" et NON "l\'établissement"' : ''}
+   - Paragraphe 2 (~45 mots) : Services concrets : ${servicesText}. BÉNÉFICES CLIENT TRANSFORMÉS (Recommandation #5). Verbes : ${actionVerbs}. TRANSFORME chaque verbe en valeur d'usage : "conseille" → "vous aide à choisir les solutions adaptées", "accompagne" → "vous suit tout au long de votre parcours", "défend" → "protège efficacement vos intérêts". Formules : "pour vous garantir [résultat concret mesurable]", "afin d'assurer [qualité service]", "de manière à offrir [expérience]". Ajoute PHRASE DE TRANSITION fluide connectant expertise et services (ex: "Grâce à cette expertise,", "C'est pourquoi", "Afin d'assurer un suivi optimal,"). UTILISE Tavily. ${/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'POUR COMPTABLES: Utilise "le cabinet" et NON "l\'établissement"' : ''}
    - Paragraphe 3 (~20 mots) : CTA personnalisé + coordonnées COMPLÈTES. "${ctaText}. Contactez ${entityType === 'practitioner' ? pronoun : (/\b(Comptable|Comptabilit[ée]|Expert[- ]comptable)\b/i.test(business.type_activite || '') ? 'le cabinet' : 'l\'établissement')} au ${business.telephone} ou rendez-vous au ${business.adresse}." PHRASE OBLIGATOIREMENT COMPLÈTE ET COHÉRENTE.
+   - Paragraphe 4 (~20-25 mots) : RECOMMANDATION PAR ${companyName}. "${business.nom} est d'ailleurs recommandé${agreement} par ${companyName}, ${companyDescription}."
 4. Phrases COURTES avec RYTHME FLUIDE (Recommandation #4) : 15-20 mots max. ALTERNE longueurs : 8-12 mots (dynamisme) et 15-20 mots (détail) pour rythme NATUREL et VARIÉ. UNE IDÉE = UNE PHRASE. Évite phrases télégraphiques.
 5. CRÉDIBILITÉ MAXIMALE et VÉRIFIABLE (Recommandation #7) : INTERDICTION TOTALE "reconnu", "réputé", "de qualité", "excellence", "leader", "référence" SAUF si Tavily confirme avec SOURCE NOMMÉE. Remplace par FAITS CONCRETS : "${realInfo.historique ? realInfo.historique : 'diplômé en [année]'}", "certifié [certification précise]", "[X] ans d'expérience vérifiée".
 6. ${entityType === 'practitioner' ? `TON PERSONNEL : utilise "${business.nom.replace(/^-\s*/, '').trim()}", "${pronoun}", "${possessive} ${vocab.clientele}", "${vocab.workplace}"` : 'TON PROFESSIONNEL : utilise "l\'établissement", "le centre", "la structure"'}
@@ -950,7 +1119,7 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
           messages: [
             {
               role: "system",
-              content: "Tu es un rédacteur professionnel. Réponds UNIQUEMENT avec du JSON valide, sans markdown. Format : {\"activity\": \"texte terminant par à\", \"extract\": \"40-60 mots\", \"description\": \"110-130 mots\"}. Règles : (1) activity se termine par 'à' seul (2) utilise article défini (l', le, la) (3) n'invente RIEN."
+              content: "Tu es un rédacteur professionnel. Réponds UNIQUEMENT avec du JSON valide, sans markdown. Format : {\"activity\": \"texte terminant par à\", \"extract\": \"40-60 mots\", \"description\": \"110-135 mots en 4 paragraphes séparés par \\n\\n\"}. Règles : (1) activity se termine par 'à' seul (2) utilise article défini (l', le, la) (3) n'invente RIEN (4) description a 4 paragraphes : P1=présentation, P2=services, P3=CTA+coordonnées, P4=recommandation par companyName."
             },
             { role: "user", content: prompt }
           ],

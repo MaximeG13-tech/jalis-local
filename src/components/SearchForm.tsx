@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GeniusDialog } from './GeniusDialog';
 
 interface SearchFormProps {
-  onSearch: (companyName: string, address: string, placeId: string, maxResults: number, selectedTypes: BusinessType[]) => void;
+  onSearch: (companyName: string, address: string, placeId: string, maxResults: number, selectedTypes: BusinessType[], companyPlaceId: string) => void;
   isLoading: boolean;
   onReset?: () => void;
 }
@@ -38,7 +38,7 @@ export const SearchForm = ({ onSearch, isLoading, onReset }: SearchFormProps) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyName.trim() || !address.trim() || !placeId) return;
-    onSearch(companyName, address, placeId, maxResults, selectedTypes);
+    onSearch(companyName, address, placeId, maxResults, selectedTypes, placeId); // Pass placeId as companyPlaceId
   };
 
   const handleAddressSelect = (selectedAddress: string, selectedPlaceId: string) => {

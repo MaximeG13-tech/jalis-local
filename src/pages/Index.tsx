@@ -28,6 +28,7 @@ const Index = () => {
     placeId: string; 
     maxResults: number;
     selectedTypes: BusinessType[];
+    companyPlaceId: string;
   } | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [limitDialogData, setLimitDialogData] = useState<{ found: number; requested: number } | null>(null);
@@ -39,9 +40,10 @@ const Index = () => {
     placeId: string, 
     maxResults: number,
     selectedTypes: BusinessType[],
+    companyPlaceId: string,
     isRegeneration: boolean = false
   ) => {
-    setLastSearch({ companyName, address, placeId, maxResults, selectedTypes });
+    setLastSearch({ companyName, address, placeId, maxResults, selectedTypes, companyPlaceId });
     setIsLoading(true);
     setBusinesses([]);
     setProgress({ current: 0, total: maxResults });
@@ -103,6 +105,7 @@ const Index = () => {
         lastSearch.placeId, 
         lastSearch.maxResults,
         lastSearch.selectedTypes,
+        lastSearch.companyPlaceId,
         true // isRegeneration = true
       );
     }
@@ -200,6 +203,7 @@ const Index = () => {
                   <ExportButton 
                     businesses={businesses}
                     companyName={lastSearch?.companyName}
+                    companyPlaceId={lastSearch?.companyPlaceId}
                     address={lastSearch?.address}
                     maxResults={lastSearch?.maxResults}
                   />
