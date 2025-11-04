@@ -956,6 +956,9 @@ FORMAT JSON REQUIS :
   "description": "110-135 mots en 4 paragraphes, chacun entouré de balises <p></p> (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots, paragraphe 4: ~20-25 mots)"
 }
 
+🚫 MOTS ABSOLUMENT INTERDITS - NE JAMAIS UTILISER :
+Partenaire, Partenaires, Partenariat, Co-partenaire, Multi-partenariat, Coentreprise, Collaboration, Coopération, Alliance, Association, Entente, Convention de partenariat
+
 RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à")
 2. extract : ${entityType === 'practitioner' ? `utilise le nom du praticien "${business.nom.replace(/^-\s*/, '').trim()}"` : 'utilise article défini (l\', le, la) + nom établissement'}, ${business.type_activite ? `DOIT MENTIONNER "${business.type_activite}"` : ''}, PAS de mention de recommandation dans extract
@@ -1011,6 +1014,9 @@ FORMAT JSON REQUIS :
   "extract": "40-60 mots avec article défini",
   "description": "110-135 mots en 4 paragraphes, chacun entouré de balises <p></p> (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots, paragraphe 4: ~20-25 mots)"
 }
+
+🚫 MOTS ABSOLUMENT INTERDITS - NE JAMAIS UTILISER :
+Partenaire, Partenaires, Partenariat, Co-partenaire, Multi-partenariat, Coentreprise, Collaboration, Coopération, Alliance, Association, Entente, Convention de partenariat
 
 RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION
@@ -1075,6 +1081,9 @@ FORMAT JSON REQUIS :
   "extract": "40-60 mots avec article défini",
   "description": "110-135 mots en 4 paragraphes, chacun entouré de balises <p></p> (paragraphe 1: ~35 mots, paragraphe 2: ~45 mots, paragraphe 3: ~20 mots, paragraphe 4: ~20-25 mots)"
 }
+
+🚫 MOTS ABSOLUMENT INTERDITS - NE JAMAIS UTILISER :
+Partenaire, Partenaires, Partenariat, Co-partenaire, Multi-partenariat, Coentreprise, Collaboration, Coopération, Alliance, Association, Entente, Convention de partenariat
 
 RÈGLES STRICTES :
 1. activity : 10-15 mots, ${business.type_activite ? `DOIT INCLURE le type d'activité "${business.type_activite}"` : 'décris l\'activité'}, se termine par "à" SANS AUCUNE PONCTUATION (ni point, ni virgule, juste "à"). NE JAMAIS MENTIONNER l'adresse dans ce champ - l'adresse sera ajoutée automatiquement après "à".
