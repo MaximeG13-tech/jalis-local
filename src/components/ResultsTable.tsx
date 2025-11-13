@@ -12,6 +12,28 @@ interface ResultsTableProps {
   onUpdate: (index: number, updatedBusiness: Business) => void;
 }
 
+const formatRating = (rating?: number, totalReviews?: number): string => {
+  if (!rating || rating === 0 || !totalReviews || totalReviews === 0) {
+    return '';
+  }
+
+  const roundedRating = Math.round(rating * 2) / 2;
+  let stars = '';
+  const fullStars = Math.floor(roundedRating);
+  const hasHalfStar = roundedRating % 1 !== 0;
+  
+  stars += '⭐'.repeat(fullStars);
+  
+  if (hasHalfStar) {
+    stars += '☆';
+  }
+  
+  const emptyStars = 5 - Math.ceil(roundedRating);
+  stars += '☆'.repeat(emptyStars);
+  
+  return ` ${stars} (${totalReviews} avis)`;
+};
+
 export const ResultsTable = ({ businesses, onRemove, onUpdate }: ResultsTableProps) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedName, setEditedName] = useState<string>('');
@@ -78,7 +100,14 @@ export const ResultsTable = ({ businesses, onRemove, onUpdate }: ResultsTablePro
                     </div>
                   ) : (
                     <>
-                      <CardTitle className="text-xl">{business.nom}</CardTitle>
+                      <CardTitle className="text-xl">
+                        {business.nom}
+                        {business.rating && business.user_ratings_total && (
+                          <span className="text-sm font-normal text-muted-foreground ml-2">
+                            {formatRating(business.rating, business.user_ratings_total)}
+                          </span>
+                        )}
+                      </CardTitle>
                       <Button
                         size="icon"
                         variant="ghost"

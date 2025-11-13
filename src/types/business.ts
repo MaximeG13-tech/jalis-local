@@ -7,6 +7,8 @@ export interface Business {
   lien_maps: string;
   category_id?: string;
   primary_type_display_name?: string;
+  rating?: number;
+  user_ratings_total?: number;
 }
 
 export interface GooglePlace {
@@ -19,6 +21,8 @@ export interface GooglePlace {
   types?: string[];
   primary_type?: string;
   primary_type_display_name?: string;
+  rating?: number;
+  user_ratings_total?: number;
   geometry?: {
     location: {
       lat: number;

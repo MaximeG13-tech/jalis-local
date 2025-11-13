@@ -435,7 +435,9 @@ export class GooglePlacesService {
               site_web: details.website || 'Non disponible',
               lien_maps: details.url || '',
               category_id: details.primary_type,
-              primary_type_display_name: details.primary_type_display_name
+              primary_type_display_name: details.primary_type_display_name,
+              rating: details.rating,
+              user_ratings_total: details.user_ratings_total
             };
             
             // Créer une clé unique basée sur nom + adresse pour détecter les doublons

@@ -28,7 +28,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API_KEY!,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location,types,primaryType,primaryTypeDisplayName'
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,googleMapsUri,location,types,primaryType,primaryTypeDisplayName,rating,userRatingCount'
       },
     });
 
@@ -51,6 +51,8 @@ serve(async (req) => {
       types: data.types || [],
       primary_type: data.primaryType || '',
       primary_type_display_name: data.primaryTypeDisplayName?.text || '',
+      rating: data.rating || null,
+      user_ratings_total: data.userRatingCount || 0,
       geometry: {
         location: {
           lat: data.location?.latitude || 0,
