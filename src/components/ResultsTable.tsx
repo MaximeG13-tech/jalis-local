@@ -31,7 +31,7 @@ const formatRating = (rating?: number, totalReviews?: number): string => {
   const emptyStars = 5 - Math.ceil(roundedRating);
   stars += '☆'.repeat(emptyStars);
   
-  return ` ${stars} (${totalReviews} avis)`;
+  return ` ${rating.toFixed(1)} ${stars} (${totalReviews} avis)`;
 };
 
 export const ResultsTable = ({ businesses, onRemove, onUpdate }: ResultsTableProps) => {
