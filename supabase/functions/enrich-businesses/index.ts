@@ -749,8 +749,6 @@ serve(async (req) => {
     );
     console.log(`✅ Company description: ${companyDescription}\n`);
 
-    const enrichedBusinesses = [];
-
     // 5 modèles d'introductions variées (Recommandation #6)
     const introVariations = [
       `À {{city}}, ${companyName} recommande`,  // Modèle 1: Présentation + localisation
@@ -760,7 +758,8 @@ serve(async (req) => {
       `Professionnel recommandé par ${companyName},`  // Modèle 5: Spécialisation + contexte
     ];
 
-    for (const business of businesses) {
+    // Function to process a single business enrichment
+    const processBusinessEnrichment = async (business: any) => {
       console.log(`\n=== Processing: ${business.nom} ===`);
       
       // Detect entity type (practitioner vs establishment)
@@ -1365,17 +1364,39 @@ RÉPONDS EN JSON UNIQUEMENT (sans markdown).`;
       cleanDescription = cleanDescription.replace(/\s{2,}/g, ' ').replace(/\.\s*\./g, '.').replace(/,\s*,/g, ',').trim();
       cleanExtract = cleanExtract.replace(/\s{2,}/g, ' ').replace(/\.\s*\./g, '.').replace(/,\s*,/g, ',').trim();
 
-      enrichedBusinesses.push({
+      return {
         name: `- ${cleanName}`,
         activity: cleanActivity,
         city: formatCity(business.adresse),
         extract: cleanExtract,
         description: cleanDescription,
-      });
+      };
+    };
 
-      // Small delay to avoid rate limits (increased for 5+ businesses)
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    // Function to process businesses in batches of 10
+    const processBatch = async (batch: any[]) => {
+      return Promise.all(batch.map(business => processBusinessEnrichment(business)));
+    };
+
+    // Split businesses into batches of 10
+    const BATCH_SIZE = 10;
+    const enrichedBusinesses = [];
+    
+    for (let i = 0; i < businesses.length; i += BATCH_SIZE) {
+      const batch = businesses.slice(i, i + BATCH_SIZE);
+      console.log(`\n📦 Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(businesses.length / BATCH_SIZE)} (${batch.length} businesses)`);
+      
+      const batchResults = await processBatch(batch);
+      enrichedBusinesses.push(...batchResults);
+      
+      // Small delay between batches to avoid rate limits
+      if (i + BATCH_SIZE < businesses.length) {
+        console.log(`⏳ Waiting 1s before next batch...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
+
+    console.log(`\n✅ All ${enrichedBusinesses.length} businesses enriched successfully`);
 
     return new Response(JSON.stringify({ enrichedBusinesses }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
