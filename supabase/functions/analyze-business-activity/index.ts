@@ -2,13 +2,13 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const OPENAI_API_KEY = Deno.env.get('OPEN_AI');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const OPENAI_API_KEY = Deno.env.get("OPEN_AI");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 // Liste complète des 158 types Google Places (ID - Label)
 const BUSINESS_TYPES_LIST = `
@@ -174,21 +174,21 @@ const BUSINESS_TYPES_LIST = `
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { businessActivity } = await req.json();
-    console.log('Processing business activity:', businessActivity);
+    console.log("Processing business activity:", businessActivity);
 
     if (!businessActivity) {
-      throw new Error('L\'activité est requise');
+      throw new Error("L'activité est requise");
     }
 
     // Appeler GPT-4o pour obtenir les suggestions
-    console.log('Calling GPT-4o for suggestions...');
-    
+    console.log("Calling GPT-4o for suggestions...");
+
     const prompt = `Tu es un expert en développement d'affaires locales.
 
 Activité de l'utilisateur : "${businessActivity}"
@@ -217,40 +217,38 @@ Règles absolues :
 - Ne suggère JAMAIS des concurrents directs
 - Privilégie les synergies métier réelles (clients partagés)`;
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
+        model: "gpt-4.1",
+        messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),
     });
 
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
-      console.error('OpenAI error:', errorText);
+      console.error("OpenAI error:", errorText);
       throw new Error(`Erreur GPT-4o: ${openAIResponse.status}`);
     }
 
     const openAIData = await openAIResponse.json();
-    console.log('GPT-4o response:', openAIData);
+    console.log("GPT-4o response:", openAIData);
 
     const gptContent = openAIData.choices[0].message.content;
-    console.log('GPT-4o content:', gptContent);
-    
+    console.log("GPT-4o content:", gptContent);
+
     // Nettoyer la réponse GPT-4o (supprimer les backticks markdown)
     const cleanedContent = gptContent
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
       .trim();
-    console.log('Cleaned GPT-4o content:', cleanedContent);
-    
+    console.log("Cleaned GPT-4o content:", cleanedContent);
+
     // Parser le JSON de la réponse GPT
     const suggestions = JSON.parse(cleanedContent);
 
@@ -260,26 +258,25 @@ Règles absolues :
     const result = {
       detected_activity: businessActivity,
       primary_type: businessActivity,
-      suggestions: finalSuggestions
+      suggestions: finalSuggestions,
     };
 
-    console.log('Returning result:', result);
+    console.log("Returning result:", result);
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (error) {
-    console.error('Error in analyze-business-activity:', error);
+    console.error("Error in analyze-business-activity:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue',
-        details: error instanceof Error ? error.stack : undefined
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Erreur inconnue",
+        details: error instanceof Error ? error.stack : undefined,
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });
