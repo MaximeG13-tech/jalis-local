@@ -3,7 +3,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { Business } from '@/types/business';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ExportButtonProps {
   businesses: Business[];
@@ -16,6 +16,33 @@ interface ExportButtonProps {
 export const ExportButton = ({ businesses, companyName, companyPlaceId }: ExportButtonProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Timer effect to track elapsed time during export
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isExporting) {
+      setElapsedTime(0);
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setElapsedTime(0);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isExporting]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -74,23 +101,30 @@ export const ExportButton = ({ businesses, companyName, companyPlaceId }: Export
   };
 
   return (
-    <Button 
-      onClick={handleExport} 
-      disabled={businesses.length === 0 || isExporting}
-      variant="outline"
-      className="w-full sm:w-auto"
-    >
-      {isExporting ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Enrichissement en cours...
-        </>
-      ) : (
-        <>
-          <Download className="mr-2 h-4 w-4" />
-          Exporter en JSON
-        </>
+    <div className="flex flex-col items-center gap-2">
+      <Button 
+        onClick={handleExport} 
+        disabled={businesses.length === 0 || isExporting}
+        variant="outline"
+        className="w-full sm:w-auto"
+      >
+        {isExporting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Enrichissement en cours...
+          </>
+        ) : (
+          <>
+            <Download className="mr-2 h-4 w-4" />
+            Exporter en JSON
+          </>
+        )}
+      </Button>
+      {isExporting && (
+        <p className="text-sm text-muted-foreground">
+          Temps écoulé : {formatTime(elapsedTime)}
+        </p>
       )}
-    </Button>
+    </div>
   );
 };
