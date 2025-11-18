@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Business } from '@/types/business';
 import { GooglePlacesService } from '@/services/GooglePlacesService';
 import { SearchForm } from '@/components/SearchForm';
@@ -7,7 +9,7 @@ import { ExportButton } from '@/components/ExportButton';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Sparkles, RefreshCw, RotateCcw, AlertCircle } from 'lucide-react';
+import { Sparkles, RefreshCw, RotateCcw, AlertCircle, LogOut } from 'lucide-react';
 import { BusinessType } from '@/constants/businessTypes';
 import {
   Dialog,
@@ -18,8 +20,11 @@ import {
 } from "@/components/ui/dialog";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [excludedPlaceIds, setExcludedPlaceIds] = useState<Set<string>>(new Set());
   const [lastSearch, setLastSearch] = useState<{ 
@@ -33,6 +38,56 @@ const Index = () => {
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [limitDialogData, setLimitDialogData] = useState<{ found: number; requested: number } | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Vérifier l'authentification
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user?.email?.endsWith('@jalis.fr')) {
+        navigate('/auth');
+        return;
+      }
+      
+      setUserEmail(session.user.email);
+      setIsCheckingAuth(false);
+    };
+
+    checkAuth();
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate('/auth');
+      } else if (event === 'SIGNED_IN' && session?.user?.email) {
+        if (!session.user.email.endsWith('@jalis.fr')) {
+          supabase.auth.signOut();
+          navigate('/auth');
+        } else {
+          setUserEmail(session.user.email);
+          setIsCheckingAuth(false);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Vérification de l'authentification...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSearch = async (
     companyName: string,
@@ -140,17 +195,35 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 py-16 max-w-6xl">
         {/* Header */}
-        <div className="mb-12 text-center space-y-6">
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-muted border border-border">
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Génération de liens utiles
-            </span>
+        <div className="mb-12 space-y-6">
+          <div className="flex justify-between items-center">
+            <div className="flex-1" />
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{userEmail}</span>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </Button>
+            </div>
           </div>
           
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-tight tracking-tight mt-8 mb-12">
-            Guide local automatisé<br />avec l'IA
-          </h1>
+          <div className="text-center space-y-6">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-muted border border-border">
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Génération de liens utiles
+              </span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-tight tracking-tight mt-8 mb-12">
+              Guide local automatisé<br />avec l'IA
+            </h1>
+          </div>
         </div>
 
         {/* Main Content */}
