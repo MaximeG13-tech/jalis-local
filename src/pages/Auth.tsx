@@ -50,9 +50,6 @@ const Auth = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            hd: 'jalis.fr', // Restreint la sélection de compte aux domaines jalis.fr
-          },
         },
       });
 
