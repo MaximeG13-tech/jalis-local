@@ -82,8 +82,14 @@ const Index = () => {
   }, [navigate]);
 
   const handleSignOut = async () => {
+    const devBypass = sessionStorage.getItem('dev_bypass');
     sessionStorage.removeItem('dev_bypass');
-    await supabase.auth.signOut();
+    
+    // Ne tenter la déconnexion Supabase que si on n'est pas en mode dev bypass
+    if (devBypass !== 'true') {
+      await supabase.auth.signOut();
+    }
+    
     navigate('/auth');
   };
 
