@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    // Détecter si on est en mode développement
+    const isDev = window.location.hostname === 'localhost' || 
+                  window.location.hostname.includes('lovable.app');
+    setIsDevMode(isDev);
+  }, []);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté
@@ -43,6 +51,12 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate, toast]);
+
+  const handleDevBypass = () => {
+    // Stocker un flag temporaire pour bypasser l'auth en dev
+    sessionStorage.setItem('dev_bypass', 'true');
+    navigate('/');
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -95,7 +109,7 @@ const Auth = () => {
             Connectez-vous avec votre compte Google @jalis.fr pour accéder à l'application
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <Button
             onClick={handleGoogleSignIn}
             className="w-full"
@@ -121,6 +135,18 @@ const Auth = () => {
             </svg>
             Se connecter avec Google
           </Button>
+          
+          {isDevMode && (
+            <Button
+              onClick={handleDevBypass}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              Continuer sans authentification (Dev)
+            </Button>
+          )}
+          
           <p className="text-xs text-muted-foreground text-center mt-4">
             Seuls les comptes @jalis.fr sont autorisés
           </p>
