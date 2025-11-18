@@ -42,6 +42,14 @@ const Index = () => {
   useEffect(() => {
     // Vérifier l'authentification
     const checkAuth = async () => {
+      // Vérifier si on est en mode dev bypass
+      const devBypass = sessionStorage.getItem('dev_bypass');
+      if (devBypass === 'true') {
+        setUserEmail('dev@preview.local');
+        setIsCheckingAuth(false);
+        return;
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user?.email?.endsWith('@jalis.fr')) {
@@ -74,6 +82,7 @@ const Index = () => {
   }, [navigate]);
 
   const handleSignOut = async () => {
+    sessionStorage.removeItem('dev_bypass');
     await supabase.auth.signOut();
     navigate('/auth');
   };
