@@ -11,9 +11,8 @@ const Auth = () => {
   const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {
-    // Détecter si on est en mode développement
-    const isDev = window.location.hostname === 'localhost' || 
-                  window.location.hostname.includes('lovable.app');
+    // Détecter si on est en mode développement (uniquement localhost)
+    const isDev = window.location.hostname === 'localhost';
     setIsDevMode(isDev);
   }, []);
 
