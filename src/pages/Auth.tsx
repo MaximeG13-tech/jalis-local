@@ -11,9 +11,9 @@ const Auth = () => {
   const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {
-    // Détecter si on est en mode développement (uniquement localhost)
-    const isDev = window.location.hostname === 'localhost';
-    setIsDevMode(isDev);
+    // TEMPORAIRE: Activer le bypass pour tous les environnements
+    // TODO: Remettre à `window.location.hostname === 'localhost'` une fois Google Auth configuré
+    setIsDevMode(true);
   }, []);
 
   useEffect(() => {
